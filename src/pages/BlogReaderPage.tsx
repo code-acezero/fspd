@@ -44,16 +44,16 @@ const BlogReaderPage = () => {
     queryKey: ["post", shortId],
     queryFn: async () => {
       if (!shortId) return null;
-      let q = supabase.from("posts").select("*");
-      if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(shortId)) {
-        q = q.eq("id", shortId);
-      } else {
-        // Cast uuid to text so ilike prefix matching works.
-        q = q.filter("id::text", "ilike", `${shortId}%`);
+      const isFullUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(shortId);
+      if (isFullUuid) {
+        const { data, error } = await supabase.from("posts").select("*").eq("id", shortId).maybeSingle();
+        if (error) throw error;
+        return data;
       }
-      const { data, error } = await q.limit(1).maybeSingle();
+      // Legacy short-id fallback: fetch published posts and match by uuid prefix client-side.
+      const { data, error } = await supabase.from("posts").select("*").eq("published", true);
       if (error) throw error;
-      return data;
+      return (data || []).find((p) => p.id.toLowerCase().startsWith(shortId.toLowerCase())) || null;
     },
     enabled: !!shortId,
     retry: false,
