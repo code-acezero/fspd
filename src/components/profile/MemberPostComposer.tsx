@@ -1,11 +1,12 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Image as ImageIcon, Loader2, Send, X, Globe, Clock, CheckCircle2, AlertCircle } from "lucide-react";
+import { Loader2, Send, Globe, Clock, CheckCircle2, AlertCircle } from "lucide-react";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
+import ImageUploader from "@/components/upload/ImageUploader";
 
 /**
  * Facebook-style composer. Members can write a post, attach images, and submit.
@@ -18,8 +19,6 @@ const postSchema = z.object({
   content: z.string().trim().min(1).max(8000),
 });
 
-const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
-const MAX_FILE = 5 * 1024 * 1024;
 const MAX_IMAGES = 4;
 
 interface MyPost {
@@ -36,13 +35,13 @@ const MemberPostComposer = () => {
   const { user, profile } = useAuth();
   const { toast } = useToast();
   const { t, lang } = useLanguage();
-  const fileRef = useRef<HTMLInputElement>(null);
+  const fileRef = null as never; // legacy ref removed; uploader owns its own input
+  void fileRef;
 
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [images, setImages] = useState<string[]>([]);
-  const [uploading, setUploading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [myPosts, setMyPosts] = useState<MyPost[]>([]);
 
@@ -61,33 +60,7 @@ const MemberPostComposer = () => {
 
   useEffect(() => { fetchMine(); /* eslint-disable-next-line */ }, [user]);
 
-  const onPickFiles = async (files: FileList | null) => {
-    if (!files || !user) return;
-    const remaining = MAX_IMAGES - images.length;
-    const arr = Array.from(files).slice(0, remaining);
-    setUploading(true);
-    const next: string[] = [];
-    for (const file of arr) {
-      if (!ALLOWED_TYPES.includes(file.type)) {
-        toast({ title: t("error"), description: t("invalidImageType"), variant: "destructive" });
-        continue;
-      }
-      if (file.size > MAX_FILE) {
-        toast({ title: t("error"), description: "Max 5MB", variant: "destructive" });
-        continue;
-      }
-      const path = `posts/${user.id}/${Date.now()}-${file.name}`;
-      const { error } = await supabase.storage.from("content-images").upload(path, file, { upsert: true });
-      if (error) {
-        toast({ title: t("uploadFailed"), description: error.message, variant: "destructive" });
-        continue;
-      }
-      const { data } = supabase.storage.from("content-images").getPublicUrl(path);
-      next.push(data.publicUrl);
-    }
-    setImages((p) => [...p, ...next]);
-    setUploading(false);
-  };
+  // Image upload handled by <ImageUploader /> below.
 
   const submit = async () => {
     if (!user) return;

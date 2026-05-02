@@ -19,6 +19,7 @@ import EventDetailPage from "./pages/EventDetailPage";
 import CoursesPage from "./pages/CoursesPage";
 import CourseDetailPage from "./pages/CourseDetailPage";
 import MembersPage from "./pages/MembersPage";
+import AboutPage from "./pages/AboutPage";
 import LoginPage from "./pages/LoginPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
@@ -50,6 +51,7 @@ const App = () => (
                     <Route path="/courses" element={<CoursesPage />} />
                     <Route path="/courses/:slug" element={<CourseDetailPage />} />
                     <Route path="/members" element={<MembersPage />} />
+                    <Route path="/about" element={<AboutPage />} />
                     <Route path="/login" element={<LoginPage />} />
                     <Route path="/forgot-password" element={<ForgotPasswordPage />} />
                     <Route path="/reset-password" element={<ResetPasswordPage />} />
