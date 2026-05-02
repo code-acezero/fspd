@@ -1,0 +1,1 @@
+ALTER TABLE public.posts ADD COLUMN excerpt_en TEXT NOT NULL DEFAULT '';

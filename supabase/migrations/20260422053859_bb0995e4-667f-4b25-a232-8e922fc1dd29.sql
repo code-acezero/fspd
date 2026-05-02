@@ -1,0 +1,9 @@
+INSERT INTO public.members (name, name_en, title, title_en, bio, bio_en, role, gradient_class, sort_order, is_senior) VALUES
+('ড. আবদুল করিম','Dr. Abdul Karim','সভাপতি','President','৩০ বছরের সাহিত্যচর্চা ও সাংস্কৃতিক আন্দোলনের অভিজ্ঞতা সম্পন্ন বিশিষ্ট কবি।','A distinguished poet with 30 years of literary practice and cultural activism.','president','from-crimson to-crimson-dark',1,true),
+('অধ্যাপক ফাতেমা বেগম','Prof. Fatema Begum','সহ-সভাপতি','Vice President','ঢাকা বিশ্ববিদ্যালয়ের বাংলা বিভাগের অবসরপ্রাপ্ত অধ্যাপক।','Retired professor from the Bengali Department of Dhaka University.','vp','from-forest to-forest-light',2,true),
+('মোঃ রফিকুল ইসলাম','Md. Rafiqul Islam','সাধারণ সম্পাদক','General Secretary','তরুণ প্রজন্মের মধ্যে সাহিত্যচর্চা ছড়িয়ে দিতে কাজ করছেন।','Working to spread literary culture among the younger generation.','secretary','from-terracotta to-crimson-light',3,true),
+('সুফিয়া খানম','Sufia Khanam','সাংস্কৃতিক সম্পাদক','Cultural Secretary','রবীন্দ্রসংগীত ও নজরুলগীতি শিল্পী এবং সাংস্কৃতিক সংগঠক।','Rabindra Sangeet and Nazrul Geeti artist and cultural organizer.','cultural','from-gold to-terracotta',4,true),
+('জাহিদ হাসান','Zahid Hasan','কোষাধ্যক্ষ','Treasurer','ব্যবসায়ী ও সমাজসেবক।','Businessman and social worker.','treasurer','from-crimson-dark to-deep-brown',5,true),
+('তানিয়া আক্তার','Tania Akter','সদস্য','Member','তরুণ কবি ও লেখিকা।','Young poet and writer.','member','from-primary to-crimson',10,false),
+('করিম উদ্দিন','Karim Uddin','সদস্য','Member','চিত্রশিল্পী ও ভাস্কর।','Painter and sculptor.','member','from-forest to-primary',11,false),
+('নাসরিন জাহান','Nasrin Jahan','সদস্য','Member','নাট্যকর্মী ও সাংস্কৃতিক সংগঠক।','Theater artist and cultural organizer.','member','from-terracotta to-gold',12,false);

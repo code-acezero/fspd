@@ -1,0 +1,206 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500&family=Noto+Serif+Bengali:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&family=Hind+Siliguri:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 35 30% 97%;
+    --foreground: 20 25% 12%;
+    --card: 35 25% 95%;
+    --card-foreground: 20 25% 12%;
+    --popover: 35 30% 97%;
+    --popover-foreground: 20 25% 12%;
+    --primary: 350 55% 38%;
+    --primary-foreground: 40 30% 96%;
+    --secondary: 38 35% 92%;
+    --secondary-foreground: 20 25% 18%;
+    --muted: 35 20% 92%;
+    --muted-foreground: 20 10% 45%;
+    --accent: 40 78% 52%;
+    --accent-foreground: 20 25% 12%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 40 30% 96%;
+    --border: 35 20% 88%;
+    --input: 35 20% 88%;
+    --ring: 350 55% 38%;
+    --radius: 9999px;
+    --gold: 40 78% 52%;
+    --gold-light: 42 70% 72%;
+    --crimson: 350 55% 38%;
+    --crimson-dark: 350 60% 28%;
+    --crimson-light: 350 45% 55%;
+    --forest: 155 40% 28%;
+    --forest-light: 155 30% 42%;
+    --cream: 35 30% 97%;
+    --cream-dark: 35 25% 90%;
+    --terracotta: 18 55% 48%;
+    --deep-brown: 20 30% 15%;
+    --gradient-hero: linear-gradient(135deg, hsl(350 55% 38%), hsl(350 60% 28%), hsl(20 30% 15%));
+    --gradient-gold: linear-gradient(135deg, hsl(40 78% 52%), hsl(42 70% 62%));
+    --gradient-warm: linear-gradient(180deg, hsl(35 30% 97%), hsl(35 25% 92%));
+    --font-display: 'Playfair Display', 'Noto Serif Bengali', serif;
+    --font-body: 'Inter', 'Hind Siliguri', sans-serif;
+    --font-bengali: 'Noto Serif Bengali', 'Hind Siliguri', serif;
+    --sidebar-background: 35 25% 95%;
+    --sidebar-foreground: 20 25% 18%;
+    --sidebar-primary: 350 55% 38%;
+    --sidebar-primary-foreground: 40 30% 96%;
+    --sidebar-accent: 38 35% 92%;
+    --sidebar-accent-foreground: 20 25% 18%;
+    --sidebar-border: 35 20% 88%;
+    --sidebar-ring: 350 55% 38%;
+  }
+
+  .dark {
+    --background: 15 18% 7%;
+    --foreground: 35 15% 88%;
+    --card: 18 16% 11%;
+    --card-foreground: 35 15% 88%;
+    --popover: 18 16% 11%;
+    --popover-foreground: 35 15% 88%;
+    --primary: 348 62% 48%;
+    --primary-foreground: 35 20% 96%;
+    --secondary: 18 14% 16%;
+    --secondary-foreground: 35 15% 78%;
+    --muted: 18 12% 15%;
+    --muted-foreground: 30 10% 52%;
+    --accent: 40 72% 50%;
+    --accent-foreground: 15 18% 7%;
+    --destructive: 0 62% 40%;
+    --destructive-foreground: 35 20% 96%;
+    --border: 20 10% 17%;
+    --input: 20 10% 17%;
+    --ring: 348 62% 48%;
+    --gold: 40 72% 50%;
+    --gold-light: 42 55% 40%;
+    --crimson: 348 62% 48%;
+    --crimson-dark: 348 55% 38%;
+    --crimson-light: 350 45% 60%;
+    --forest: 155 35% 32%;
+    --forest-light: 155 28% 42%;
+    --cream: 18 12% 15%;
+    --cream-dark: 18 10% 10%;
+    --terracotta: 18 50% 50%;
+    --deep-brown: 30 12% 75%;
+    --gradient-hero: linear-gradient(135deg, hsl(348 55% 22%), hsl(15 20% 9%));
+    --gradient-gold: linear-gradient(135deg, hsl(40 65% 40%), hsl(42 50% 30%));
+    --gradient-warm: linear-gradient(180deg, hsl(15 18% 7%), hsl(18 16% 11%));
+    --sidebar-background: 18 16% 9%;
+    --sidebar-foreground: 35 15% 82%;
+    --sidebar-primary: 348 62% 48%;
+    --sidebar-primary-foreground: 35 20% 96%;
+    --sidebar-accent: 18 14% 16%;
+    --sidebar-accent-foreground: 35 15% 78%;
+    --sidebar-border: 20 10% 17%;
+    --sidebar-ring: 348 62% 48%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-body);
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+  }
+}
+
+@layer utilities {
+  .text-gradient-gold { background: var(--gradient-gold); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  .bg-hero-gradient { background: var(--gradient-hero); }
+  .bg-warm-gradient { background: var(--gradient-warm); }
+  .border-ornamental { border-image: linear-gradient(90deg, transparent, hsl(var(--gold)), transparent) 1; }
+  .alpona-pattern { background-image: radial-gradient(circle at 25% 25%, hsl(var(--gold) / 0.06) 1px, transparent 1px), radial-gradient(circle at 75% 75%, hsl(var(--crimson) / 0.04) 1px, transparent 1px); background-size: 30px 30px; }
+  .nakshi-border { border: 2px solid transparent; background-image: linear-gradient(hsl(var(--card)), hsl(var(--card))), linear-gradient(135deg, hsl(var(--gold) / 0.4), hsl(var(--crimson) / 0.3), hsl(var(--gold) / 0.4)); background-origin: border-box; background-clip: padding-box, border-box; }
+  .depth-card { box-shadow: 0 2px 4px hsl(var(--foreground) / 0.04), 0 8px 16px hsl(var(--foreground) / 0.06), 0 16px 32px hsl(var(--foreground) / 0.04), inset 0 1px 0 hsl(var(--primary-foreground) / 0.1); transform: perspective(1000px) rotateX(0deg); transition: transform 0.4s ease, box-shadow 0.4s ease; }
+  .depth-card:hover { box-shadow: 0 4px 8px hsl(var(--foreground) / 0.06), 0 12px 24px hsl(var(--foreground) / 0.08), 0 24px 48px hsl(var(--foreground) / 0.06), inset 0 1px 0 hsl(var(--primary-foreground) / 0.15); transform: perspective(1000px) rotateX(1deg) translateY(-4px); }
+  .depth-card-3d { transform-style: preserve-3d; box-shadow: 0 4px 6px hsl(var(--foreground) / 0.04), 0 10px 20px hsl(var(--foreground) / 0.06), 0 20px 40px hsl(var(--foreground) / 0.04); transition: transform 0.5s ease, box-shadow 0.5s ease; }
+  .depth-card-3d:hover { transform: perspective(800px) rotateY(-3deg) rotateX(2deg) translateY(-6px) scale(1.02); box-shadow: 0 8px 16px hsl(var(--foreground) / 0.08), 0 20px 40px hsl(var(--foreground) / 0.1), 0 30px 60px hsl(var(--foreground) / 0.06); }
+  .bengali-glow { box-shadow: 0 0 20px hsl(var(--gold) / 0.15), 0 0 40px hsl(var(--crimson) / 0.08); }
+  .font-bengali { font-family: var(--font-bengali); }
+  .font-display { font-family: var(--font-display); }
+  .paisley-pattern { background-image: radial-gradient(ellipse at 20% 50%, hsl(var(--gold) / 0.04) 0%, transparent 50%), radial-gradient(ellipse at 80% 20%, hsl(var(--crimson) / 0.03) 0%, transparent 50%), radial-gradient(ellipse at 60% 80%, hsl(var(--forest) / 0.03) 0%, transparent 50%); }
+  .lotus-shadow { box-shadow: 0 0 0 1px hsl(var(--gold) / 0.1), 0 4px 12px hsl(var(--crimson) / 0.08), 0 8px 24px hsl(var(--foreground) / 0.04); }
+  .parallax-container { perspective: 1200px; transform-style: preserve-3d; }
+  .parallax-layer { will-change: transform; backface-visibility: hidden; }
+}
+
+html { scroll-behavior: smooth; }
+
+/* Layered palette depth — back / mid / front gradients composed via CSS vars
+   set by applyPalette(). Use .palette-depth on any container; ::before paints
+   the back+mid layers, ::after paints the foreground highlight. */
+.palette-depth { position: relative; isolation: isolate; }
+.palette-depth::before,
+.palette-depth::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none; z-index: -1;
+  border-radius: inherit;
+}
+.palette-depth::before {
+  background: var(--layer-back, transparent), var(--layer-mid, transparent);
+  transform: translateZ(0);
+  transition: background 600ms ease;
+}
+.palette-depth::after {
+  background: var(--layer-front, transparent);
+  mix-blend-mode: screen;
+  opacity: 0.9;
+  transition: background 600ms ease, opacity 600ms ease;
+}
+.dark .palette-depth::after { mix-blend-mode: lighten; opacity: 0.6; }
+
+/* Palette picker cards — layered swatch with hover & selected animation */
+.palette-card { transform: translateZ(0); transition: transform 380ms cubic-bezier(.2,.8,.2,1), box-shadow 380ms ease, border-color 280ms ease; }
+.palette-card:hover { transform: translateY(-3px) scale(1.02); }
+.palette-card-active { transform: translateY(-2px) scale(1.03); }
+.palette-card-swatch > span { transition: transform 700ms cubic-bezier(.2,.8,.2,1), opacity 500ms ease; }
+.palette-card:hover .palette-card-layer-back { transform: scale(1.15) translate(-3%, -2%); }
+.palette-card:hover .palette-card-layer-mid  { transform: scale(1.08) translate(2%, 1%); opacity: 1.05; }
+.palette-card:hover .palette-card-layer-front{ transform: scale(1.25) translate(4%, 3%); }
+.palette-card-active .palette-card-layer-back { transform: scale(1.2) translate(-4%, -3%); }
+.palette-card-active .palette-card-layer-mid  { transform: scale(1.12) translate(3%, 2%); }
+.palette-card-active .palette-card-layer-front{ animation: palette-front-pulse 4s ease-in-out infinite; }
+@keyframes palette-front-pulse {
+  0%, 100% { transform: scale(1.18) translate(3%, 2%); opacity: 0.9; }
+  50%      { transform: scale(1.32) translate(6%, 4%); opacity: 1; }
+}
+
+/* Body-wide ambient depth — extremely subtle so content stays legible. */
+body::before {
+  content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background: var(--layer-back, transparent);
+  opacity: 0.45;
+}
+body > #root { position: relative; z-index: 1; }
+
+/* Hide scrollbar globally */
+* { scrollbar-width: none; -ms-overflow-style: none; }
+*::-webkit-scrollbar { display: none; }
+
+/* Performance: GPU acceleration for animated elements */
+.depth-card, .depth-card-3d, [class*="animate-"], [class*="transition-"] {
+  will-change: auto;
+  -webkit-font-smoothing: antialiased;
+}
+img, video { content-visibility: auto; }
+
+/* Dark mode logo invert for transparent logos */
+.dark img[style*="mix-blend-mode"] { filter: brightness(0) invert(1); }
+
+/* Logo halo — liquid gradient blending blue logo with crimson theme */
+@keyframes logo-halo-spin { to { transform: rotate(360deg); } }
+@keyframes logo-halo-pulse {
+  0%, 100% { transform: scale(1); opacity: var(--halo-opacity, 0.65); }
+  50%      { transform: scale(1.12); opacity: calc(var(--halo-opacity, 0.65) * 1.35); }
+}
+.logo-halo-spin  { animation: logo-halo-spin 14s linear infinite; }
+.logo-halo-pulse { animation: logo-halo-pulse 6s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .logo-halo-spin, .logo-halo-pulse { animation: none; }
+}
