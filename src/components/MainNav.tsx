@@ -18,6 +18,7 @@ const navItems = [
   { key: "events", to: "/events", icon: Calendar },
   { key: "courses", to: "/courses", icon: GraduationCap },
   { key: "members", to: "/members", icon: Users },
+  { key: "about", to: "/about", icon: Info },
 ];
 
 interface Suggestion {
