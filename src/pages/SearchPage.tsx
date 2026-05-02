@@ -63,7 +63,7 @@ const SearchPage = () => {
 
     // Search members
     try {
-      const { data: profiles } = await supabase.from("profiles").select("*");
+      const { data: profiles } = await supabase.from("profiles").select("id, full_name, display_name, position, position_en, avatar_url");
       if (profiles) {
         profiles.forEach((p) => {
           if (p.full_name.toLowerCase().includes(lower) || p.display_name.toLowerCase().includes(lower) || p.position.toLowerCase().includes(lower)) {

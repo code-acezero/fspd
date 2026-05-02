@@ -430,6 +430,63 @@ export type Database = {
         }
         Relationships: []
       }
+      public_members: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          bio_en: string | null
+          created_at: string | null
+          gradient_class: string | null
+          id: string | null
+          is_active: boolean | null
+          is_approved: boolean | null
+          is_senior: boolean | null
+          name: string | null
+          name_en: string | null
+          role: string | null
+          sort_order: number | null
+          title: string | null
+          title_en: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          bio_en?: string | null
+          created_at?: string | null
+          gradient_class?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          is_approved?: boolean | null
+          is_senior?: boolean | null
+          name?: string | null
+          name_en?: string | null
+          role?: string | null
+          sort_order?: number | null
+          title?: string | null
+          title_en?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          bio_en?: string | null
+          created_at?: string | null
+          gradient_class?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          is_approved?: boolean | null
+          is_senior?: boolean | null
+          name?: string | null
+          name_en?: string | null
+          role?: string | null
+          sort_order?: number | null
+          title?: string | null
+          title_en?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       has_role: {
