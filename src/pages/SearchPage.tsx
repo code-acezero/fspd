@@ -73,23 +73,8 @@ const SearchPage = () => {
       }
     } catch {}
 
-    // Search mock posts (fallback)
-    if (allResults.filter(r => r.type === "post").length === 0) {
-      blogPosts.forEach((p) => {
-        if (p.title.toLowerCase().includes(lower) || p.titleEn.toLowerCase().includes(lower)) {
-          allResults.push({ type: "post", id: p.id, title: lang === "en" ? p.titleEn : p.title, subtitle: p.category, link: `/blog/${p.id}`, icon: BookOpen });
-        }
-      });
-    }
 
-    // Search mock events (fallback)
-    if (allResults.filter(r => r.type === "event").length === 0) {
-      mockEvents.forEach((e) => {
-        if (e.title.toLowerCase().includes(lower) || e.titleEn.toLowerCase().includes(lower)) {
-          allResults.push({ type: "event", id: e.id, title: lang === "en" ? e.titleEn : e.title, subtitle: e.date, link: `/events/${e.id}`, icon: Calendar });
-        }
-      });
-    }
+
 
     // Search courses (mock only for now)
     mockCourses.forEach((c) => {
