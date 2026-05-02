@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Loader2, Send, Globe, Clock, CheckCircle2, AlertCircle } from "lucide-react";
+import { Loader2, Send, Globe, Clock, CheckCircle2, AlertCircle, X } from "lucide-react";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -35,8 +35,6 @@ const MemberPostComposer = () => {
   const { user, profile } = useAuth();
   const { toast } = useToast();
   const { t, lang } = useLanguage();
-  const fileRef = null as never; // legacy ref removed; uploader owns its own input
-  void fileRef;
 
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("");
@@ -149,17 +147,15 @@ const MemberPostComposer = () => {
                 ))}
               </div>
             )}
+            <ImageUploader
+              userId={user.id}
+              folder="posts"
+              max={MAX_IMAGES}
+              value={images}
+              onChange={setImages}
+            />
             <div className="flex items-center justify-between flex-wrap gap-2">
               <div className="flex items-center gap-2">
-                <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={(e) => onPickFiles(e.target.files)} className="hidden" />
-                <button
-                  onClick={() => fileRef.current?.click()}
-                  disabled={uploading || images.length >= MAX_IMAGES}
-                  className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-secondary text-secondary-foreground text-xs font-semibold font-bengali hover:bg-secondary/80 disabled:opacity-50 transition-all"
-                >
-                  {uploading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ImageIcon className="w-3.5 h-3.5" />}
-                  {t("addPhoto")} ({images.length}/{MAX_IMAGES})
-                </button>
                 <span className="text-[10px] text-muted-foreground font-bengali inline-flex items-center gap-1">
                   {isSenior ? <CheckCircle2 className="w-3 h-3 text-forest" /> : <Clock className="w-3 h-3 text-accent" />}
                   {isSenior ? t("autoPublishSenior") : t("approvalRequired")}
