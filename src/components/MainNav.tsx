@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, User, LogOut, Settings, Shield, Sun, Moon, Home, BookOpen, Calendar, GraduationCap, Users, ChevronLeft, ChevronRight } from "lucide-react";
+import { Search, User, LogOut, Settings, Shield, Sun, Moon, Home, BookOpen, Calendar, GraduationCap, Users, Info, ChevronLeft, ChevronRight } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
