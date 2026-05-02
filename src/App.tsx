@@ -61,7 +61,7 @@ const App = () => (
                     <Route path="/search" element={<SearchPage />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
-                  <EditorToolbar />
+
                 </BrowserRouter>
               </TooltipProvider>
             </VisualEditorProvider>
