@@ -148,9 +148,8 @@ const MemberPostComposer = () => {
               </div>
             )}
             <ImageUploader
-              userId={user.id}
-              folder="posts"
-              max={MAX_IMAGES}
+              folder="post"
+              maxImages={MAX_IMAGES}
               value={images}
               onChange={setImages}
             />
