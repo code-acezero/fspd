@@ -8,7 +8,6 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { SiteSettingsProvider } from "@/contexts/SiteSettingsContext";
 import { VisualEditorProvider } from "@/contexts/VisualEditorContext";
-import EditorToolbar from "@/components/editor/EditorToolbar";
 import RequireRole from "@/components/auth/RequireRole";
 
 import LandingPage from "./pages/LandingPage";
@@ -62,7 +61,7 @@ const App = () => (
                     <Route path="/search" element={<SearchPage />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
-                  <EditorToolbar />
+
                 </BrowserRouter>
               </TooltipProvider>
             </VisualEditorProvider>
