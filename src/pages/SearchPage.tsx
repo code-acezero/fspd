@@ -6,7 +6,7 @@ import MainNav from "@/components/MainNav";
 import Footer from "@/components/landing/Footer";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
-import { blogPosts, events as mockEvents, courses as mockCourses } from "@/data/mockData";
+import { courses as mockCourses } from "@/data/mockData";
 import { createSlug } from "@/lib/slugify";
 
 interface SearchResult {

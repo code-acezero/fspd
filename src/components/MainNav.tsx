@@ -7,7 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useSiteSettings } from "@/contexts/SiteSettingsContext";
 import { supabase } from "@/integrations/supabase/client";
-import { blogPosts, events as mockEvents, courses as mockCourses } from "@/data/mockData";
+import { courses as mockCourses } from "@/data/mockData";
 import { createSlug } from "@/lib/slugify";
 import demoLogo from "@/assets/site-logo.png";
 import LogoTile from "@/components/branding/LogoTile";
