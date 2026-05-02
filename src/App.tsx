@@ -9,6 +9,7 @@ import { ThemeProvider } from "@/contexts/ThemeContext";
 import { SiteSettingsProvider } from "@/contexts/SiteSettingsContext";
 import { VisualEditorProvider } from "@/contexts/VisualEditorContext";
 import EditorToolbar from "@/components/editor/EditorToolbar";
+import RequireRole from "@/components/auth/RequireRole";
 
 import LandingPage from "./pages/LandingPage";
 import HomePage from "./pages/HomePage";
@@ -55,7 +56,7 @@ const App = () => (
                     <Route path="/login" element={<LoginPage />} />
                     <Route path="/forgot-password" element={<ForgotPasswordPage />} />
                     <Route path="/reset-password" element={<ResetPasswordPage />} />
-                    <Route path="/admin" element={<AdminDashboard />} />
+                    <Route path="/admin" element={<RequireRole role="admin"><AdminDashboard /></RequireRole>} />
                     <Route path="/profile" element={<ProfilePage />} />
                     <Route path="/profile/:id" element={<ProfilePage />} />
                     <Route path="/search" element={<SearchPage />} />
