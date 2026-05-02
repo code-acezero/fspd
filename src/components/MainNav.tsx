@@ -7,7 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useSiteSettings } from "@/contexts/SiteSettingsContext";
 import { supabase } from "@/integrations/supabase/client";
-import { blogPosts, events as mockEvents, courses as mockCourses } from "@/data/mockData";
+import { courses as mockCourses } from "@/data/mockData";
 import { createSlug } from "@/lib/slugify";
 import demoLogo from "@/assets/site-logo.png";
 import LogoTile from "@/components/branding/LogoTile";
@@ -116,17 +116,8 @@ const MainNav = () => {
     const lower = searchQuery.toLowerCase();
     const results: Suggestion[] = [];
 
-    // Mock data search
-    blogPosts.forEach((p) => {
-      if (p.title.toLowerCase().includes(lower) || p.titleEn.toLowerCase().includes(lower)) {
-        results.push({ title: lang === "en" ? p.titleEn : p.title, link: `/blog/${p.id}`, type: t("blog") });
-      }
-    });
-    mockEvents.forEach((e) => {
-      if (e.title.toLowerCase().includes(lower) || e.titleEn.toLowerCase().includes(lower)) {
-        results.push({ title: lang === "en" ? e.titleEn : e.title, link: `/events/${e.id}`, type: t("events") });
-      }
-    });
+    // Course suggestions (demo data)
+
     mockCourses.forEach((c) => {
       if (c.title.toLowerCase().includes(lower) || c.titleEn.toLowerCase().includes(lower)) {
         results.push({ title: lang === "en" ? c.titleEn : c.title, link: `/courses/${c.id}`, type: t("courses") });
