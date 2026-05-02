@@ -21,15 +21,15 @@ const EventDetailPage = () => {
     queryKey: ["event", shortId],
     queryFn: async () => {
       if (!shortId) return null;
-      let q = supabase.from("events").select("*");
-      if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(shortId)) {
-        q = q.eq("id", shortId);
-      } else {
-        q = q.filter("id::text", "ilike", `${shortId}%`);
+      const isFullUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(shortId);
+      if (isFullUuid) {
+        const { data, error } = await supabase.from("events").select("*").eq("id", shortId).maybeSingle();
+        if (error) throw error;
+        return data;
       }
-      const { data, error } = await q.limit(1).maybeSingle();
+      const { data, error } = await supabase.from("events").select("*");
       if (error) throw error;
-      return data;
+      return (data || []).find((e) => e.id.toLowerCase().startsWith(shortId.toLowerCase())) || null;
     },
     enabled: !!shortId,
     retry: false,

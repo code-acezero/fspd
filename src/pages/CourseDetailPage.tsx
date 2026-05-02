@@ -15,9 +15,10 @@ const CourseDetailPage = () => {
   const [showShareMenu, setShowShareMenu] = useState(false);
   const [registerOpen, setRegisterOpen] = useState(false);
 
-  // Support both slug-based and direct ID access
+  // Support slug-based, direct ID, or trailing-numeric-id formats.
   const shortId = slug ? extractIdFromSlug(slug) : "";
-  const course = mockCourses.find((c) => c.id === slug || c.id === shortId);
+  const trailingNumeric = slug ? (slug.match(/-(\d+)$/)?.[1] ?? "") : "";
+  const course = mockCourses.find((c) => c.id === slug || c.id === shortId || c.id === trailingNumeric);
 
   const statusLabels: Record<string, { label: string; color: string }> = {
     open: { label: t("statusOpen"), color: "bg-forest text-primary-foreground" },
