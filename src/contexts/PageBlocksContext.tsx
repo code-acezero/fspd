@@ -87,7 +87,7 @@ export const PageBlocksProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [previewDraft, setPreviewDraft] = useState(false);
-  const [activeBlock, setActiveBlock] = useState<AnyBlockKey | null>(null);
+  const [activeBlock, setActiveBlock] = useState<string | null>(null);
 
   const fetchBlocks = useCallback(async () => {
     const { data } = await supabase
