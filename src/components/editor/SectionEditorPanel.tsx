@@ -25,49 +25,70 @@ const SIZES: HeroSizeScale[] = ["s", "m", "l", "xl"];
 const SPACINGS: HeroSpacing[] = ["tight", "comfortable", "spacious"];
 const ANIMS: HeroAnimation[] = ["none", "subtle", "elegant", "dramatic"];
 
-type Tab = "text" | "show" | "style" | "advanced";
+type Tab = "text" | "items" | "show" | "style" | "advanced";
 
 interface Props {
-  blockKey: Exclude<AnyBlockKey, "hero">;
+  blockKey: string;
+  page?: string;          // default "landing"
+  label?: string;         // override BLOCK_LABELS
 }
 
-const SectionEditorPanel = ({ blockKey }: Props) => {
+const SectionEditorPanel = ({ blockKey, page = "landing", label }: Props) => {
   const { role } = useAuth();
   const { editMode } = useVisualEditor();
   const {
     activeBlock, setActiveBlock, setPreviewDraft,
     getRow, getSectionDraft, isVisible,
     updateSectionDraft, setBlockVisible, publishBlock, revertBlockDraft, saving,
+    updateRawDraft, getRawDraft,
   } = usePageBlocks();
   const { toast } = useToast();
   const [tab, setTab] = useState<Tab>("text");
   const [translating, setTranslating] = useState<string | null>(null);
 
   const isEditor = role === "admin" || role === "moderator";
-  const row = getRow(blockKey);
-  const shouldShow = isEditor && editMode && activeBlock === blockKey && !!row;
+  const row = getRow(blockKey, page);
+  const activeKey = `${page}:${blockKey}`;
+  const shouldShow = isEditor && editMode && (activeBlock as unknown as string) === activeKey && !!row;
 
   useEffect(() => {
     if (shouldShow) setPreviewDraft(true);
-    // we don't unset on close — Hero panel manages global preview
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [shouldShow]);
 
   if (!shouldShow) return null;
 
-  const cfg: SectionConfig = getSectionDraft(blockKey);
-  const visible = isVisible(blockKey);
+  const cfg: SectionConfig = getSectionDraft(blockKey, page);
+  const visible = isVisible(blockKey, page);
+  const isServices = page === "landing" && blockKey === "services";
+  const rawDraft = getRawDraft(blockKey, page);
+  const items: ServicesItem[] = Array.isArray(rawDraft?.items) ? rawDraft.items : DEFAULT_SERVICES_ITEMS;
+  const blockLabel = label ?? BLOCK_LABELS[blockKey] ?? blockKey;
 
   const setText = (k: keyof SectionConfig["text"], v: string) =>
-    updateSectionDraft(blockKey, { ...cfg, text: { ...cfg.text, [k]: v } });
+    updateSectionDraft(blockKey, { ...cfg, text: { ...cfg.text, [k]: v } }, page);
   const setShow = (k: keyof SectionConfig["show"], v: boolean) =>
-    updateSectionDraft(blockKey, { ...cfg, show: { ...cfg.show, [k]: v } });
+    updateSectionDraft(blockKey, { ...cfg, show: { ...cfg.show, [k]: v } }, page);
   const setStyle = <K extends keyof SectionConfig["style"]>(k: K, v: SectionConfig["style"][K]) =>
-    updateSectionDraft(blockKey, { ...cfg, style: { ...cfg.style, [k]: v } });
+    updateSectionDraft(blockKey, { ...cfg, style: { ...cfg.style, [k]: v } }, page);
   const setAdv = (k: keyof SectionConfig["style"]["advanced"], v: any) =>
-    updateSectionDraft(blockKey, { ...cfg, style: { ...cfg.style, advanced: { ...cfg.style.advanced, [k]: v } } });
+    updateSectionDraft(blockKey, { ...cfg, style: { ...cfg.style, advanced: { ...cfg.style.advanced, [k]: v } } }, page);
 
-  const autoTranslate = async (sourceText: string, targetLang: "bn" | "en", targetField: string) => {
+  // ---- items helpers (services only) ----
+  const setItems = (next: ServicesItem[]) =>
+    updateRawDraft(blockKey, (prev: any) => ({ ...prev, items: next }), page);
+  const addItem = () => setItems([...items, { id: newId("svc"), icon: "BookOpen", title_bn: "নতুন সেবা", title_en: "New Service", desc_bn: "", desc_en: "", visible: true }]);
+  const removeItem = (id: string) => setItems(items.filter((x) => x.id !== id));
+  const moveItem = (id: string, dir: -1 | 1) => {
+    const i = items.findIndex((x) => x.id === id); if (i < 0) return;
+    const j = i + dir; if (j < 0 || j >= items.length) return;
+    const arr = [...items]; [arr[i], arr[j]] = [arr[j], arr[i]];
+    setItems(arr);
+  };
+  const updateItem = (id: string, patch: Partial<ServicesItem>) =>
+    setItems(items.map((x) => (x.id === id ? { ...x, ...patch } : x)));
+
+  const autoTranslate = async (sourceText: string, targetLang: "bn" | "en", targetField: string, applyTo?: (v: string) => void) => {
     if (!sourceText.trim()) { toast({ title: "Source field is empty", variant: "destructive" }); return; }
     setTranslating(targetField);
     try {
@@ -76,27 +97,32 @@ const SectionEditorPanel = ({ blockKey }: Props) => {
       });
       if (error) throw error;
       const translated = data?.translatedText || "";
-      if (translated) setText(targetField as any, translated);
+      if (translated) {
+        if (applyTo) applyTo(translated);
+        else setText(targetField as any, translated);
+      }
     } catch (e: any) {
       toast({ title: "Translation failed", description: e?.message, variant: "destructive" });
     } finally { setTranslating(null); }
   };
 
   const handlePublish = async () => {
-    await publishBlock(blockKey);
-    toast({ title: "Published", description: `${BLOCK_LABELS[blockKey]} is now live.` });
+    await publishBlock(blockKey, page);
+    toast({ title: "Published", description: `${blockLabel} is now live.` });
   };
   const handleRevert = async () => {
-    await revertBlockDraft(blockKey);
+    await revertBlockDraft(blockKey, page);
     toast({ title: "Reverted to published version" });
   };
 
   const tabs: { id: Tab; label: string; icon: any }[] = [
     { id: "text", label: "Text", icon: TypeIcon },
+    ...(isServices ? [{ id: "items" as Tab, label: "Items", icon: Layers }] : []),
     { id: "show", label: "Show/Hide", icon: Eye },
     { id: "style", label: "Style", icon: Wand2 },
     { id: "advanced", label: "Advanced", icon: Settings2 },
   ];
+
 
   return (
     <AnimatePresence>
