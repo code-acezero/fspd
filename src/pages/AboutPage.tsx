@@ -1,11 +1,15 @@
 import { useEffect } from "react";
 import { motion } from "framer-motion";
+import * as LucideIcons from "lucide-react";
 import { BookOpen, Users, Calendar, Award, MapPin, Phone, Mail } from "lucide-react";
 import MainNav from "@/components/MainNav";
 import Footer from "@/components/landing/Footer";
 import PageHeader from "@/components/landing/PageHeader";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useSiteSettings } from "@/contexts/SiteSettingsContext";
+import { usePageBlocks } from "@/contexts/PageBlocksContext";
+import { useVisualEditor } from "@/contexts/VisualEditorContext";
+import { mergeBodyConfig } from "@/lib/pageBlocks";
 
 /**
  * About / History page populated from the printed booklet
