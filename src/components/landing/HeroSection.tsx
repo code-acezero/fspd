@@ -107,11 +107,21 @@ const HeroSection = () => {
           initial={{ opacity: 0, y: 40, rotateX: 20 }}
           animate={{ opacity: 1, y: 0, rotateX: 0 }}
           transition={{ duration: 1, delay: 0.2, ease: "easeOut" }}
-          className="font-bengali text-4xl md:text-6xl lg:text-7xl font-bold text-foreground mb-6 leading-tight"
+          className="font-bengali text-4xl md:text-6xl lg:text-7xl font-bold text-foreground mb-3 leading-tight"
           style={{ textShadow: "0 4px 30px hsl(var(--primary) / 0.15)" }}
         >
           {siteName}
         </motion.h1>
+
+        {/* Founding year — change the year in one place if needed. */}
+        <motion.p
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, delay: 0.3 }}
+          className="text-accent/90 text-xs md:text-sm tracking-[0.25em] uppercase mb-6 font-medium font-bengali"
+        >
+          {lang === "en" ? "Established 1975" : "প্রতিষ্ঠিত ১৯৭৫"}
+        </motion.p>
 
         <motion.p initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.4 }} className="text-muted-foreground text-lg md:text-xl max-w-2xl mx-auto mb-4 font-bengali">
           {t("heroSubtitle")}
