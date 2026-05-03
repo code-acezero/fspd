@@ -36,10 +36,11 @@ type Tab = "text" | "show" | "style" | "advanced";
 
 const HeroEditorPanel = () => {
   const { role } = useAuth();
-  const { editMode, setEditMode } = useVisualEditor();
+  const { editMode } = useVisualEditor();
   const {
     heroDraft, heroRow, heroVisible, setPreviewDraft,
     updateHeroDraft, setHeroVisible, publishHero, revertHeroDraft, saving,
+    activeBlock, setActiveBlock,
   } = usePageBlocks();
   const { toast } = useToast();
 
@@ -47,7 +48,7 @@ const HeroEditorPanel = () => {
   const [translating, setTranslating] = useState<string | null>(null);
 
   const isEditor = role === "admin" || role === "moderator";
-  const shouldShow = isEditor && editMode && !!heroRow;
+  const shouldShow = isEditor && editMode && activeBlock === "hero" && !!heroRow;
 
   // Auto-enable draft preview while panel is open; turn it off when it closes.
   useEffect(() => {
