@@ -133,3 +133,85 @@ export const ALIGN_CLASS: Record<HeroAlign, string> = {
 export const ANIMATION_DURATION: Record<HeroAnimation, number> = {
   none: 0, subtle: 0.4, elegant: 0.8, dramatic: 1.2,
 };
+
+// =============================================================
+// Generic Section block (for About / Services / Events / Members / Footer)
+// =============================================================
+
+export type SectionBlockKey = "about" | "services" | "events_preview" | "members" | "footer";
+export type AnyBlockKey = "hero" | SectionBlockKey;
+
+export interface SectionShow {
+  eyebrow: boolean;
+  title: boolean;
+  subtitle: boolean;
+  divider: boolean;
+  decorations: boolean;
+}
+
+export interface SectionText {
+  eyebrow_bn: string; eyebrow_en: string;
+  title_bn: string;   title_en: string;
+  subtitle_bn: string; subtitle_en: string;
+}
+
+export interface SectionAdvanced {
+  titleFontPx: number | null;
+  paddingTopPx: number | null;
+  paddingBottomPx: number | null;
+  titleColor: string | null;
+  accentColor: string | null;
+  backgroundColor: string | null;
+}
+
+export interface SectionStyle {
+  align: HeroAlign;
+  titleSize: HeroSizeScale;
+  spacing: HeroSpacing;
+  animation: HeroAnimation;
+  advanced: SectionAdvanced;
+}
+
+export interface SectionConfig {
+  show: SectionShow;
+  text: SectionText;
+  style: SectionStyle;
+}
+
+export const DEFAULT_SECTION_CONFIG: SectionConfig = {
+  show: { eyebrow: true, title: true, subtitle: true, divider: true, decorations: true },
+  text: {
+    eyebrow_bn: "", eyebrow_en: "",
+    title_bn: "", title_en: "",
+    subtitle_bn: "", subtitle_en: "",
+  },
+  style: {
+    align: "center", titleSize: "l", spacing: "comfortable", animation: "elegant",
+    advanced: {
+      titleFontPx: null, paddingTopPx: null, paddingBottomPx: null,
+      titleColor: null, accentColor: null, backgroundColor: null,
+    },
+  },
+};
+
+export function mergeSectionConfig(raw: any): SectionConfig {
+  const r = (raw && typeof raw === "object") ? raw : {};
+  return {
+    show: { ...DEFAULT_SECTION_CONFIG.show, ...(r.show ?? {}) },
+    text: { ...DEFAULT_SECTION_CONFIG.text, ...(r.text ?? {}) },
+    style: {
+      ...DEFAULT_SECTION_CONFIG.style,
+      ...(r.style ?? {}),
+      advanced: { ...DEFAULT_SECTION_CONFIG.style.advanced, ...((r.style?.advanced) ?? {}) },
+    },
+  };
+}
+
+export const BLOCK_LABELS: Record<AnyBlockKey, string> = {
+  hero: "Hero",
+  about: "About",
+  services: "Services",
+  events_preview: "Events Preview",
+  members: "Senior Members",
+  footer: "Footer",
+};
