@@ -11,15 +11,14 @@ import { courses as mockCourses } from "@/data/mockData";
 import { createSlug } from "@/lib/slugify";
 import demoLogo from "@/assets/site-logo.webp";
 import LogoTile from "@/components/branding/LogoTile";
+import { usePageBlocks } from "@/contexts/PageBlocksContext";
+import { DEFAULT_NAV_ITEMS } from "@/lib/pageBlocks";
 
-const navItems = [
-  { key: "home", to: "/home", icon: Home },
-  { key: "blog", to: "/blog", icon: BookOpen },
-  { key: "events", to: "/events", icon: Calendar },
-  { key: "courses", to: "/courses", icon: GraduationCap },
-  { key: "members", to: "/members", icon: Users },
-  { key: "about", to: "/about", icon: Info },
-];
+// Map nav item id → icon (lucide). Custom items fall back to a generic icon.
+const NAV_ICONS: Record<string, any> = {
+  home: Home, blog: BookOpen, events: Calendar,
+  courses: GraduationCap, members: Users, about: Info,
+};
 
 interface Suggestion {
   title: string;
