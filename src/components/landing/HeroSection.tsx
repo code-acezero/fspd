@@ -50,10 +50,10 @@ const HeroSection = () => {
       {/* Floating cultural motifs with depth layers */}
       <motion.img src={alponaMotif} alt="" className="absolute top-16 right-8 w-40 h-40 opacity-[0.03] pointer-events-none"
         style={{ y: useTransform(scrollYProgress, [0, 1], [0, -80]) }}
-        animate={{ rotate: 360 }} transition={{ duration: 60, repeat: Infinity, ease: "linear" }} loading="lazy" width={512} height={512} />
+        animate={{ rotate: 360 }} transition={{ duration: 60, repeat: Infinity, ease: "linear" }} loading="lazy" decoding="async" width={160} height={160} />
       <motion.img src={alponaMotif} alt="" className="absolute bottom-24 left-8 w-32 h-32 opacity-[0.03] pointer-events-none"
         style={{ y: useTransform(scrollYProgress, [0, 1], [0, 60]) }}
-        animate={{ rotate: -360 }} transition={{ duration: 50, repeat: Infinity, ease: "linear" }} loading="lazy" width={512} height={512} />
+        animate={{ rotate: -360 }} transition={{ duration: 50, repeat: Infinity, ease: "linear" }} loading="lazy" decoding="async" width={128} height={128} />
 
       {/* Floating light orbs */}
       {[...Array(8)].map((_, i) => (
