@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { LayoutDashboard, FileText, Calendar, Settings, Users, Palette, Menu, X, Eye, UserPlus, MessageSquare, Globe, LogOut, Save, Loader2, Trash2, Edit3, Monitor, Smartphone, ShieldCheck, ImagePlus, Crown, Plus, ChevronUp, ChevronDown, Check } from "lucide-react";
+import { LayoutDashboard, FileText, Calendar, Settings, Users, Palette, Menu, X, Eye, UserPlus, MessageSquare, Globe, LogOut, Save, Loader2, Trash2, Edit3, Monitor, Smartphone, ShieldCheck, ImagePlus, Crown, Plus, ChevronUp, ChevronDown, Check, GraduationCap } from "lucide-react";
 import LogoTile from "@/components/branding/LogoTile";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSiteSettings } from "@/contexts/SiteSettingsContext";
