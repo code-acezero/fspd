@@ -38,7 +38,7 @@ const HeroEditorPanel = () => {
   const { role } = useAuth();
   const { editMode, setEditMode } = useVisualEditor();
   const {
-    heroDraft, heroRow, heroVisible, previewDraft, setPreviewDraft,
+    heroDraft, heroRow, heroVisible, setPreviewDraft,
     updateHeroDraft, setHeroVisible, publishHero, revertHeroDraft, saving,
   } = usePageBlocks();
   const { toast } = useToast();
