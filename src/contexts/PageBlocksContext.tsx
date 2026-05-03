@@ -88,7 +88,22 @@ interface PageBlocksContextType {
   reorderBlocks: (page: string, orderedKeys: string[]) => Promise<void>;
   getOrderedKeys: (page: string) => string[];
 
+  // ---- revisions & publish workflow ----
+  fetchHistory: (key: string, page?: string) => Promise<HistoryRow[]>;
+  restoreRevision: (key: string, page: string, config: any) => Promise<void>;
+  publishAll: (page?: string) => Promise<{ ok: number; failed: number }>;
+  dirtyKeys: (page?: string) => Array<{ page: string; key: string }>;
+
   refresh: () => Promise<void>;
+}
+
+interface HistoryRow {
+  id: string;
+  page: string;
+  block_key: string;
+  config: any;
+  published_at: string;
+  published_by: string | null;
 }
 
 const PageBlocksContext = createContext<PageBlocksContextType | null>(null);
