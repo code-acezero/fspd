@@ -13,9 +13,16 @@ import SettingsHistoryPanel from "@/components/admin/SettingsHistoryPanel";
 import HealthCheckBanner from "@/components/admin/HealthCheckBanner";
 import { ShieldAlert } from "lucide-react";
 
-type AdminTab = "dashboard" | "posts" | "events" | "members" | "users" | "assets" | "theme" | "settings" | "moderation";
+type AdminTab = "dashboard" | "posts" | "events" | "courses" | "members" | "users" | "assets" | "theme" | "settings" | "moderation";
 
 const emptyMemberForm = { name: "", name_en: "", title: "", title_en: "", bio: "", bio_en: "", role: "member", avatar_url: "", gradient_class: "from-primary to-crimson", sort_order: 0, is_senior: false, is_active: true, is_approved: true };
+
+const emptyCourseForm = {
+  title: "", title_en: "", instructor: "", instructor_en: "",
+  duration: "", duration_en: "", modules: 0, enrolled: 0,
+  status: "coming_soon", description: "", description_en: "",
+  highlights: "", highlights_en: "", cover_image: "", sort_order: 0, is_active: true,
+};
 
 const ASSET_SLOTS = ["hero", "slider", "course_cover", "blog_cover", "gallery"] as const;
 type AssetSlot = typeof ASSET_SLOTS[number];
