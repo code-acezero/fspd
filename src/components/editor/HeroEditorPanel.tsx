@@ -8,7 +8,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X, Eye, EyeOff, Sparkles, Languages, Save, RotateCcw, Settings2,
-  Type as TypeIcon, Layout, Wand2, ChevronRight, Loader2, Plus, Minus,
+  Type as TypeIcon, Wand2, Loader2,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useVisualEditor } from "@/contexts/VisualEditorContext";
