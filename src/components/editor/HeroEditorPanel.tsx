@@ -46,12 +46,18 @@ const HeroEditorPanel = () => {
   const [tab, setTab] = useState<Tab>("text");
   const [translating, setTranslating] = useState<string | null>(null);
 
-  if (role !== "admin" && role !== "moderator") return null;
-  if (!editMode) return null;
-  if (!heroRow) return null;
+  const isEditor = role === "admin" || role === "moderator";
+  const shouldShow = isEditor && editMode && !!heroRow;
 
-  // Auto-enable preview when panel opens so admins see their draft live.
-  if (!previewDraft) setPreviewDraft(true);
+  // Auto-enable draft preview while panel is open; turn it off when it closes.
+  useEffect(() => {
+    if (shouldShow) setPreviewDraft(true);
+    else setPreviewDraft(false);
+    // setPreviewDraft is stable from context
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shouldShow]);
+
+  if (!shouldShow) return null;
 
   const cfg: HeroConfig = heroDraft;
 
