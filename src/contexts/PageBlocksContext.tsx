@@ -77,6 +77,12 @@ interface PageBlocksContextType {
   getNavDraft: () => NavConfig;
   getFooterLinks: () => FooterLinksConfig;
   getFooterLinksDraft: () => FooterLinksConfig;
+  getAbout: () => AboutSectionConfig;
+  getAboutDraft: () => AboutSectionConfig;
+  getEventsPreview: () => EventsSectionConfig;
+  getEventsPreviewDraft: () => EventsSectionConfig;
+  getMembers: () => MembersSectionConfig;
+  getMembersDraft: () => MembersSectionConfig;
 
   refresh: () => Promise<void>;
 }
