@@ -165,7 +165,7 @@ const SectionEditorPanel = ({ blockKey, page = "landing", label }: Props) => {
 
   const tabs: { id: Tab; label: string; icon: any }[] = [
     { id: "text", label: "Text", icon: TypeIcon },
-    ...(isServices ? [{ id: "items" as Tab, label: "Items", icon: Layers }] : []),
+    ...(hasItems ? [{ id: "items" as Tab, label: itemsLabel, icon: Layers }] : []),
     { id: "show", label: "Show/Hide", icon: Eye },
     { id: "style", label: "Style", icon: Wand2 },
     { id: "advanced", label: "Advanced", icon: Settings2 },
