@@ -11,6 +11,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import ModerationPanel from "@/components/admin/ModerationPanel";
 import SettingsHistoryPanel from "@/components/admin/SettingsHistoryPanel";
 import ThemePanel from "@/components/admin/ThemePanel";
+import HomeBannersPanel from "@/components/admin/HomeBannersPanel";
 import HealthCheckBanner from "@/components/admin/HealthCheckBanner";
 import SpeechesPanel from "@/components/admin/SpeechesPanel";
 import PageBuilderPanel from "@/components/admin/PageBuilderPanel";
@@ -976,6 +977,7 @@ const AdminDashboard = () => {
                 </button>
               </div>
               <ThemePanel />
+              <HomeBannersPanel />
               <SettingsHistoryPanel />
             </div>
           )}
