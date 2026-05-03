@@ -532,4 +532,75 @@ const ColorInput = ({ value, onChange }: { value: string | null; onChange: (v: s
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 const humanize = (s: string) => s.replace(/_/g, " ").replace(/([A-Z])/g, " $1").replace(/^./, (c) => c.toUpperCase());
 
+// --- generic item editor primitives (used by services / stats / events / members) ---
+
+const ItemsList = ({ count, label, onAdd, empty, children }: {
+  count: number; label: string; onAdd: () => void; empty: string; children: React.ReactNode;
+}) => (
+  <div className="space-y-3">
+    <div className="flex items-center justify-between">
+      <p className="text-[11px] text-muted-foreground">{count} {label}{count === 1 ? "" : "s"}</p>
+      <button onClick={onAdd} className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-primary/10 text-primary text-[11px] font-medium hover:bg-primary/20">
+        <Plus className="w-3 h-3" /> Add {label}
+      </button>
+    </div>
+    {count === 0
+      ? <p className="text-xs text-muted-foreground italic text-center py-4">{empty}</p>
+      : children}
+  </div>
+);
+
+const ItemCard = ({
+  leading, leadingControl, visible, onToggleVisible,
+  onUp, upDisabled, onDown, downDisabled, onRemove, children,
+}: {
+  leading?: React.ReactNode;
+  leadingControl?: React.ReactNode;
+  visible: boolean; onToggleVisible: () => void;
+  onUp: () => void; upDisabled: boolean;
+  onDown: () => void; downDisabled: boolean;
+  onRemove: () => void;
+  children: React.ReactNode;
+}) => (
+  <div className="border border-border rounded-xl p-3 space-y-2 bg-background/50">
+    <div className="flex items-center gap-2">
+      {leading}
+      {leadingControl}
+      <button onClick={onToggleVisible} className="p-1.5 rounded-lg hover:bg-foreground/5" title={visible ? "Hide" : "Show"}>
+        {visible ? <Eye className="w-3.5 h-3.5 text-emerald-600" /> : <EyeOff className="w-3.5 h-3.5 text-muted-foreground" />}
+      </button>
+      <button disabled={upDisabled} onClick={onUp} className="p-1 rounded hover:bg-foreground/5 disabled:opacity-30" title="Move up">
+        <ChevronUp className="w-3.5 h-3.5" />
+      </button>
+      <button disabled={downDisabled} onClick={onDown} className="p-1 rounded hover:bg-foreground/5 disabled:opacity-30" title="Move down">
+        <ChevronDown className="w-3.5 h-3.5" />
+      </button>
+      <button onClick={onRemove} className="p-1 rounded hover:bg-destructive/10 text-destructive" title="Remove">
+        <Trash2 className="w-3.5 h-3.5" />
+      </button>
+    </div>
+    <div className="grid grid-cols-1 gap-1.5">{children}</div>
+  </div>
+);
+
+const BilingualRow = ({
+  bn, en, onBn, onEn, placeholderBn, placeholderEn,
+  translateToken, translating, onTranslateBnEn,
+}: {
+  bn: string; en: string; onBn: (v: string) => void; onEn: (v: string) => void;
+  placeholderBn: string; placeholderEn: string;
+  translateToken: string; translating: string | null;
+  onTranslateBnEn: () => void;
+}) => (
+  <>
+    <div className="flex gap-1">
+      <input className={`${inputCls} font-bengali text-xs`} placeholder={placeholderBn} value={bn} onChange={(e) => onBn(e.target.value)} />
+      <button onClick={onTranslateBnEn} disabled={translating === translateToken || !bn.trim()} className="p-1.5 rounded-lg bg-muted hover:bg-foreground/10 disabled:opacity-40 shrink-0" title="BN→EN">
+        {translating === translateToken ? <Loader2 className="w-3 h-3 animate-spin" /> : <Languages className="w-3 h-3" />}
+      </button>
+    </div>
+    <input className={`${inputCls} text-xs`} placeholder={placeholderEn} value={en} onChange={(e) => onEn(e.target.value)} />
+  </>
+);
+
 export default SectionEditorPanel;
