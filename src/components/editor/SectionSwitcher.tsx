@@ -2,23 +2,36 @@
 // Visible only when admin/mod + editMode is on AND no specific block panel is open.
 // Lets the admin pick which section to edit and toggle visibility quickly.
 
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useLocation } from "react-router-dom";
 import { Eye, EyeOff, Pencil, Layers, X } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useVisualEditor } from "@/contexts/VisualEditorContext";
 import { usePageBlocks } from "@/contexts/PageBlocksContext";
 import { BLOCK_LABELS } from "@/lib/pageBlocks";
 
-// Composite [page, block_key] entries. Switcher only shows entries that exist
-// in the loaded rows for the current page context.
-const ORDER: Array<{ page: string; key: string }> = [
+// Group entries by section in the switcher.
+const LANDING_ORDER: Array<{ page: string; key: string }> = [
   { page: "landing", key: "hero" },
   { page: "landing", key: "about" },
   { page: "landing", key: "services" },
   { page: "landing", key: "events_preview" },
   { page: "landing", key: "members" },
   { page: "landing", key: "footer" },
+];
+const GLOBAL_ORDER: Array<{ page: string; key: string }> = [
+  { page: "global", key: "nav" },
+  { page: "global", key: "footer_links" },
+];
+
+const ROUTE_TO_PAGE: Array<{ test: RegExp; page: string }> = [
+  { test: /^\/(home)?$/, page: "landing" },
+  { test: /^\/about/, page: "about" },
+  { test: /^\/members/, page: "members" },
+  { test: /^\/blog/, page: "blog" },
+  { test: /^\/events/, page: "events" },
+  { test: /^\/courses/, page: "courses" },
 ];
 
 const SectionSwitcher = () => {
