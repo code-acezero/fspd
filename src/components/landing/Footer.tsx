@@ -6,6 +6,7 @@ import { Link } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useSiteSettings } from "@/contexts/SiteSettingsContext";
 import LogoTile from "@/components/branding/LogoTile";
+import { useSectionBlock } from "@/hooks/useSectionBlock";
 
 const Footer = () => {
   const { lang, setLang, t } = useLanguage();
@@ -14,6 +15,10 @@ const Footer = () => {
   const footerRef = useRef<HTMLElement>(null);
   const { scrollYProgress } = useScroll({ target: footerRef, offset: ["start end", "end start"] });
   const lensX = useTransform(scrollYProgress, [0, 1], ["-10%", "110%"]);
+
+  const block = useSectionBlock("footer", {
+    subtitle: t("orgDesc"),
+  });
 
   const quickLinks = [
     { label: t("footerHomePage"), to: "/home" },
@@ -31,8 +36,11 @@ const Footer = () => {
 
   const toggleLang = () => setLang(lang === "bn" ? "en" : "bn");
 
+  if (block.hideForVisitors) return null;
+  const aboutText = block.texts.subtitle || t("orgDesc");
+
   return (
-    <footer id="contact" className="bg-card border-t border-border relative overflow-hidden" ref={footerRef}>
+    <footer id="contact" style={block.styles.section} className="bg-card border-t border-border relative overflow-hidden" ref={footerRef}>
       <div className="h-px w-full bg-gradient-to-r from-transparent via-accent/40 to-transparent relative overflow-visible">
         <motion.div
           className="absolute top-1/2 -translate-y-1/2 w-16 h-8 pointer-events-none"
