@@ -23,11 +23,18 @@ const ParticleField = () => {
     if (!ctx) return;
 
     const resize = () => {
+      // Use viewport size instead of scrollHeight to avoid forced reflow
+      // (canvas is position: fixed, so viewport coverage is sufficient)
       canvas.width = window.innerWidth;
-      canvas.height = document.documentElement.scrollHeight;
+      canvas.height = window.innerHeight;
     };
     resize();
-    window.addEventListener("resize", resize);
+    let resizeTimer: number | undefined;
+    const onResize = () => {
+      if (resizeTimer) window.clearTimeout(resizeTimer);
+      resizeTimer = window.setTimeout(resize, 150);
+    };
+    window.addEventListener("resize", onResize);
 
     // Create firefly particles
     const count = Math.min(60, Math.floor(window.innerWidth / 25));
