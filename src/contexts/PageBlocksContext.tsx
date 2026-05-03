@@ -1,14 +1,16 @@
-// PageBlocksContext — generic loader for ALL page blocks on a given page.
-// Phase 2: supports hero + about/services/events_preview/members/footer.
-// Editors read draft (preview), publish (push draft → published_config),
-// or revert (copy published → draft). Each row keyed by (page, block_key).
+// PageBlocksContext — generic loader for ALL page blocks across ALL pages.
+// Phase 3: loads landing + global + secondary-page blocks in one shot.
+// Editors keyed by `${page}:${block_key}` internally; convenience helpers
+// keep landing-page back-compat (single block_key string).
 
 import { createContext, useContext, useEffect, useState, ReactNode, useCallback, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   mergeHeroConfig, mergeSectionConfig,
+  mergeServicesConfig, mergeNavConfig, mergeFooterLinksConfig,
   type HeroConfig, type SectionConfig, type AnyBlockKey,
+  type ServicesSectionConfig, type NavConfig, type FooterLinksConfig,
 } from "@/lib/pageBlocks";
 
 interface BlockRow {
