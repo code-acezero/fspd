@@ -325,6 +325,19 @@ const AdminDashboard = () => {
                   </motion.div>
                 ))}
               </div>
+              {/* CMS Builder hint card (Phase 1: Hero only) */}
+              <Link to="/" className="block bg-gradient-to-r from-primary/10 via-accent/10 to-primary/5 border border-primary/30 rounded-3xl p-5 hover:from-primary/15 hover:to-accent/15 transition-all group">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-2xl bg-primary text-primary-foreground flex items-center justify-center shadow-lg shadow-primary/30 group-hover:scale-110 transition-transform">
+                    <Edit3 className="w-5 h-5" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-bengali font-bold text-foreground">Visual CMS Builder · Phase 1</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">Open the landing page → click the floating pencil button → edit Hero text, visibility, presets, animations, and advanced styles inline. Draft autosaves; click Publish to go live.</p>
+                  </div>
+                  <ChevronUp className="w-4 h-4 text-muted-foreground rotate-90 shrink-0" />
+                </div>
+              </Link>
               <div className="bg-background rounded-3xl border border-border p-6 depth-card">
                 <h3 className="font-bengali font-bold text-foreground mb-4">{t("recentPosts")}</h3>
                 <div className="space-y-3">
