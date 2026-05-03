@@ -48,7 +48,7 @@ const HeroEditorPanel = () => {
   const [translating, setTranslating] = useState<string | null>(null);
 
   const isEditor = role === "admin" || role === "moderator";
-  const shouldShow = isEditor && editMode && activeBlock === "hero" && !!heroRow;
+  const shouldShow = isEditor && editMode && activeBlock === "landing:hero" && !!heroRow;
 
   // Auto-enable draft preview while panel is open; turn it off when it closes.
   useEffect(() => {

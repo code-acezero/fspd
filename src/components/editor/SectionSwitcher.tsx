@@ -8,16 +8,24 @@ import { Eye, EyeOff, Pencil, Layers, X } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useVisualEditor } from "@/contexts/VisualEditorContext";
 import { usePageBlocks } from "@/contexts/PageBlocksContext";
-import { BLOCK_LABELS, type AnyBlockKey } from "@/lib/pageBlocks";
+import { BLOCK_LABELS } from "@/lib/pageBlocks";
 
-const ORDER: AnyBlockKey[] = ["hero", "about", "services", "events_preview", "members", "footer"];
+// Composite [page, block_key] entries. Switcher only shows entries that exist
+// in the loaded rows for the current page context.
+const ORDER: Array<{ page: string; key: string }> = [
+  { page: "landing", key: "hero" },
+  { page: "landing", key: "about" },
+  { page: "landing", key: "services" },
+  { page: "landing", key: "events_preview" },
+  { page: "landing", key: "members" },
+  { page: "landing", key: "footer" },
+];
 
 const SectionSwitcher = () => {
   const { role } = useAuth();
   const { editMode, setEditMode } = useVisualEditor();
   const { rows, activeBlock, setActiveBlock, setBlockVisible, setPreviewDraft } = usePageBlocks();
 
-  // Drive draft preview based on edit mode (so switcher view also previews drafts).
   useEffect(() => { setPreviewDraft(editMode); }, [editMode, setPreviewDraft]);
 
   const isEditor = role === "admin" || role === "moderator";
@@ -44,29 +52,30 @@ const SectionSwitcher = () => {
           </div>
 
           <div className="p-2 max-h-[70vh] overflow-y-auto">
-            {ORDER.map((key) => {
-              const row = rows[key];
+            {ORDER.map(({ page, key }) => {
+              const ck = `${page}:${key}`;
+              const row = rows[ck];
               if (!row) return null;
               const visible = row.visible;
               const dirty = row.has_unpublished_changes;
               return (
-                <div key={key} className="flex items-center gap-2 p-2 rounded-lg hover:bg-muted/40 group">
+                <div key={ck} className="flex items-center gap-2 p-2 rounded-lg hover:bg-muted/40 group">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <span className="text-sm font-medium truncate">{BLOCK_LABELS[key]}</span>
+                      <span className="text-sm font-medium truncate">{BLOCK_LABELS[key] ?? key}</span>
                       {dirty && <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-amber-500/15 text-amber-600 font-semibold uppercase tracking-wide">Draft</span>}
                     </div>
                     <p className="text-[10px] text-muted-foreground">{visible ? "Visible to visitors" : "Hidden"}</p>
                   </div>
                   <button
-                    onClick={() => setBlockVisible(key, !visible)}
+                    onClick={() => setBlockVisible(key, !visible, page)}
                     className={`p-1.5 rounded-full ${visible ? "hover:bg-destructive/15 text-muted-foreground hover:text-destructive" : "hover:bg-emerald-500/15 text-emerald-600"}`}
                     title={visible ? "Hide" : "Show"}
                   >
                     {visible ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
                   </button>
                   <button
-                    onClick={() => setActiveBlock(key)}
+                    onClick={() => setActiveBlock(ck)}
                     className="p-1.5 rounded-full bg-primary/10 text-primary hover:bg-primary/20"
                     title="Edit"
                   >
