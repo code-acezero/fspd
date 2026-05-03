@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 import ModerationPanel from "@/components/admin/ModerationPanel";
 import SettingsHistoryPanel from "@/components/admin/SettingsHistoryPanel";
+import ThemePanel from "@/components/admin/ThemePanel";
 import HealthCheckBanner from "@/components/admin/HealthCheckBanner";
 import SpeechesPanel from "@/components/admin/SpeechesPanel";
 import PageBuilderPanel from "@/components/admin/PageBuilderPanel";
@@ -974,6 +975,7 @@ const AdminDashboard = () => {
                   {savingSettings ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} {t("save")}
                 </button>
               </div>
+              <ThemePanel />
               <SettingsHistoryPanel />
             </div>
           )}

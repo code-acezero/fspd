@@ -1,6 +1,8 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { applyPalette, DEFAULT_PALETTE, PALETTES, type PaletteId } from "@/lib/palettes";
+import { applyThemeTokens, DEFAULT_THEME, type ThemeSetting } from "@/lib/themeTokens";
+import { useTheme } from "@/contexts/ThemeContext";
 
 interface SiteSettings {
   general: {
@@ -37,6 +39,7 @@ interface SiteSettings {
     enabled: boolean;
     cooldown_minutes: number;
   };
+  theme: ThemeSetting;
 }
 
 // --- Validation / clamping for appearance values ---
@@ -75,6 +78,7 @@ const defaultSettings: SiteSettings = {
   appearance: { primary_color: "0 78% 45%", accent_color: "45 90% 52%", hero_style: "default", show_particles: true, palette: DEFAULT_PALETTE, logo_glow: "normal", logo_dilate: LOGO_DILATE_DEFAULT },
   features: { enable_blog: true, enable_events: true, enable_courses: true, enable_members: true, maintenance_mode: false },
   welcome_popup: { enabled: true, cooldown_minutes: 15 },
+  theme: DEFAULT_THEME,
 };
 
 interface SiteSettingsContextType {
@@ -92,6 +96,7 @@ const SiteSettingsContext = createContext<SiteSettingsContextType>({
 export const SiteSettingsProvider = ({ children }: { children: ReactNode }) => {
   const [settings, setSettings] = useState<SiteSettings>(defaultSettings);
   const [loading, setLoading] = useState(true);
+  const { theme: mode } = useTheme();
 
   useEffect(() => {
     const fetchSettings = async () => {
@@ -121,6 +126,13 @@ export const SiteSettingsProvider = ({ children }: { children: ReactNode }) => {
     const palette = (settings.appearance.palette as PaletteId) || DEFAULT_PALETTE;
     applyPalette(PALETTES[palette] ? palette : DEFAULT_PALETTE);
   }, [settings.appearance.palette]);
+
+  // Apply DB-driven theme tokens (overrides monochrome defaults in index.css).
+  // Re-runs when theme settings change OR when user toggles dark/light mode.
+  useEffect(() => {
+    const tokens = mode === "dark" ? settings.theme.dark : settings.theme.light;
+    applyThemeTokens(tokens, mode);
+  }, [settings.theme, mode]);
 
   const updateSettings = async (key: keyof SiteSettings, value: any) => {
     // Sanitize appearance on the way out so invalid admin input never reaches
