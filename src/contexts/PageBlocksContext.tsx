@@ -86,6 +86,16 @@ interface PageBlocksContextType {
   getMembers: () => MembersSectionConfig;
   getMembersDraft: () => MembersSectionConfig;
 
+  // ---- typed helpers for secondary-page blocks ----
+  getBody: (key: string, page: string) => BodyConfig;
+  getBodyDraft: (key: string, page: string) => BodyConfig;
+  getListing: (page: string) => ListingConfig;
+  getListingDraft: (page: string) => ListingConfig;
+  getAnniversaries: (page?: string) => AnniversariesConfig;
+  getAnniversariesDraft: (page?: string) => AnniversariesConfig;
+  getHonoured: (page?: string) => HonouredConfig;
+  getHonouredDraft: (page?: string) => HonouredConfig;
+
   // ---- ordering ----
   reorderBlocks: (page: string, orderedKeys: string[]) => Promise<void>;
   getOrderedKeys: (page: string) => string[];
