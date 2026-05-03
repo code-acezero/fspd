@@ -68,27 +68,34 @@ const Footer = () => {
             </div>
             <p className="font-bengali text-[11px] text-muted-foreground leading-relaxed mb-2">{aboutText}</p>
             <div className="flex gap-1.5">
-              {[Facebook, Youtube, Mail].map((Icon, i) => (
-                <a key={i} href="#" className="w-6 h-6 rounded-full bg-secondary flex items-center justify-center hover:bg-primary hover:text-primary-foreground text-muted-foreground hover:scale-110 transition-all">
-                  <Icon className="w-3 h-3" />
-                </a>
-              ))}
+              {socials.map((s) => {
+                const Icon = SOCIAL_ICONS[s.platform] || Mail;
+                return (
+                  <a key={s.id} href={s.href} target="_blank" rel="noreferrer" className="w-6 h-6 rounded-full bg-secondary flex items-center justify-center hover:bg-primary hover:text-primary-foreground text-muted-foreground hover:scale-110 transition-all">
+                    <Icon className="w-3 h-3" />
+                  </a>
+                );
+              })}
             </div>
           </motion.div>
 
-          {/* Quick Links */}
-          <motion.div initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.05 }}>
-            <h4 className="font-bengali text-[10px] font-bold mb-2 text-accent uppercase tracking-wider">{t("quickLinks")}</h4>
-            <ul className="space-y-1">
-              {quickLinks.map((item) => (
-                <li key={item.to}>
-                  <Link to={item.to} className="text-[11px] text-muted-foreground hover:text-primary transition-colors font-bengali hover:translate-x-1 inline-block">
-                    {item.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </motion.div>
+          {/* Link columns (CMS-driven) */}
+          {columns.map((col, ci) => (
+            <motion.div key={col.id} initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.05 + ci * 0.05 }}>
+              <h4 className="font-bengali text-[10px] font-bold mb-2 text-accent uppercase tracking-wider">
+                {lang === "en" ? (col.title_en || col.title_bn) : (col.title_bn || col.title_en)}
+              </h4>
+              <ul className="space-y-1">
+                {col.links.filter((l) => l.visible !== false).map((l) => (
+                  <li key={l.id}>
+                    <Link to={l.to} className="text-[11px] text-muted-foreground hover:text-primary transition-colors font-bengali hover:translate-x-1 inline-block">
+                      {lang === "en" ? (l.label_en || l.label_bn) : (l.label_bn || l.label_en)}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </motion.div>
+          ))}
 
           {/* Contact */}
           <motion.div initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.1 }}>
