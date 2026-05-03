@@ -245,55 +245,150 @@ const SectionEditorPanel = ({ blockKey, page = "landing", label }: Props) => {
           )}
 
           {tab === "items" && isServices && (
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <p className="text-[11px] text-muted-foreground">{items.length} item{items.length === 1 ? "" : "s"}</p>
-                <button onClick={addItem} className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-primary/10 text-primary text-[11px] font-medium hover:bg-primary/20">
-                  <Plus className="w-3 h-3" /> Add card
-                </button>
-              </div>
-              {items.map((it, idx) => {
+            <ItemsList
+              count={svcItems.length} label="card"
+              onAdd={addSvc}
+              empty="No items. Add a card to get started."
+            >
+              {svcItems.map((it, idx) => {
                 const Icon = (LucideIcons as any)[it.icon] || LucideIcons.BookOpen;
                 return (
-                  <div key={it.id} className="border border-border rounded-xl p-3 space-y-2 bg-background/50">
-                    <div className="flex items-center gap-2">
-                      <Icon className="w-4 h-4 text-primary shrink-0" />
-                      <select value={it.icon} onChange={(e) => updateItem(it.id, { icon: e.target.value as ServiceIcon })}
-                        className={`${inputCls} text-xs flex-1`}>
+                  <ItemCard key={it.id}
+                    onUp={() => moveSvc(it.id, -1)} upDisabled={idx === 0}
+                    onDown={() => moveSvc(it.id, 1)} downDisabled={idx === svcItems.length - 1}
+                    onRemove={() => removeSvc(it.id)}
+                    onToggleVisible={() => updateSvc(it.id, { visible: !it.visible })}
+                    visible={it.visible}
+                    leading={<Icon className="w-4 h-4 text-primary shrink-0" />}
+                    leadingControl={
+                      <select value={it.icon} onChange={(e) => updateSvc(it.id, { icon: e.target.value as ServiceIcon })} className={`${inputCls} text-xs flex-1`}>
                         {SERVICE_ICONS.map((ic) => <option key={ic} value={ic}>{ic}</option>)}
                       </select>
-                      <button onClick={() => updateItem(it.id, { visible: !it.visible })}
-                        className="p-1.5 rounded-lg hover:bg-foreground/5" title={it.visible ? "Hide" : "Show"}>
-                        {it.visible ? <Eye className="w-3.5 h-3.5 text-emerald-600" /> : <EyeOff className="w-3.5 h-3.5 text-muted-foreground" />}
-                      </button>
-                      <button disabled={idx === 0} onClick={() => moveItem(it.id, -1)} className="p-1 rounded hover:bg-foreground/5 disabled:opacity-30" title="Move up">
-                        <ChevronUp className="w-3.5 h-3.5" />
-                      </button>
-                      <button disabled={idx === items.length - 1} onClick={() => moveItem(it.id, 1)} className="p-1 rounded hover:bg-foreground/5 disabled:opacity-30" title="Move down">
-                        <ChevronDown className="w-3.5 h-3.5" />
-                      </button>
-                      <button onClick={() => removeItem(it.id)} className="p-1 rounded hover:bg-destructive/10 text-destructive" title="Remove">
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                    <div className="grid grid-cols-1 gap-1.5">
-                      <div className="flex gap-1">
-                        <input className={`${inputCls} font-bengali text-xs`} placeholder="বাংলা শিরোনাম" value={it.title_bn} onChange={(e) => updateItem(it.id, { title_bn: e.target.value })} />
-                        <button onClick={() => autoTranslate(it.title_bn, "en", `it_${it.id}_t_en`, (v) => updateItem(it.id, { title_en: v }))} disabled={translating === `it_${it.id}_t_en` || !it.title_bn.trim()} className="p-1.5 rounded-lg bg-muted hover:bg-foreground/10 disabled:opacity-40 shrink-0" title="BN→EN">
-                          {translating === `it_${it.id}_t_en` ? <Loader2 className="w-3 h-3 animate-spin" /> : <Languages className="w-3 h-3" />}
-                        </button>
-                      </div>
-                      <input className={`${inputCls} text-xs`} placeholder="English title" value={it.title_en} onChange={(e) => updateItem(it.id, { title_en: e.target.value })} />
-                      <textarea className={`${inputCls} font-bengali text-xs min-h-[44px]`} placeholder="বাংলা বিবরণ" value={it.desc_bn} onChange={(e) => updateItem(it.id, { desc_bn: e.target.value })} />
-                      <textarea className={`${inputCls} text-xs min-h-[44px]`} placeholder="English description" value={it.desc_en} onChange={(e) => updateItem(it.id, { desc_en: e.target.value })} />
-                    </div>
-                  </div>
+                    }
+                  >
+                    <BilingualRow bn={it.title_bn} en={it.title_en}
+                      onBn={(v) => updateSvc(it.id, { title_bn: v })} onEn={(v) => updateSvc(it.id, { title_en: v })}
+                      placeholderBn="বাংলা শিরোনাম" placeholderEn="English title"
+                      translateToken={`svc_${it.id}_t_en`} translating={translating}
+                      onTranslateBnEn={() => autoTranslate(it.title_bn, "en", `svc_${it.id}_t_en`, (v) => updateSvc(it.id, { title_en: v }))}
+                    />
+                    <textarea className={`${inputCls} font-bengali text-xs min-h-[44px]`} placeholder="বাংলা বিবরণ" value={it.desc_bn} onChange={(e) => updateSvc(it.id, { desc_bn: e.target.value })} />
+                    <textarea className={`${inputCls} text-xs min-h-[44px]`} placeholder="English description" value={it.desc_en} onChange={(e) => updateSvc(it.id, { desc_en: e.target.value })} />
+                  </ItemCard>
                 );
               })}
-              {items.length === 0 && (
-                <p className="text-xs text-muted-foreground italic text-center py-4">No items. Add a card to get started.</p>
-              )}
-            </div>
+            </ItemsList>
+          )}
+
+          {tab === "items" && isAbout && (
+            <ItemsList
+              count={aboutStats.length} label="stat"
+              onAdd={addStat}
+              empty="No stats. Add a tile to get started."
+            >
+              {aboutStats.map((it, idx) => {
+                const Icon = (LucideIcons as any)[it.icon] || LucideIcons.Star;
+                return (
+                  <ItemCard key={it.id}
+                    onUp={() => moveStat(it.id, -1)} upDisabled={idx === 0}
+                    onDown={() => moveStat(it.id, 1)} downDisabled={idx === aboutStats.length - 1}
+                    onRemove={() => removeStat(it.id)}
+                    onToggleVisible={() => updateStat(it.id, { visible: !it.visible })}
+                    visible={it.visible}
+                    leading={<Icon className="w-4 h-4 text-primary shrink-0" />}
+                    leadingControl={
+                      <select value={it.icon} onChange={(e) => updateStat(it.id, { icon: e.target.value as StatIcon })} className={`${inputCls} text-xs flex-1`}>
+                        {STAT_ICONS.map((ic) => <option key={ic} value={ic}>{ic}</option>)}
+                      </select>
+                    }
+                  >
+                    <input className={`${inputCls} font-bengali text-sm font-bold`} placeholder="৫০০+" value={it.value} onChange={(e) => updateStat(it.id, { value: e.target.value })} />
+                    <BilingualRow bn={it.label_bn} en={it.label_en}
+                      onBn={(v) => updateStat(it.id, { label_bn: v })} onEn={(v) => updateStat(it.id, { label_en: v })}
+                      placeholderBn="বাংলা লেবেল" placeholderEn="English label"
+                      translateToken={`stat_${it.id}_l_en`} translating={translating}
+                      onTranslateBnEn={() => autoTranslate(it.label_bn, "en", `stat_${it.id}_l_en`, (v) => updateStat(it.id, { label_en: v }))}
+                    />
+                  </ItemCard>
+                );
+              })}
+            </ItemsList>
+          )}
+
+          {tab === "items" && isEventsPreview && (
+            <ItemsList
+              count={eventItems.length} label="event"
+              onAdd={addEv}
+              empty="No custom events. Live events from the database will be shown until you add overrides here."
+            >
+              {eventItems.map((it, idx) => (
+                <ItemCard key={it.id}
+                  onUp={() => moveEv(it.id, -1)} upDisabled={idx === 0}
+                  onDown={() => moveEv(it.id, 1)} downDisabled={idx === eventItems.length - 1}
+                  onRemove={() => removeEv(it.id)}
+                  onToggleVisible={() => updateEv(it.id, { visible: !it.visible })}
+                  visible={it.visible}
+                  leadingControl={
+                    <input className={`${inputCls} text-xs flex-1`} placeholder="Tag (e.g. Workshop)" value={it.tag} onChange={(e) => updateEv(it.id, { tag: e.target.value })} />
+                  }
+                >
+                  <BilingualRow bn={it.title_bn} en={it.title_en}
+                    onBn={(v) => updateEv(it.id, { title_bn: v })} onEn={(v) => updateEv(it.id, { title_en: v })}
+                    placeholderBn="বাংলা শিরোনাম" placeholderEn="English title"
+                    translateToken={`ev_${it.id}_t_en`} translating={translating}
+                    onTranslateBnEn={() => autoTranslate(it.title_bn, "en", `ev_${it.id}_t_en`, (v) => updateEv(it.id, { title_en: v }))}
+                  />
+                  <div className="grid grid-cols-2 gap-1">
+                    <input className={`${inputCls} font-bengali text-xs`} placeholder="তারিখ / Date" value={it.date} onChange={(e) => updateEv(it.id, { date: e.target.value })} />
+                    <input className={`${inputCls} font-bengali text-xs`} placeholder="সময় / Time" value={it.time} onChange={(e) => updateEv(it.id, { time: e.target.value })} />
+                  </div>
+                  <input className={`${inputCls} font-bengali text-xs`} placeholder="অবস্থান / Location" value={it.location} onChange={(e) => updateEv(it.id, { location: e.target.value })} />
+                  <input className={`${inputCls} text-xs`} placeholder="/events/slug or https://..." value={it.href} onChange={(e) => updateEv(it.id, { href: e.target.value })} />
+                  <select className={`${inputCls} text-xs`} value={it.tag_color} onChange={(e) => updateEv(it.id, { tag_color: e.target.value })}>
+                    {TAG_COLORS.map((c) => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                </ItemCard>
+              ))}
+            </ItemsList>
+          )}
+
+          {tab === "items" && isMembers && (
+            <ItemsList
+              count={memberItems.length} label="member"
+              onAdd={addMem}
+              empty="No custom members. Senior members from the database will be shown until you add overrides here."
+            >
+              {memberItems.map((it, idx) => (
+                <ItemCard key={it.id}
+                  onUp={() => moveMem(it.id, -1)} upDisabled={idx === 0}
+                  onDown={() => moveMem(it.id, 1)} downDisabled={idx === memberItems.length - 1}
+                  onRemove={() => removeMem(it.id)}
+                  onToggleVisible={() => updateMem(it.id, { visible: !it.visible })}
+                  visible={it.visible}
+                  leadingControl={
+                    <select className={`${inputCls} text-xs flex-1`} value={it.gradient_class} onChange={(e) => updateMem(it.id, { gradient_class: e.target.value })}>
+                      {MEMBER_GRADIENTS.map((g) => <option key={g} value={g}>{g}</option>)}
+                    </select>
+                  }
+                >
+                  <BilingualRow bn={it.name_bn} en={it.name_en}
+                    onBn={(v) => updateMem(it.id, { name_bn: v })} onEn={(v) => updateMem(it.id, { name_en: v })}
+                    placeholderBn="বাংলা নাম" placeholderEn="English name"
+                    translateToken={`mem_${it.id}_n_en`} translating={translating}
+                    onTranslateBnEn={() => autoTranslate(it.name_bn, "en", `mem_${it.id}_n_en`, (v) => updateMem(it.id, { name_en: v }))}
+                  />
+                  <BilingualRow bn={it.title_bn} en={it.title_en}
+                    onBn={(v) => updateMem(it.id, { title_bn: v })} onEn={(v) => updateMem(it.id, { title_en: v })}
+                    placeholderBn="বাংলা পদবি" placeholderEn="English title"
+                    translateToken={`mem_${it.id}_t_en`} translating={translating}
+                    onTranslateBnEn={() => autoTranslate(it.title_bn, "en", `mem_${it.id}_t_en`, (v) => updateMem(it.id, { title_en: v }))}
+                  />
+                  <input className={`${inputCls} text-xs`} placeholder="Avatar URL (https://...)" value={it.avatar_url} onChange={(e) => updateMem(it.id, { avatar_url: e.target.value })} />
+                  <textarea className={`${inputCls} font-bengali text-xs min-h-[40px]`} placeholder="বাংলা পরিচিতি" value={it.bio_bn} onChange={(e) => updateMem(it.id, { bio_bn: e.target.value })} />
+                  <textarea className={`${inputCls} text-xs min-h-[40px]`} placeholder="English bio" value={it.bio_en} onChange={(e) => updateMem(it.id, { bio_en: e.target.value })} />
+                </ItemCard>
+              ))}
+            </ItemsList>
           )}
 
           {tab === "show" && (
