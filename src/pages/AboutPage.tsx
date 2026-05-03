@@ -1,29 +1,31 @@
 import { useEffect } from "react";
 import { motion } from "framer-motion";
+import * as LucideIcons from "lucide-react";
 import { BookOpen, Users, Calendar, Award, MapPin, Phone, Mail } from "lucide-react";
 import MainNav from "@/components/MainNav";
 import Footer from "@/components/landing/Footer";
 import PageHeader from "@/components/landing/PageHeader";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useSiteSettings } from "@/contexts/SiteSettingsContext";
+import { usePageBlocks } from "@/contexts/PageBlocksContext";
 
 /**
  * About / History page populated from the printed booklet
  * "ফরিদপুর সাহিত্য পরিষদ — মহাফেজখানা থেকে" (editor: মফিজ ইমাম মিলন).
  *
- * Content is intentionally hard-coded Bengali prose — it is the canonical
- * record from the booklet and not editable from the admin dashboard. Stats
- * and contact info pull from `site_settings` so admins can still tweak them.
+ * Booklet prose stays hardcoded (memory: backlog). Stats, anniversaries,
+ * honoured personalities, and intro/outro bodies are CMS-managed via
+ * page_blocks rows under page="about".
  */
 
-const stats = [
+const FALLBACK_STATS = [
   { icon: Calendar, value: "১৯৮৩", labelBn: "প্রতিষ্ঠা", labelEn: "Founded" },
   { icon: Users, value: "৪০+", labelBn: "নির্বাহী সদস্য", labelEn: "Executive Members" },
   { icon: Award, value: "৩০+", labelBn: "সংবর্ধিত গুণীজন", labelEn: "Honoured Personalities" },
   { icon: BookOpen, value: "৪০+", labelBn: "বছরের ঐতিহ্য", labelEn: "Years of Legacy" },
 ];
 
-const HONOURED = [
+const FALLBACK_HONOURED = [
   { year: "১৯৮৮", names: ["শিক্ষাবিদ অধ্যক্ষ অপূর্বকৃষ্ণ ঘোষ", "অধ্যাপক আবুল হাশেম", "বাবু শ্রীশচন্দ্র ঘোষ"] },
   { year: "১৯৯০", names: ["শিক্ষাবিদ এস এন কিউ জুলফিকার আলী", "পথিকৃৎ মুসলিম চিত্রশিল্পী কাজী আবুল কাশেম", "ঔপন্যাসিক রাজিয়া মজিদ"] },
   { year: "১৯৯২", names: ["ক্রীড়াবিদ আলাউদ্দিন খান", "শিল্পানুরাগী শ্রী রাধাগোবিন্দ সাহা", "নাট্যশিল্পী মহীউদ্দিন আহমেদ"] },
@@ -35,7 +37,7 @@ const HONOURED = [
   { year: "২০২০", names: ["বিশিষ্ট লেখক ও গবেষক অতিরিক্ত সচিব (অব.) মোহাম্মদ আলী খান"] },
 ];
 
-const ANNIVERSARIES = [
+const FALLBACK_ANNIVERSARIES = [
   { person: "জাতির পিতা বঙ্গবন্ধু শেখ মুজিবুর রহমান", date: "১৭ই মার্চ ২০২০", venue: "জেলা প্রশাসকের কার্যালয় চত্বর — নাসির আলী মামুনের ক্যামেরায় বঙ্গবন্ধু আলোকচিত্র প্রদর্শনী" },
   { person: "ড. কাজী মোতাহার হোসেন", date: "৩০ জুলাই ১৯৯৭", venue: "ফরিদপুর মিউজিয়াম" },
   { person: "বিভূতিভূষণ বন্দ্যোপাধ্যায়", date: "১২ সেপ্টেম্বর ১৯৯৪", venue: "ফরিদপুর মিউজিয়াম" },
@@ -47,15 +49,62 @@ const ANNIVERSARIES = [
   { person: "মৃণাল সেন (জন্মশতবার্ষিকী)", date: "১৪–১৫ মে ২০২৩", venue: "মৃণাল সেনের পৈতৃক ভিটা, নিলটুলি (মেজবান পার্টি সেন্টার)" },
 ];
 
+function getIcon(name: string) {
+  const I = (LucideIcons as any)[name];
+  return I || BookOpen;
+}
+
 const AboutPage = () => {
   const { t, lang } = useLanguage();
   const { settings } = useSiteSettings();
+  const { getRawPublished, getBody, getAnniversaries, getHonoured, isVisible } = usePageBlocks();
 
   useEffect(() => {
     document.title = lang === "bn"
       ? "আমাদের সম্পর্কে — ফরিদপুর সাহিত্য পরিষদ"
       : "About Us — Faridpur Shahitto Parishad";
   }, [lang]);
+
+  // CMS overrides
+  const statsRaw = getRawPublished("stats", "about") as { stats?: Array<{ icon: string; value: string; label_bn: string; label_en: string; visible: boolean }> };
+  const cmsStats = Array.isArray(statsRaw?.stats) ? statsRaw.stats.filter((s) => s.visible !== false) : null;
+  const stats = cmsStats && cmsStats.length > 0
+    ? cmsStats.map((s) => ({ icon: getIcon(s.icon), value: s.value, labelBn: s.label_bn, labelEn: s.label_en }))
+    : FALLBACK_STATS;
+
+  const intro = getBody("body_intro", "about");
+  const outro = getBody("body_outro", "about");
+  const introVisible = isVisible("body_intro", "about");
+  const outroVisible = isVisible("body_outro", "about");
+  const statsVisible = isVisible("stats", "about");
+
+  const anniv = getAnniversaries("about");
+  const annivVisible = isVisible("anniversaries", "about");
+  const annivItems = (anniv.items && anniv.items.length > 0)
+    ? anniv.items.filter((i) => i.visible !== false).map((i) => ({
+        person: lang === "bn" ? i.person_bn : (i.person_en || i.person_bn),
+        date:   lang === "bn" ? i.date_bn   : (i.date_en   || i.date_bn),
+        venue:  lang === "bn" ? i.venue_bn  : (i.venue_en  || i.venue_bn),
+      }))
+    : FALLBACK_ANNIVERSARIES;
+  const annivHeading = (lang === "bn" ? anniv.heading_bn : anniv.heading_en) || (lang === "bn" ? "যাঁদের জন্মশতবার্ষিকী উদযাপন করা হয়েছে" : "Centenary Celebrations Hosted");
+  const annivSubtitle = (lang === "bn" ? anniv.subtitle_bn : anniv.subtitle_en) || (lang === "bn" ? "জাতির মণিষীদের স্মরণে পরিষদের আয়োজিত অনুষ্ঠানগুলি" : "Anniversary observances organised by the Parishad.");
+
+  const hon = getHonoured("about");
+  const honVisible = isVisible("honoured", "about");
+  const honGroups = (hon.groups && hon.groups.length > 0)
+    ? hon.groups.filter((g) => g.visible !== false).map((g) => ({
+        year: lang === "bn" ? g.year_bn : (g.year_en || g.year_bn),
+        names: (lang === "bn" ? g.names_bn : (g.names_en?.length ? g.names_en : g.names_bn)) || [],
+      }))
+    : FALLBACK_HONOURED;
+  const honHeading = (lang === "bn" ? hon.heading_bn : hon.heading_en) || (lang === "bn" ? "যাঁদের সংবর্ধনা জানানো হয়েছে" : "Honoured Personalities");
+  const honSubtitle = (lang === "bn" ? hon.subtitle_bn : hon.subtitle_en) || (lang === "bn" ? "ফরিদপুর সাহিত্য পরিষদ যে সকল গুণীজনকে সংবর্ধনা জানিয়েছে" : "Personalities honoured by Faridpur Shahitto Parishad over the years.");
+
+  const introHeading = lang === "bn" ? intro.heading_bn : intro.heading_en;
+  const introText = lang === "bn" ? intro.text_bn : intro.text_en;
+  const outroHeading = lang === "bn" ? outro.heading_bn : outro.heading_en;
+  const outroText = lang === "bn" ? outro.text_bn : outro.text_en;
 
   return (
     <div className="min-h-screen bg-background">
@@ -71,33 +120,49 @@ const AboutPage = () => {
           : "The history and work of Faridpur's foremost literary society, founded in 1983."}
       />
 
-      {/* Stats */}
-      <section className="py-12">
-        <div className="container mx-auto px-4 lg:px-8">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
-            {stats.map((s, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.08 }}
-                className="bg-card rounded-2xl border border-border p-6 text-center depth-card"
-              >
-                <div className="w-12 h-12 mx-auto mb-3 rounded-2xl bg-gradient-to-br from-primary/15 to-accent/10 flex items-center justify-center">
-                  <s.icon className="w-6 h-6 text-primary" />
-                </div>
-                <p className="font-bengali text-2xl md:text-3xl font-bold text-foreground">{s.value}</p>
-                <p className="font-bengali text-xs text-muted-foreground mt-1">
-                  {lang === "bn" ? s.labelBn : s.labelEn}
-                </p>
-              </motion.div>
-            ))}
+      {/* Body intro (optional CMS prose above stats) */}
+      {introVisible && (introHeading || introText) && (
+        <section className="py-10">
+          <div className="container mx-auto px-4 lg:px-8 max-w-4xl">
+            {introHeading && (
+              <h2 className="font-bengali text-2xl md:text-3xl font-bold text-foreground mb-4">{introHeading}</h2>
+            )}
+            {introText && (
+              <div className="font-bengali text-foreground/90 leading-relaxed whitespace-pre-line">{introText}</div>
+            )}
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
-      {/* History */}
+      {/* Stats */}
+      {statsVisible && (
+        <section className="py-12">
+          <div className="container mx-auto px-4 lg:px-8">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
+              {stats.map((s, i) => (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.08 }}
+                  className="bg-card rounded-2xl border border-border p-6 text-center depth-card"
+                >
+                  <div className="w-12 h-12 mx-auto mb-3 rounded-2xl bg-gradient-to-br from-primary/15 to-accent/10 flex items-center justify-center">
+                    <s.icon className="w-6 h-6 text-primary" />
+                  </div>
+                  <p className="font-bengali text-2xl md:text-3xl font-bold text-foreground">{s.value}</p>
+                  <p className="font-bengali text-xs text-muted-foreground mt-1">
+                    {lang === "bn" ? s.labelBn : s.labelEn}
+                  </p>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* History (booklet prose, hardcoded per memory) */}
       <section className="py-12">
         <div className="container mx-auto px-4 lg:px-8 max-w-4xl">
           <h2 className="font-bengali text-2xl md:text-3xl font-bold text-foreground mb-6">
@@ -153,63 +218,77 @@ const AboutPage = () => {
       </section>
 
       {/* Birth anniversaries */}
-      <section className="py-12 bg-warm-gradient">
-        <div className="container mx-auto px-4 lg:px-8 max-w-4xl">
-          <h2 className="font-bengali text-2xl md:text-3xl font-bold text-foreground mb-2">
-            {lang === "bn" ? "যাঁদের জন্মশতবার্ষিকী উদযাপন করা হয়েছে" : "Centenary Celebrations Hosted"}
-          </h2>
-          <p className="font-bengali text-sm text-muted-foreground mb-8">
-            {lang === "bn"
-              ? "জাতির মণিষীদের স্মরণে পরিষদের আয়োজিত অনুষ্ঠানগুলি"
-              : "Anniversary observances organised by the Parishad."}
-          </p>
-          <div className="grid md:grid-cols-2 gap-4">
-            {ANNIVERSARIES.map((a, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 12 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.05 }}
-                className="bg-card rounded-2xl border border-border p-5 depth-card"
-              >
-                <p className="font-bengali font-semibold text-foreground mb-1">{a.person}</p>
-                <p className="text-xs text-accent font-bengali mb-2">{a.date}</p>
-                <p className="font-bengali text-xs text-muted-foreground">{a.venue}</p>
-              </motion.div>
-            ))}
+      {annivVisible && annivItems.length > 0 && (
+        <section className="py-12 bg-warm-gradient">
+          <div className="container mx-auto px-4 lg:px-8 max-w-4xl">
+            <h2 className="font-bengali text-2xl md:text-3xl font-bold text-foreground mb-2">
+              {annivHeading}
+            </h2>
+            <p className="font-bengali text-sm text-muted-foreground mb-8">
+              {annivSubtitle}
+            </p>
+            <div className="grid md:grid-cols-2 gap-4">
+              {annivItems.map((a, i) => (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, y: 12 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.05 }}
+                  className="bg-card rounded-2xl border border-border p-5 depth-card"
+                >
+                  <p className="font-bengali font-semibold text-foreground mb-1">{a.person}</p>
+                  <p className="text-xs text-accent font-bengali mb-2">{a.date}</p>
+                  <p className="font-bengali text-xs text-muted-foreground">{a.venue}</p>
+                </motion.div>
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* Honoured personalities */}
-      <section className="py-12">
-        <div className="container mx-auto px-4 lg:px-8 max-w-4xl">
-          <h2 className="font-bengali text-2xl md:text-3xl font-bold text-foreground mb-2">
-            {lang === "bn" ? "যাঁদের সংবর্ধনা জানানো হয়েছে" : "Honoured Personalities"}
-          </h2>
-          <p className="font-bengali text-sm text-muted-foreground mb-8">
-            {lang === "bn"
-              ? "ফরিদপুর সাহিত্য পরিষদ যে সকল গুণীজনকে সংবর্ধনা জানিয়েছে"
-              : "Personalities honoured by Faridpur Shahitto Parishad over the years."}
-          </p>
-          <div className="space-y-6">
-            {HONOURED.map((g) => (
-              <div key={g.year} className="grid md:grid-cols-[120px_1fr] gap-4 items-start">
-                <div className="font-bengali text-lg font-bold text-primary">{g.year}</div>
-                <ul className="space-y-1.5">
-                  {g.names.map((n, i) => (
-                    <li key={i} className="font-bengali text-sm text-foreground/90 flex gap-2">
-                      <span className="text-accent">•</span>
-                      <span>{n}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
+      {honVisible && honGroups.length > 0 && (
+        <section className="py-12">
+          <div className="container mx-auto px-4 lg:px-8 max-w-4xl">
+            <h2 className="font-bengali text-2xl md:text-3xl font-bold text-foreground mb-2">
+              {honHeading}
+            </h2>
+            <p className="font-bengali text-sm text-muted-foreground mb-8">
+              {honSubtitle}
+            </p>
+            <div className="space-y-6">
+              {honGroups.map((g, gi) => (
+                <div key={gi} className="grid md:grid-cols-[120px_1fr] gap-4 items-start">
+                  <div className="font-bengali text-lg font-bold text-primary">{g.year}</div>
+                  <ul className="space-y-1.5">
+                    {g.names.map((n, i) => (
+                      <li key={i} className="font-bengali text-sm text-foreground/90 flex gap-2">
+                        <span className="text-accent">•</span>
+                        <span>{n}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
+
+      {/* Body outro (optional CMS prose below honoured) */}
+      {outroVisible && (outroHeading || outroText) && (
+        <section className="py-10">
+          <div className="container mx-auto px-4 lg:px-8 max-w-4xl">
+            {outroHeading && (
+              <h2 className="font-bengali text-2xl md:text-3xl font-bold text-foreground mb-4">{outroHeading}</h2>
+            )}
+            {outroText && (
+              <div className="font-bengali text-foreground/90 leading-relaxed whitespace-pre-line">{outroText}</div>
+            )}
+          </div>
+        </section>
+      )}
 
       {/* Contact */}
       <section className="py-12 bg-muted/30">
