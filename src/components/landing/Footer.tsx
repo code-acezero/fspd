@@ -62,7 +62,7 @@ const Footer = () => {
                 <p className="text-[8px] text-muted-foreground tracking-widest uppercase">{lang === "bn" ? settings.general.site_name_en : settings.general.site_name_bn}</p>
               </div>
             </div>
-            <p className="font-bengali text-[11px] text-muted-foreground leading-relaxed mb-2">{t("orgDesc")}</p>
+            <p className="font-bengali text-[11px] text-muted-foreground leading-relaxed mb-2">{aboutText}</p>
             <div className="flex gap-1.5">
               {[Facebook, Youtube, Mail].map((Icon, i) => (
                 <a key={i} href="#" className="w-6 h-6 rounded-full bg-secondary flex items-center justify-center hover:bg-primary hover:text-primary-foreground text-muted-foreground hover:scale-110 transition-all">
