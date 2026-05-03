@@ -4,7 +4,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLocation } from "react-router-dom";
-import { Eye, EyeOff, Pencil, Layers, X, GripVertical, Plus } from "lucide-react";
+import { Eye, EyeOff, Pencil, Layers, X, GripVertical, Plus, Rocket, Loader2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 import {
   DndContext, closestCenter, PointerSensor, useSensor, useSensors,
   type DragEndEvent,
@@ -95,9 +96,12 @@ const SectionSwitcher = () => {
   const { editMode, setEditMode } = useVisualEditor();
   const {
     rows, activeBlock, setPreviewDraft, getOrderedKeys, reorderBlocks, setBlockVisible,
+    dirtyKeys, publishAll, saving,
   } = usePageBlocks();
   const { pathname } = useLocation();
+  const { toast } = useToast();
   const [showAddMenu, setShowAddMenu] = useState(false);
+  const [publishingAll, setPublishingAll] = useState(false);
 
   useEffect(() => { setPreviewDraft(editMode); }, [editMode, setPreviewDraft]);
 
@@ -218,8 +222,46 @@ const SectionSwitcher = () => {
             </div>
           </div>
 
-          <div className="px-4 py-2 border-t border-border bg-muted/20 text-[10px] text-muted-foreground">
-            Drag <GripVertical className="inline w-3 h-3" /> to reorder. Edits autosave as draft.
+          <div className="border-t border-border bg-muted/20">
+            {(() => {
+              const dirty = dirtyKeys();
+              const dirtyOnPage = currentPage ? dirty.filter((d) => d.page === currentPage).length : 0;
+              const totalDirty = dirty.length;
+              if (totalDirty === 0) {
+                return (
+                  <p className="px-4 py-2 text-[10px] text-muted-foreground">
+                    Drag <GripVertical className="inline w-3 h-3" /> to reorder. All changes published.
+                  </p>
+                );
+              }
+              return (
+                <div className="p-3 flex items-center gap-2">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[11px] font-semibold">{totalDirty} unpublished {totalDirty === 1 ? "draft" : "drafts"}</p>
+                    {dirtyOnPage > 0 && currentPage && (
+                      <p className="text-[10px] text-muted-foreground">{dirtyOnPage} on this page</p>
+                    )}
+                  </div>
+                  <button
+                    disabled={publishingAll || saving}
+                    onClick={async () => {
+                      setPublishingAll(true);
+                      const { ok, failed } = await publishAll();
+                      setPublishingAll(false);
+                      toast({
+                        title: failed === 0 ? "All drafts published" : `Published ${ok}, failed ${failed}`,
+                        description: `${ok} block${ok === 1 ? "" : "s"} are now live for visitors.`,
+                        variant: failed > 0 ? "destructive" : "default",
+                      });
+                    }}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary text-primary-foreground text-[11px] font-semibold hover:bg-primary/90 disabled:opacity-50"
+                  >
+                    {publishingAll ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Rocket className="w-3.5 h-3.5" />}
+                    Publish all
+                  </button>
+                </div>
+              );
+            })()}
           </div>
         </motion.aside>
       )}

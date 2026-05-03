@@ -88,7 +88,22 @@ interface PageBlocksContextType {
   reorderBlocks: (page: string, orderedKeys: string[]) => Promise<void>;
   getOrderedKeys: (page: string) => string[];
 
+  // ---- revisions & publish workflow ----
+  fetchHistory: (key: string, page?: string) => Promise<HistoryRow[]>;
+  restoreRevision: (key: string, page: string, config: any) => Promise<void>;
+  publishAll: (page?: string) => Promise<{ ok: number; failed: number }>;
+  dirtyKeys: (page?: string) => Array<{ page: string; key: string }>;
+
   refresh: () => Promise<void>;
+}
+
+interface HistoryRow {
+  id: string;
+  page: string;
+  block_key: string;
+  config: any;
+  published_at: string;
+  published_by: string | null;
 }
 
 const PageBlocksContext = createContext<PageBlocksContextType | null>(null);
@@ -281,6 +296,70 @@ export const PageBlocksProvider = ({ children }: { children: ReactNode }) => {
     setSaving(false);
   }, [rows]);
 
+  // -------- revisions & publish workflow --------
+  const fetchHistory = useCallback(async (key: string, page = "landing"): Promise<HistoryRow[]> => {
+    const { data, error } = await supabase
+      .from("page_blocks_history")
+      .select("*")
+      .eq("page", page).eq("block_key", key)
+      .order("published_at", { ascending: false })
+      .limit(50);
+    if (error) { console.error(error); return []; }
+    return (data ?? []) as HistoryRow[];
+  }, []);
+
+  const restoreRevision = useCallback(async (key: string, page: string, config: any) => {
+    const row = rows[k(page, key)]; if (!row) return;
+    setSaving(true);
+    const { data } = await supabase
+      .from("page_blocks")
+      .update({
+        draft_config: config,
+        published_config: config,
+        has_unpublished_changes: false,
+        published_at: new Date().toISOString(),
+        published_by: user?.id ?? null,
+      })
+      .eq("id", row.id).select().maybeSingle();
+    if (data) setRows((prev) => ({ ...prev, [k(page, key)]: data as BlockRow }));
+    setSaving(false);
+  }, [rows, user?.id]);
+
+  const dirtyKeys = useCallback((page?: string) => {
+    return Object.values(rows)
+      .filter((r) => r.has_unpublished_changes && (!page || r.page === page))
+      .map((r) => ({ page: r.page, key: r.block_key }));
+  }, [rows]);
+
+  const publishAll = useCallback(async (page?: string) => {
+    const targets = Object.values(rows).filter(
+      (r) => r.has_unpublished_changes && (!page || r.page === page)
+    );
+    let ok = 0, failed = 0;
+    setSaving(true);
+    const updates = await Promise.all(targets.map(async (row) => {
+      const { data, error } = await supabase
+        .from("page_blocks")
+        .update({
+          published_config: row.draft_config,
+          has_unpublished_changes: false,
+          published_at: new Date().toISOString(),
+          published_by: user?.id ?? null,
+        })
+        .eq("id", row.id).select().maybeSingle();
+      if (error || !data) { failed++; return null; }
+      ok++;
+      return data as BlockRow;
+    }));
+    setRows((prev) => {
+      const next = { ...prev };
+      for (const u of updates) if (u) next[k(u.page, u.block_key)] = u;
+      return next;
+    });
+    setSaving(false);
+    return { ok, failed };
+  }, [rows, user?.id]);
+
   const setHeroVisible = useCallback((v: boolean) => setBlockVisible("hero", v), [setBlockVisible]);
   const publishHero = useCallback(() => publishBlock("hero"), [publishBlock]);
   const revertHeroDraft = useCallback(() => revertBlockDraft("hero"), [revertBlockDraft]);
@@ -302,6 +381,7 @@ export const PageBlocksProvider = ({ children }: { children: ReactNode }) => {
       getEventsPreview, getEventsPreviewDraft,
       getMembers, getMembersDraft,
       reorderBlocks, getOrderedKeys,
+      fetchHistory, restoreRevision, publishAll, dirtyKeys,
       refresh: fetchBlocks,
     }}>
       {children}

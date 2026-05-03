@@ -6,8 +6,9 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X, Eye, EyeOff, Sparkles, Languages, Save, RotateCcw, Settings2,
-  Type as TypeIcon, Wand2, Loader2, Plus, Trash2, ChevronUp, ChevronDown, Layers,
+  Type as TypeIcon, Wand2, Loader2, Plus, Trash2, ChevronUp, ChevronDown, Layers, History,
 } from "lucide-react";
+import RevisionsDialog from "@/components/editor/RevisionsDialog";
 import * as LucideIcons from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useVisualEditor } from "@/contexts/VisualEditorContext";
@@ -47,6 +48,7 @@ const SectionEditorPanel = ({ blockKey, page = "landing", label }: Props) => {
   const { toast } = useToast();
   const [tab, setTab] = useState<Tab>("text");
   const [translating, setTranslating] = useState<string | null>(null);
+  const [revisionsOpen, setRevisionsOpen] = useState(false);
 
   const isEditor = role === "admin" || role === "moderator";
   const row = getRow(blockKey, page);
@@ -436,6 +438,11 @@ const SectionEditorPanel = ({ blockKey, page = "landing", label }: Props) => {
         </div>
 
         <div className="border-t border-border p-3 bg-muted/30 flex items-center gap-2">
+          <button onClick={() => setRevisionsOpen(true)}
+            className="inline-flex items-center justify-center gap-1.5 px-2.5 py-2 rounded-full bg-background hover:bg-foreground/5 text-xs font-medium border border-border"
+            title="Revision history">
+            <History className="w-3.5 h-3.5" />
+          </button>
           <button onClick={handleRevert} disabled={saving || !row?.has_unpublished_changes}
             className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-full bg-background hover:bg-foreground/5 text-xs font-medium border border-border disabled:opacity-40">
             <RotateCcw className="w-3.5 h-3.5" /> Revert
@@ -447,6 +454,14 @@ const SectionEditorPanel = ({ blockKey, page = "landing", label }: Props) => {
           </button>
         </div>
       </motion.aside>
+      <RevisionsDialog
+        open={revisionsOpen}
+        onClose={() => setRevisionsOpen(false)}
+        page={page}
+        blockKey={blockKey}
+        blockLabel={blockLabel}
+        currentDraft={rawDraft}
+      />
     </AnimatePresence>
   );
 };

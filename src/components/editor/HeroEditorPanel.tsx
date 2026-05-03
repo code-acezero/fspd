@@ -8,8 +8,9 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X, Eye, EyeOff, Sparkles, Languages, Save, RotateCcw, Settings2,
-  Type as TypeIcon, Wand2, Loader2,
+  Type as TypeIcon, Wand2, Loader2, History,
 } from "lucide-react";
+import RevisionsDialog from "@/components/editor/RevisionsDialog";
 import { useAuth } from "@/contexts/AuthContext";
 import { useVisualEditor } from "@/contexts/VisualEditorContext";
 import { usePageBlocks } from "@/contexts/PageBlocksContext";
@@ -46,6 +47,7 @@ const HeroEditorPanel = () => {
 
   const [tab, setTab] = useState<Tab>("text");
   const [translating, setTranslating] = useState<string | null>(null);
+  const [revisionsOpen, setRevisionsOpen] = useState(false);
 
   const isEditor = role === "admin" || role === "moderator";
   const shouldShow = isEditor && editMode && activeBlock === "landing:hero" && !!heroRow;
@@ -281,6 +283,13 @@ const HeroEditorPanel = () => {
         {/* Footer actions */}
         <div className="border-t border-border p-3 bg-muted/30 flex items-center gap-2">
           <button
+            onClick={() => setRevisionsOpen(true)}
+            className="inline-flex items-center justify-center gap-1.5 px-2.5 py-2 rounded-full bg-background hover:bg-foreground/5 text-xs font-medium border border-border"
+            title="Revision history"
+          >
+            <History className="w-3.5 h-3.5" />
+          </button>
+          <button
             onClick={handleRevert}
             disabled={saving || !heroRow?.has_unpublished_changes}
             className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-full bg-background hover:bg-foreground/5 text-xs font-medium border border-border disabled:opacity-40"
@@ -298,6 +307,14 @@ const HeroEditorPanel = () => {
           </button>
         </div>
       </motion.aside>
+      <RevisionsDialog
+        open={revisionsOpen}
+        onClose={() => setRevisionsOpen(false)}
+        page="landing"
+        blockKey="hero"
+        blockLabel="Hero Section"
+        currentDraft={heroDraft}
+      />
     </AnimatePresence>
   );
 };
