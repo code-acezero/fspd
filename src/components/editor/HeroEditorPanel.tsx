@@ -4,7 +4,7 @@
 // - Live preview is on by default while panel is open.
 // - Publish promotes draft → published_config; Revert resets draft.
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X, Eye, EyeOff, Sparkles, Languages, Save, RotateCcw, Settings2,
