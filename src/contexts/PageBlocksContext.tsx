@@ -39,9 +39,9 @@ interface PageBlocksContextType {
   previewDraft: boolean;
   setPreviewDraft: (v: boolean) => void;
 
-  // currently-selected block in the editor (null = nothing open)
-  activeBlock: AnyBlockKey | null;
-  setActiveBlock: (k: AnyBlockKey | null) => void;
+  // currently-selected block in the editor (composite key `${page}:${block_key}`, or null)
+  activeBlock: string | null;
+  setActiveBlock: (k: string | null) => void;
 
   // ---- hero (back-compat for HeroEditorPanel + HeroSection) ----
   hero: HeroConfig;
