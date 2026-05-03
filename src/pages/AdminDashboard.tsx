@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { LayoutDashboard, FileText, Calendar, Settings, Users, Palette, Menu, X, Eye, UserPlus, MessageSquare, Globe, LogOut, Save, Loader2, Trash2, Edit3, Monitor, Smartphone, ShieldCheck, ImagePlus, Crown, Plus, ChevronUp, ChevronDown, Check } from "lucide-react";
+import { LayoutDashboard, FileText, Calendar, Settings, Users, Palette, Menu, X, Eye, UserPlus, MessageSquare, Globe, LogOut, Save, Loader2, Trash2, Edit3, Monitor, Smartphone, ShieldCheck, ImagePlus, Crown, Plus, ChevronUp, ChevronDown, Check, GraduationCap } from "lucide-react";
 import LogoTile from "@/components/branding/LogoTile";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSiteSettings } from "@/contexts/SiteSettingsContext";
@@ -13,9 +13,16 @@ import SettingsHistoryPanel from "@/components/admin/SettingsHistoryPanel";
 import HealthCheckBanner from "@/components/admin/HealthCheckBanner";
 import { ShieldAlert } from "lucide-react";
 
-type AdminTab = "dashboard" | "posts" | "events" | "members" | "users" | "assets" | "theme" | "settings" | "moderation";
+type AdminTab = "dashboard" | "posts" | "events" | "courses" | "members" | "users" | "assets" | "theme" | "settings" | "moderation";
 
 const emptyMemberForm = { name: "", name_en: "", title: "", title_en: "", bio: "", bio_en: "", role: "member", avatar_url: "", gradient_class: "from-primary to-crimson", sort_order: 0, is_senior: false, is_active: true, is_approved: true };
+
+const emptyCourseForm = {
+  title: "", title_en: "", instructor: "", instructor_en: "",
+  duration: "", duration_en: "", modules: 0, enrolled: 0,
+  status: "coming_soon", description: "", description_en: "",
+  highlights: "", highlights_en: "", cover_image: "", sort_order: 0, is_active: true,
+};
 
 const ASSET_SLOTS = ["hero", "slider", "course_cover", "blog_cover", "gallery"] as const;
 type AssetSlot = typeof ASSET_SLOTS[number];
@@ -58,6 +65,12 @@ const AdminDashboard = () => {
   const [featuresForm, setFeaturesForm] = useState(settings.features);
   const [savingSettings, setSavingSettings] = useState(false);
   const [previewDevice, setPreviewDevice] = useState<"desktop" | "mobile">("desktop");
+  const [courses, setCourses] = useState<any[]>([]);
+  const [editingCourse, setEditingCourse] = useState<any>(null);
+  const [courseForm, setCourseForm] = useState({ ...emptyCourseForm });
+  const [savingCourse, setSavingCourse] = useState(false);
+  const [uploadingCourseImage, setUploadingCourseImage] = useState(false);
+  const courseImageRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!user) { navigate("/login"); return; }
@@ -88,6 +101,10 @@ const AdminDashboard = () => {
     if (activeTab === "members" || activeTab === "dashboard") {
       const { data } = await supabase.from("members").select("*").order("sort_order", { ascending: true });
       if (data) setMembers(data);
+    }
+    if (activeTab === "courses" || activeTab === "dashboard") {
+      const { data } = await supabase.from("courses").select("*").order("sort_order", { ascending: true });
+      if (data) setCourses(data);
     }
     if (activeTab === "assets") {
       const { data } = await supabase.from("site_assets").select("*").order("slot", { ascending: true }).order("sort_order", { ascending: true });
@@ -224,6 +241,62 @@ const AdminDashboard = () => {
 
   const deletePost = async (id: string) => { await supabase.from("posts").delete().eq("id", id); toast({ title: t("deleted") }); fetchData(); };
 
+  const handleCourseImageUpload = async (file: File) => {
+    if (file.size > 5 * 1024 * 1024) { toast({ title: t("error"), description: "Max 5MB", variant: "destructive" }); return; }
+    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) { toast({ title: t("error"), description: t("invalidImageType"), variant: "destructive" }); return; }
+    setUploadingCourseImage(true);
+    const filePath = `courses/${Date.now()}-${file.name}`;
+    const { error: uploadError } = await supabase.storage.from("content-images").upload(filePath, file, { upsert: true });
+    if (uploadError) toast({ title: t("uploadFailed"), description: uploadError.message, variant: "destructive" });
+    else {
+      const { data: urlData } = supabase.storage.from("content-images").getPublicUrl(filePath);
+      setCourseForm((p) => ({ ...p, cover_image: urlData.publicUrl }));
+      toast({ title: t("success"), description: t("imageUploaded") });
+    }
+    setUploadingCourseImage(false);
+  };
+
+  const splitCsv = (s: string) => s.split(",").map((x) => x.trim()).filter(Boolean);
+
+  const saveCourse = async () => {
+    setSavingCourse(true);
+    let form = { ...courseForm };
+    if (form.title && !form.title_en) form.title_en = await autoTranslate(form.title, "en");
+    else if (form.title_en && !form.title) form.title = await autoTranslate(form.title_en, "bn");
+    if (form.description && !form.description_en) form.description_en = await autoTranslate(form.description, "en");
+    else if (form.description_en && !form.description) form.description = await autoTranslate(form.description_en, "bn");
+    if (form.instructor && !form.instructor_en) form.instructor_en = await autoTranslate(form.instructor, "en");
+    if (form.duration && !form.duration_en) form.duration_en = await autoTranslate(form.duration, "en");
+    const payload: any = {
+      title: form.title, title_en: form.title_en,
+      instructor: form.instructor, instructor_en: form.instructor_en,
+      duration: form.duration, duration_en: form.duration_en,
+      modules: Number(form.modules) || 0, enrolled: Number(form.enrolled) || 0,
+      status: form.status, description: form.description, description_en: form.description_en,
+      highlights: splitCsv(form.highlights), highlights_en: splitCsv(form.highlights_en),
+      cover_image: form.cover_image, sort_order: Number(form.sort_order) || 0,
+      is_active: form.is_active, created_by: user?.id,
+    };
+    const { error } = editingCourse
+      ? await supabase.from("courses").update(payload).eq("id", editingCourse.id)
+      : await supabase.from("courses").insert(payload);
+    if (error) toast({ title: t("error"), description: error.message, variant: "destructive" });
+    else {
+      toast({ title: t("success"), description: t("courseSaved") });
+      setEditingCourse(null);
+      setCourseForm({ ...emptyCourseForm });
+      fetchData();
+    }
+    setSavingCourse(false);
+  };
+
+  const deleteCourse = async (id: string) => {
+    await supabase.from("courses").delete().eq("id", id);
+    toast({ title: t("deleted") });
+    fetchData();
+  };
+
+
   const saveEvent = async () => {
     let form = { ...eventForm };
     // Auto-translate event title
@@ -277,6 +350,7 @@ const AdminDashboard = () => {
     { icon: FileText, label: t("postManagement"), tab: "posts" as AdminTab },
     { icon: ShieldAlert, label: t("moderation"), tab: "moderation" as AdminTab },
     { icon: Calendar, label: t("eventManagement"), tab: "events" as AdminTab },
+    { icon: GraduationCap, label: t("courseManagement"), tab: "courses" as AdminTab },
     { icon: Crown, label: t("membersAdmin"), tab: "members" as AdminTab },
     { icon: Users, label: t("memberManagement"), tab: "users" as AdminTab },
     { icon: ImagePlus, label: t("assetManager"), tab: "assets" as AdminTab },
@@ -428,7 +502,73 @@ const AdminDashboard = () => {
             </div>
           )}
 
-          {/* Members (organization showcase) */}
+          {/* Courses */}
+          {activeTab === "courses" && (
+            <div className="space-y-6">
+              <div className="bg-background rounded-3xl border border-border p-6 depth-card">
+                <h3 className="font-bengali font-bold text-foreground mb-4">{editingCourse ? t("editCourse") : t("newCourse")}</h3>
+                <div className="grid md:grid-cols-2 gap-4 mb-4">
+                  <input value={courseForm.title} onChange={(e) => setCourseForm({ ...courseForm, title: e.target.value })} placeholder={t("courseTitleBn")} className={inputClass} />
+                  <input value={courseForm.title_en} onChange={(e) => setCourseForm({ ...courseForm, title_en: e.target.value })} placeholder={t("courseTitleEn")} className={inputClass} />
+                  <input value={courseForm.instructor} onChange={(e) => setCourseForm({ ...courseForm, instructor: e.target.value })} placeholder={t("instructorBn")} className={inputClass} />
+                  <input value={courseForm.instructor_en} onChange={(e) => setCourseForm({ ...courseForm, instructor_en: e.target.value })} placeholder={t("instructorEn")} className={inputClass} />
+                  <input value={courseForm.duration} onChange={(e) => setCourseForm({ ...courseForm, duration: e.target.value })} placeholder={t("durationBn")} className={inputClass} />
+                  <input value={courseForm.duration_en} onChange={(e) => setCourseForm({ ...courseForm, duration_en: e.target.value })} placeholder={t("durationEn")} className={inputClass} />
+                  <input type="number" value={courseForm.modules} onChange={(e) => setCourseForm({ ...courseForm, modules: Number(e.target.value) })} placeholder={t("modulesCount")} className={inputClass} />
+                  <input type="number" value={courseForm.enrolled} onChange={(e) => setCourseForm({ ...courseForm, enrolled: Number(e.target.value) })} placeholder={t("enrolledCount")} className={inputClass} />
+                  <select value={courseForm.status} onChange={(e) => setCourseForm({ ...courseForm, status: e.target.value })} className={inputClass}>
+                    <option value="open">{t("statusOpen")}</option>
+                    <option value="ongoing">{t("statusOngoing")}</option>
+                    <option value="coming_soon">{t("statusComingSoon")}</option>
+                  </select>
+                  <input type="number" value={courseForm.sort_order} onChange={(e) => setCourseForm({ ...courseForm, sort_order: Number(e.target.value) })} placeholder={t("sortOrder")} className={inputClass} />
+                </div>
+                <textarea value={courseForm.description} onChange={(e) => setCourseForm({ ...courseForm, description: e.target.value })} placeholder={t("descriptionLabel") + " (BN)"} rows={3} className={inputClass + " mb-3 resize-none"} />
+                <textarea value={courseForm.description_en} onChange={(e) => setCourseForm({ ...courseForm, description_en: e.target.value })} placeholder={t("descriptionLabel") + " (EN)"} rows={3} className={inputClass + " mb-3 resize-none"} />
+                <textarea value={courseForm.highlights} onChange={(e) => setCourseForm({ ...courseForm, highlights: e.target.value })} placeholder={t("highlightsBn")} rows={2} className={inputClass + " mb-3 resize-none"} />
+                <textarea value={courseForm.highlights_en} onChange={(e) => setCourseForm({ ...courseForm, highlights_en: e.target.value })} placeholder={t("highlightsEnLabel")} rows={2} className={inputClass + " mb-4 resize-none"} />
+                <div className="mb-4">
+                  <input ref={courseImageRef} type="file" accept="image/jpeg,image/png,image/webp" onChange={(e) => e.target.files?.[0] && handleCourseImageUpload(e.target.files[0])} className="hidden" />
+                  <div className="flex items-center gap-3">
+                    <button type="button" onClick={() => courseImageRef.current?.click()} disabled={uploadingCourseImage} className="flex items-center gap-2 px-4 py-2 rounded-full bg-secondary text-secondary-foreground text-sm font-bengali hover:bg-secondary/80 transition-all disabled:opacity-50">
+                      {uploadingCourseImage ? <Loader2 className="w-4 h-4 animate-spin" /> : <ImagePlus className="w-4 h-4" />} {t("coverImage")}
+                    </button>
+                    {courseForm.cover_image && <img src={courseForm.cover_image} alt="" className="w-20 h-12 rounded-lg object-cover border border-border" />}
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-4 items-center">
+                  <label className="flex items-center gap-2 text-sm font-bengali text-foreground"><input type="checkbox" checked={courseForm.is_active} onChange={(e) => setCourseForm({ ...courseForm, is_active: e.target.checked })} className="rounded" /> {t("isActive")}</label>
+                  {editingCourse && <button onClick={() => { setEditingCourse(null); setCourseForm({ ...emptyCourseForm }); }} className="px-4 py-2 rounded-full bg-secondary text-secondary-foreground text-sm font-bengali"><Plus className="w-4 h-4 inline mr-1" />{t("newCourse")}</button>}
+                  <button onClick={saveCourse} disabled={savingCourse || (!courseForm.title && !courseForm.title_en)} className="ml-auto px-6 py-2.5 rounded-full bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/80 transition-all shadow-md flex items-center gap-2 disabled:opacity-50 font-bengali">{savingCourse ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}{t("save")}</button>
+                </div>
+              </div>
+              <div className="bg-background rounded-3xl border border-border p-6 depth-card">
+                <h3 className="font-bengali font-bold text-foreground mb-4">{t("allCoursesAdmin")}</h3>
+                <div className="space-y-3">
+                  {courses.map((c) => (
+                    <div key={c.id} className="flex items-center justify-between py-3 border-b border-border last:border-0">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary/15 to-forest/15 flex items-center justify-center overflow-hidden shrink-0">
+                          {c.cover_image ? <img src={c.cover_image} alt="" className="w-full h-full object-cover" /> : <GraduationCap className="w-5 h-5 text-primary/40" />}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="font-bengali text-sm font-semibold text-foreground truncate">{c.title || c.title_en}</p>
+                          <p className="text-xs text-muted-foreground truncate">{c.status} • #{c.sort_order} {!c.is_active ? "• ✕" : ""}</p>
+                        </div>
+                      </div>
+                      <div className="flex gap-1 shrink-0">
+                        <button onClick={() => { setEditingCourse(c); setCourseForm({ title: c.title || "", title_en: c.title_en || "", instructor: c.instructor || "", instructor_en: c.instructor_en || "", duration: c.duration || "", duration_en: c.duration_en || "", modules: c.modules || 0, enrolled: c.enrolled || 0, status: c.status || "coming_soon", description: c.description || "", description_en: c.description_en || "", highlights: (c.highlights || []).join(", "), highlights_en: (c.highlights_en || []).join(", "), cover_image: c.cover_image || "", sort_order: c.sort_order || 0, is_active: c.is_active !== false }); }} className="p-2 rounded-full hover:bg-secondary"><Edit3 className="w-4 h-4 text-muted-foreground" /></button>
+                        <button onClick={() => deleteCourse(c.id)} className="p-2 rounded-full hover:bg-destructive/10"><Trash2 className="w-4 h-4 text-destructive" /></button>
+                      </div>
+                    </div>
+                  ))}
+                  {courses.length === 0 && <p className="text-sm text-muted-foreground font-bengali text-center py-8">{t("noCoursesYet")}</p>}
+                </div>
+              </div>
+            </div>
+          )}
+
+
           {activeTab === "members" && (
             <div className="space-y-6">
               <div className="bg-background rounded-3xl border border-border p-6 depth-card">

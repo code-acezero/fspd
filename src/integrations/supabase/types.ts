@@ -50,6 +50,75 @@ export type Database = {
         }
         Relationships: []
       }
+      courses: {
+        Row: {
+          cover_image: string
+          created_at: string
+          created_by: string | null
+          description: string
+          description_en: string
+          duration: string
+          duration_en: string
+          enrolled: number
+          highlights: string[]
+          highlights_en: string[]
+          id: string
+          instructor: string
+          instructor_en: string
+          is_active: boolean
+          modules: number
+          sort_order: number
+          status: string
+          title: string
+          title_en: string
+          updated_at: string
+        }
+        Insert: {
+          cover_image?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          description_en?: string
+          duration?: string
+          duration_en?: string
+          enrolled?: number
+          highlights?: string[]
+          highlights_en?: string[]
+          id?: string
+          instructor?: string
+          instructor_en?: string
+          is_active?: boolean
+          modules?: number
+          sort_order?: number
+          status?: string
+          title: string
+          title_en?: string
+          updated_at?: string
+        }
+        Update: {
+          cover_image?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          description_en?: string
+          duration?: string
+          duration_en?: string
+          enrolled?: number
+          highlights?: string[]
+          highlights_en?: string[]
+          id?: string
+          instructor?: string
+          instructor_en?: string
+          is_active?: boolean
+          modules?: number
+          sort_order?: number
+          status?: string
+          title?: string
+          title_en?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       events: {
         Row: {
           cover_image: string

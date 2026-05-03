@@ -487,6 +487,24 @@ export const translations: Translations = {
   retry: { bn: "পুনরায় চেষ্টা", en: "Retry" },
   moderation: { bn: "মডারেশন", en: "Moderation" },
   rejected: { bn: "প্রত্যাখ্যাত", en: "Rejected" },
+  // Courses admin
+  courseManagement: { bn: "কোর্স ব্যবস্থাপনা", en: "Course Management" },
+  newCourse: { bn: "নতুন কোর্স", en: "New Course" },
+  editCourse: { bn: "কোর্স সম্পাদনা", en: "Edit Course" },
+  allCoursesAdmin: { bn: "সব কোর্স", en: "All Courses" },
+  courseTitleBn: { bn: "শিরোনাম (বাংলা)", en: "Title (Bangla)" },
+  courseTitleEn: { bn: "শিরোনাম (ইংরেজি)", en: "Title (English)" },
+  instructorBn: { bn: "প্রশিক্ষক (বাংলা)", en: "Instructor (Bangla)" },
+  instructorEn: { bn: "প্রশিক্ষক (ইংরেজি)", en: "Instructor (English)" },
+  durationBn: { bn: "মেয়াদ (বাংলা)", en: "Duration (Bangla)" },
+  durationEn: { bn: "মেয়াদ (ইংরেজি)", en: "Duration (English)" },
+  modulesCount: { bn: "মডিউল সংখ্যা", en: "Modules" },
+  enrolledCount: { bn: "নিবন্ধিত সংখ্যা", en: "Enrolled" },
+  highlightsBn: { bn: "মূল বৈশিষ্ট্য (বাংলা, কমা দ্বারা)", en: "Highlights (Bangla, comma-separated)" },
+  highlightsEnLabel: { bn: "মূল বৈশিষ্ট্য (ইংরেজি, কমা দ্বারা)", en: "Highlights (English, comma-separated)" },
+  courseStatus: { bn: "অবস্থা", en: "Status" },
+  noCoursesYet: { bn: "এখনো কোনো কোর্স নেই", en: "No courses yet" },
+  courseSaved: { bn: "কোর্স সংরক্ষিত হয়েছে", en: "Course saved" },
 };
 
 interface LangContextType {
