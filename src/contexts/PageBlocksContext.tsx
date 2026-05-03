@@ -10,9 +10,11 @@ import {
   mergeHeroConfig, mergeSectionConfig,
   mergeServicesConfig, mergeNavConfig, mergeFooterLinksConfig,
   mergeAboutConfig, mergeEventsConfig, mergeMembersConfig,
+  mergeBodyConfig, mergeListingConfig, mergeAnniversariesConfig, mergeHonouredConfig,
   type HeroConfig, type SectionConfig, type AnyBlockKey,
   type ServicesSectionConfig, type NavConfig, type FooterLinksConfig,
   type AboutSectionConfig, type EventsSectionConfig, type MembersSectionConfig,
+  type BodyConfig, type ListingConfig, type AnniversariesConfig, type HonouredConfig,
 } from "@/lib/pageBlocks";
 
 interface BlockRow {
