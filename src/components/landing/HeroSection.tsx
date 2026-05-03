@@ -118,7 +118,7 @@ const HeroSection = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.3 }}
-          className="inline-block mb-6 px-6 py-2 rounded-full border border-accent/30 bg-gradient-to-r from-primary/15 via-accent/10 to-primary/15 backdrop-blur-sm shadow-[0_4px_20px_-4px_hsl(var(--primary)/0.35)]"
+          className="inline-block mb-6 px-6 py-2 rounded-full border border-accent/50 bg-gradient-to-r from-primary/80 via-primary/60 to-accent/70 backdrop-blur-sm shadow-[0_6px_24px_-6px_hsl(var(--primary)/0.6)]"
         >
           <p className="text-shine text-sm md:text-base tracking-[2em] uppercase font-medium font-bengali pl-[2em] mb-0">
             {lang === "en" ? "Established 1975" : "প্রতিষ্ঠিত ১৯৭৫"}
