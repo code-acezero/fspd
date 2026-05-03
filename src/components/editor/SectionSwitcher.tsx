@@ -211,6 +211,18 @@ const SectionSwitcher = () => {
                   {currentPage[0].toUpperCase()}{currentPage.slice(1)} Page
                 </p>
                 <SortableRow page={currentPage} blockKey="page_hero" />
+                {currentPage === "about" && (
+                  <>
+                    <SortableRow page="about" blockKey="body_intro" />
+                    <SortableRow page="about" blockKey="stats" />
+                    <SortableRow page="about" blockKey="anniversaries" />
+                    <SortableRow page="about" blockKey="honoured" />
+                    <SortableRow page="about" blockKey="body_outro" />
+                  </>
+                )}
+                {(currentPage === "blog" || currentPage === "events" || currentPage === "courses") && (
+                  <SortableRow page={currentPage} blockKey="listing" />
+                )}
               </div>
             )}
 

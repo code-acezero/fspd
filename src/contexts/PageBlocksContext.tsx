@@ -10,9 +10,11 @@ import {
   mergeHeroConfig, mergeSectionConfig,
   mergeServicesConfig, mergeNavConfig, mergeFooterLinksConfig,
   mergeAboutConfig, mergeEventsConfig, mergeMembersConfig,
+  mergeBodyConfig, mergeListingConfig, mergeAnniversariesConfig, mergeHonouredConfig,
   type HeroConfig, type SectionConfig, type AnyBlockKey,
   type ServicesSectionConfig, type NavConfig, type FooterLinksConfig,
   type AboutSectionConfig, type EventsSectionConfig, type MembersSectionConfig,
+  type BodyConfig, type ListingConfig, type AnniversariesConfig, type HonouredConfig,
 } from "@/lib/pageBlocks";
 
 interface BlockRow {
@@ -83,6 +85,16 @@ interface PageBlocksContextType {
   getEventsPreviewDraft: () => EventsSectionConfig;
   getMembers: () => MembersSectionConfig;
   getMembersDraft: () => MembersSectionConfig;
+
+  // ---- typed helpers for secondary-page blocks ----
+  getBody: (key: string, page: string) => BodyConfig;
+  getBodyDraft: (key: string, page: string) => BodyConfig;
+  getListing: (page: string) => ListingConfig;
+  getListingDraft: (page: string) => ListingConfig;
+  getAnniversaries: (page?: string) => AnniversariesConfig;
+  getAnniversariesDraft: (page?: string) => AnniversariesConfig;
+  getHonoured: (page?: string) => HonouredConfig;
+  getHonouredDraft: (page?: string) => HonouredConfig;
 
   // ---- ordering ----
   reorderBlocks: (page: string, orderedKeys: string[]) => Promise<void>;
@@ -254,6 +266,31 @@ export const PageBlocksProvider = ({ children }: { children: ReactNode }) => {
   }, [rows, previewDraft]);
   const getMembersDraft = useCallback(() => mergeMembersConfig(rows[k("landing", "members")]?.draft_config), [rows]);
 
+  // -------- secondary-page typed helpers --------
+  const getBody = useCallback((key: string, page: string): BodyConfig => {
+    const r = rows[k(page, key)];
+    return mergeBodyConfig(previewDraft ? r?.draft_config : r?.published_config);
+  }, [rows, previewDraft]);
+  const getBodyDraft = useCallback((key: string, page: string) => mergeBodyConfig(rows[k(page, key)]?.draft_config), [rows]);
+
+  const getListing = useCallback((page: string): ListingConfig => {
+    const r = rows[k(page, "listing")];
+    return mergeListingConfig(previewDraft ? r?.draft_config : r?.published_config);
+  }, [rows, previewDraft]);
+  const getListingDraft = useCallback((page: string) => mergeListingConfig(rows[k(page, "listing")]?.draft_config), [rows]);
+
+  const getAnniversaries = useCallback((page = "about"): AnniversariesConfig => {
+    const r = rows[k(page, "anniversaries")];
+    return mergeAnniversariesConfig(previewDraft ? r?.draft_config : r?.published_config);
+  }, [rows, previewDraft]);
+  const getAnniversariesDraft = useCallback((page = "about") => mergeAnniversariesConfig(rows[k(page, "anniversaries")]?.draft_config), [rows]);
+
+  const getHonoured = useCallback((page = "about"): HonouredConfig => {
+    const r = rows[k(page, "honoured")];
+    return mergeHonouredConfig(previewDraft ? r?.draft_config : r?.published_config);
+  }, [rows, previewDraft]);
+  const getHonouredDraft = useCallback((page = "about") => mergeHonouredConfig(rows[k(page, "honoured")]?.draft_config), [rows]);
+
   // -------- hero back-compat --------
   const heroRow = rows[k("landing", "hero")] ?? null;
   const heroDraft = useMemo(() => mergeHeroConfig(heroRow?.draft_config), [heroRow]);
@@ -380,6 +417,10 @@ export const PageBlocksProvider = ({ children }: { children: ReactNode }) => {
       getAbout, getAboutDraft,
       getEventsPreview, getEventsPreviewDraft,
       getMembers, getMembersDraft,
+      getBody, getBodyDraft,
+      getListing, getListingDraft,
+      getAnniversaries, getAnniversariesDraft,
+      getHonoured, getHonouredDraft,
       reorderBlocks, getOrderedKeys,
       fetchHistory, restoreRevision, publishAll, dirtyKeys,
       refresh: fetchBlocks,

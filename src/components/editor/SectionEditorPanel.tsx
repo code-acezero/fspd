@@ -64,12 +64,14 @@ const SectionEditorPanel = ({ blockKey, page = "landing", label }: Props) => {
 
   const cfg: SectionConfig = getSectionDraft(blockKey, page);
   const visible = isVisible(blockKey, page);
-  const isServices = page === "landing" && blockKey === "services";
+  const isServices = page === "landing" && blockKey === "about" ? false : page === "landing" && blockKey === "services";
   const isAbout = page === "landing" && blockKey === "about";
   const isEventsPreview = page === "landing" && blockKey === "events_preview";
   const isMembers = page === "landing" && blockKey === "members";
-  const hasItems = isServices || isAbout || isEventsPreview || isMembers;
-  const itemsLabel = isAbout ? "Stats" : isMembers ? "Members" : isEventsPreview ? "Events" : "Cards";
+  const isAboutStats = page === "about" && blockKey === "stats";
+  const showsStats = isAbout || isAboutStats;
+  const hasItems = isServices || isAbout || isEventsPreview || isMembers || isAboutStats;
+  const itemsLabel = (isAbout || isAboutStats) ? "Stats" : isMembers ? "Members" : isEventsPreview ? "Events" : "Cards";
   const rawDraft = getRawDraft(blockKey, page);
   const blockLabel = label ?? BLOCK_LABELS[blockKey] ?? blockKey;
 
@@ -77,8 +79,8 @@ const SectionEditorPanel = ({ blockKey, page = "landing", label }: Props) => {
   const svcItems: ServicesItem[] = isServices
     ? (Array.isArray(rawDraft?.items) ? rawDraft.items : DEFAULT_SERVICES_ITEMS)
     : [];
-  // ---- about stats
-  const aboutStats: AboutStatItem[] = isAbout
+  // ---- about stats (used on landing 'about' AND about/'stats' blocks)
+  const aboutStats: AboutStatItem[] = showsStats
     ? (Array.isArray(rawDraft?.stats) ? rawDraft.stats : DEFAULT_ABOUT_STATS)
     : [];
   // ---- events items (default empty → falls back to DB events)
@@ -282,7 +284,7 @@ const SectionEditorPanel = ({ blockKey, page = "landing", label }: Props) => {
             </ItemsList>
           )}
 
-          {tab === "items" && isAbout && (
+          {tab === "items" && showsStats && (
             <ItemsList
               count={aboutStats.length} label="stat"
               onAdd={addStat}
