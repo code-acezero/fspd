@@ -6,16 +6,17 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X, Eye, EyeOff, Sparkles, Languages, Save, RotateCcw, Settings2,
-  Type as TypeIcon, Wand2, Loader2,
+  Type as TypeIcon, Wand2, Loader2, Plus, Trash2, ChevronUp, ChevronDown, Layers,
 } from "lucide-react";
+import * as LucideIcons from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useVisualEditor } from "@/contexts/VisualEditorContext";
 import { usePageBlocks } from "@/contexts/PageBlocksContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import {
-  BLOCK_LABELS,
-  type AnyBlockKey, type SectionConfig,
+  BLOCK_LABELS, SERVICE_ICONS, DEFAULT_SERVICES_ITEMS, newId,
+  type AnyBlockKey, type SectionConfig, type ServicesItem, type ServiceIcon,
   type HeroAlign, type HeroSizeScale, type HeroSpacing, type HeroAnimation,
 } from "@/lib/pageBlocks";
 
