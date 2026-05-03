@@ -31,14 +31,15 @@ export interface SectionBlockResult {
 }
 
 export function useSectionBlock(
-  blockKey: "about" | "services" | "events_preview" | "members" | "footer",
+  blockKey: string,
   fallback: { eyebrow?: string; title?: string; subtitle?: string } = {},
+  page: string = "landing",
 ): SectionBlockResult {
   const { getSection, isVisible } = usePageBlocks();
   const { editMode } = useVisualEditor();
   const { lang } = useLanguage();
-  const cfg = getSection(blockKey);
-  const visible = isVisible(blockKey);
+  const cfg = getSection(blockKey, page);
+  const visible = isVisible(blockKey, page);
   const hideForVisitors = !visible && !editMode;
 
   const adv = cfg.style.advanced;
