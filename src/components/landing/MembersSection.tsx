@@ -4,33 +4,52 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import MemberCard, { type MemberCardData } from "@/components/members/MemberCard";
 import { useSectionBlock } from "@/hooks/useSectionBlock";
+import { usePageBlocks } from "@/contexts/PageBlocksContext";
 
 type Member = MemberCardData & { id: string };
 
 const MembersSection = () => {
   const { t } = useLanguage();
+  const { getMembers } = usePageBlocks();
   const containerRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({ target: containerRef, offset: ["start end", "end start"] });
   const y = useTransform(scrollYProgress, [0, 1], [50, -50]);
   const yReverse = useTransform(scrollYProgress, [0, 1], [-30, 30]);
   const [activeIndex, setActiveIndex] = useState(0);
-  const [members, setMembers] = useState<Member[]>([]);
+  const [dbMembers, setDbMembers] = useState<Member[]>([]);
 
   const block = useSectionBlock("members", {
     eyebrow: t("ourLeadership"),
     title: t("seniorMembers"),
   });
 
+  // CMS items override DB members when present
+  const memCfg = getMembers();
+  const cmsItems = (memCfg.items ?? []).filter((m) => m.visible !== false);
+  const useCms = cmsItems.length > 0;
+
   useEffect(() => {
+    if (useCms) return;
     (async () => {
       const { data } = await supabase
         .from("members")
         .select("id, name, name_en, title, title_en, bio, bio_en, avatar_url, gradient_class")
         .eq("is_senior", true)
         .order("sort_order", { ascending: true });
-      if (data) setMembers(data as Member[]);
+      if (data) setDbMembers(data as Member[]);
     })();
-  }, []);
+  }, [useCms]);
+
+  const members: Member[] = useCms
+    ? cmsItems.map((it) => ({
+        id: it.id,
+        name: it.name_bn, name_en: it.name_en,
+        title: it.title_bn, title_en: it.title_en,
+        bio: it.bio_bn, bio_en: it.bio_en,
+        avatar_url: it.avatar_url,
+        gradient_class: it.gradient_class,
+      }))
+    : dbMembers;
 
   useEffect(() => {
     if (members.length === 0) return;
