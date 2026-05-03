@@ -7,9 +7,15 @@ import MainNav from "@/components/MainNav";
 import Footer from "@/components/landing/Footer";
 import PageHeader from "@/components/landing/PageHeader";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { usePageBlocks } from "@/contexts/PageBlocksContext";
 
 const CoursesPage = () => {
   const { t, lang } = useLanguage();
+  const { getListing } = usePageBlocks();
+  const listing = getListing("courses");
+  const pickL = (bn: string, en: string, fb: string) => (lang === "bn" ? (bn || fb) : (en || fb));
+  const introText = pickL(listing.intro_bn, listing.intro_en, "");
+  const emptyText = pickL(listing.emptyState_bn, listing.emptyState_en, lang === "bn" ? "শীঘ্রই কোর্স প্রকাশিত হবে।" : "Courses will be published soon.");
 
   const statusLabels: Record<string, { label: string; color: string }> = {
     open: { label: t("statusOpen"), color: "bg-forest text-primary-foreground" },
