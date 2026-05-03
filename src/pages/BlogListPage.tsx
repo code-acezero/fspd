@@ -10,13 +10,17 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { createSlug } from "@/lib/slugify";
-
-
+import { usePageBlocks } from "@/contexts/PageBlocksContext";
 
 const BlogListPage = () => {
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState("সব");
   const { t, lang } = useLanguage();
+  const { getListing, isVisible } = usePageBlocks();
+  const listing = getListing("blog");
+  const listingVisible = isVisible("listing", "blog");
+  const pickL = (bn: string, en: string, fbBn: string, fbEn: string) =>
+    (lang === "bn" ? (bn || fbBn) : (en || fbEn));
 
   const { data: dbPosts, isLoading } = useQuery({
     queryKey: ["posts"],
@@ -50,8 +54,19 @@ const BlogListPage = () => {
     featured: p.featured,
   }));
 
-  const categoryKeys = ["catAll", "catLiterature", "catCulture", "catDrama", "catFestival"];
-  const categoryValues = ["সব", "সাহিত্য", "সংস্কৃতি", "নাটক", "উৎসব"];
+  const defaultCategoryKeys = ["catAll", "catLiterature", "catCulture", "catDrama", "catFestival"];
+  const defaultCategoryValues = ["সব", "সাহিত্য", "সংস্কৃতি", "নাটক", "উৎসব"];
+
+  // CMS overrides for filter chips
+  const cmsFilters = listing.filters?.filter((f) => f.visible !== false) ?? null;
+  const allLabel = pickL(listing.filterAllLabel_bn, listing.filterAllLabel_en, t("catAll"), t("catAll"));
+  const filterChips = (cmsFilters && cmsFilters.length > 0)
+    ? [{ value: "সব", label: allLabel }, ...cmsFilters.map((f) => ({ value: f.value, label: pickL(f.label_bn, f.label_en, f.value, f.value) }))]
+    : defaultCategoryKeys.map((k, i) => ({ value: defaultCategoryValues[i], label: t(k) }));
+
+  const searchPlaceholder = pickL(listing.searchPlaceholder_bn, listing.searchPlaceholder_en, t("blogSearchPlaceholder"), t("blogSearchPlaceholder"));
+  const emptyText = pickL(listing.emptyState_bn, listing.emptyState_en, t("noPosts"), t("noPosts"));
+  const introText = pickL(listing.intro_bn, listing.intro_en, "", "");
 
   const filtered = allPosts.filter((post) => {
     const matchSearch = post.title.includes(search) || post.titleEn.toLowerCase().includes(search.toLowerCase());
@@ -64,18 +79,23 @@ const BlogListPage = () => {
       <MainNav />
       <PageHeader page="blog" fallbackTitle={t("blogAndPosts")} fallbackSubtitle={t("blogSubtitle")} />
       <div className="container mx-auto px-4 lg:px-8 py-10">
+        {listingVisible && introText && (
+          <p className="font-bengali text-center text-muted-foreground max-w-3xl mx-auto mb-8 whitespace-pre-line">{introText}</p>
+        )}
+        {listingVisible && (
         <div className="flex flex-col md:flex-row gap-4 mb-8">
           <div className="relative flex-1">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t("blogSearchPlaceholder")} className="w-full pl-11 pr-4 py-3 rounded-full bg-card border border-border text-sm text-foreground font-bengali focus:outline-none focus:ring-2 focus:ring-primary/20 depth-card" />
+            <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder={searchPlaceholder} className="w-full pl-11 pr-4 py-3 rounded-full bg-card border border-border text-sm text-foreground font-bengali focus:outline-none focus:ring-2 focus:ring-primary/20 depth-card" />
           </div>
           <div className="flex items-center gap-2 overflow-x-auto pb-1">
             <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center shrink-0"><Filter className="w-4 h-4 text-muted-foreground" /></div>
-            {categoryKeys.map((catKey, i) => (
-              <button key={catKey} onClick={() => setActiveCategory(categoryValues[i])} className={`px-5 py-2 rounded-full text-sm font-bengali whitespace-nowrap transition-all ${activeCategory === categoryValues[i] ? "bg-primary text-primary-foreground shadow-md shadow-primary/20" : "bg-secondary text-secondary-foreground hover:bg-secondary/80"}`}>{t(catKey)}</button>
+            {filterChips.map((c) => (
+              <button key={c.value} onClick={() => setActiveCategory(c.value)} className={`px-5 py-2 rounded-full text-sm font-bengali whitespace-nowrap transition-all ${activeCategory === c.value ? "bg-primary text-primary-foreground shadow-md shadow-primary/20" : "bg-secondary text-secondary-foreground hover:bg-secondary/80"}`}>{c.label}</button>
             ))}
           </div>
         </div>
+        )}
 
         {isLoading ? (
           <div className="flex justify-center py-16"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>
@@ -116,7 +136,7 @@ const BlogListPage = () => {
         )}
 
         {!isLoading && filtered.length === 0 && (
-          <div className="text-center py-16"><BookOpen className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" /><p className="font-bengali text-muted-foreground">{t("noPosts")}</p></div>
+          <div className="text-center py-16"><BookOpen className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" /><p className="font-bengali text-muted-foreground">{emptyText}</p></div>
         )}
       </div>
       <Footer />

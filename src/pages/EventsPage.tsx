@@ -9,9 +9,15 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { createSlug } from "@/lib/slugify";
+import { usePageBlocks } from "@/contexts/PageBlocksContext";
 
 const EventsPage = () => {
   const { t, lang } = useLanguage();
+  const { getListing } = usePageBlocks();
+  const listing = getListing("events");
+  const pickL = (bn: string, en: string, fb: string) => (lang === "bn" ? (bn || fb) : (en || fb));
+  const introText = pickL(listing.intro_bn, listing.intro_en, "");
+  const emptyText = pickL(listing.emptyState_bn, listing.emptyState_en, t("noEvents"));
 
   const { data: dbEvents, isLoading } = useQuery({
     queryKey: ["events"],
@@ -43,10 +49,13 @@ const EventsPage = () => {
       <MainNav />
       <PageHeader page="events" fallbackTitle={t("allEvents")} fallbackSubtitle={t("eventsPageSubtitle")} />
       <div className="container mx-auto px-4 lg:px-8 py-10">
+        {introText && (
+          <p className="font-bengali text-center text-muted-foreground max-w-3xl mx-auto mb-8 whitespace-pre-line">{introText}</p>
+        )}
         {isLoading ? (
           <div className="flex justify-center py-16"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>
         ) : events.length === 0 ? (
-          <div className="text-center py-16"><Calendar className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" /><p className="font-bengali text-muted-foreground">{t("noEvents")}</p></div>
+          <div className="text-center py-16"><Calendar className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" /><p className="font-bengali text-muted-foreground">{emptyText}</p></div>
         ) : (
           <div className="flex flex-wrap justify-center gap-6">
             {events.map((event, index) => (

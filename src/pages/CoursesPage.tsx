@@ -7,9 +7,15 @@ import MainNav from "@/components/MainNav";
 import Footer from "@/components/landing/Footer";
 import PageHeader from "@/components/landing/PageHeader";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { usePageBlocks } from "@/contexts/PageBlocksContext";
 
 const CoursesPage = () => {
   const { t, lang } = useLanguage();
+  const { getListing } = usePageBlocks();
+  const listing = getListing("courses");
+  const pickL = (bn: string, en: string, fb: string) => (lang === "bn" ? (bn || fb) : (en || fb));
+  const introText = pickL(listing.intro_bn, listing.intro_en, "");
+  const emptyText = pickL(listing.emptyState_bn, listing.emptyState_en, lang === "bn" ? "শীঘ্রই কোর্স প্রকাশিত হবে।" : "Courses will be published soon.");
 
   const statusLabels: Record<string, { label: string; color: string }> = {
     open: { label: t("statusOpen"), color: "bg-forest text-primary-foreground" },
@@ -22,12 +28,13 @@ const CoursesPage = () => {
       <MainNav />
       <PageHeader page="courses" fallbackTitle={t("allCourses")} fallbackSubtitle={t("coursesSubtitle")} />
       <div className="container mx-auto px-4 lg:px-8 py-10">
+        {introText && (
+          <p className="font-bengali text-center text-muted-foreground max-w-3xl mx-auto mb-8 whitespace-pre-line">{introText}</p>
+        )}
         {courses.length === 0 ? (
           <div className="text-center py-20">
             <GraduationCap className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
-            <p className="font-bengali text-muted-foreground">
-              {lang === "bn" ? "শীঘ্রই কোর্স প্রকাশিত হবে।" : "Courses will be published soon."}
-            </p>
+            <p className="font-bengali text-muted-foreground">{emptyText}</p>
           </div>
         ) : (
           <div className="flex flex-wrap justify-center gap-6">
