@@ -118,7 +118,7 @@ const HeroSection = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.3 }}
-          className="text-accent/90 text-xs md:text-sm tracking-[0.25em] uppercase mb-6 font-medium font-bengali"
+          className="text-accent/90 text-xs md:text-sm tracking-[1em] uppercase mb-6 font-medium font-bengali pl-[1em]"
         >
           {lang === "en" ? "Established 1975" : "প্রতিষ্ঠিত ১৯৭৫"}
         </motion.p>
