@@ -81,7 +81,7 @@ const AboutSection = () => {
               className="bg-card rounded-2xl p-6 lg:p-8 text-center border border-border group shadow-lg shadow-foreground/[0.03] hover:shadow-xl hover:shadow-primary/10 transition-shadow"
             >
               <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/15 to-accent/10 flex items-center justify-center mx-auto mb-4 group-hover:scale-110 group-hover:rotate-3 transition-transform shadow-inner">
-                <stat.icon className="w-7 h-7 text-primary" />
+                <stat.Icon className="w-7 h-7 text-primary" />
               </div>
               <p className="font-bengali text-3xl lg:text-4xl font-bold text-foreground mb-1">{stat.value}</p>
               <p className="font-bengali text-sm text-muted-foreground">{stat.label}</p>
