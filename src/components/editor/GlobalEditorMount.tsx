@@ -7,6 +7,9 @@ import SectionSwitcher from "@/components/editor/SectionSwitcher";
 import HeroEditorPanel from "@/components/editor/HeroEditorPanel";
 import SectionEditorPanel from "@/components/editor/SectionEditorPanel";
 import GlobalLinksEditorPanel from "@/components/editor/GlobalLinksEditorPanel";
+import BodyEditorPanel from "@/components/editor/BodyEditorPanel";
+import ListingEditorPanel from "@/components/editor/ListingEditorPanel";
+import AboutListsEditorPanel from "@/components/editor/AboutListsEditorPanel";
 
 const ROUTE_TO_PAGE: Array<{ test: RegExp; page: string }> = [
   { test: /^\/$/, page: "landing" },
@@ -28,7 +31,7 @@ const GlobalEditorMount = () => {
       <EditorToolbar />
       <SectionSwitcher />
 
-      {/* Always-mounted editors (visibility self-managed by activeBlock match) */}
+      {/* Always-mounted landing editors (visibility self-managed by activeBlock match) */}
       <HeroEditorPanel />
       <SectionEditorPanel blockKey="about" page="landing" />
       <SectionEditorPanel blockKey="services" page="landing" />
@@ -44,6 +47,22 @@ const GlobalEditorMount = () => {
       {page && page !== "landing" && (
         <SectionEditorPanel blockKey="page_hero" page={page} label="Page Header" />
       )}
+
+      {/* About page deep blocks */}
+      {page === "about" && (
+        <>
+          <BodyEditorPanel blockKey="body_intro" page="about" />
+          <BodyEditorPanel blockKey="body_outro" page="about" />
+          <SectionEditorPanel blockKey="stats" page="about" label="Stats Tiles" />
+          <AboutListsEditorPanel blockKey="anniversaries" page="about" />
+          <AboutListsEditorPanel blockKey="honoured" page="about" />
+        </>
+      )}
+
+      {/* Listing pages */}
+      {page === "blog"    && <ListingEditorPanel page="blog"    supportsFilters />}
+      {page === "events"  && <ListingEditorPanel page="events" />}
+      {page === "courses" && <ListingEditorPanel page="courses" />}
     </>
   );
 };
