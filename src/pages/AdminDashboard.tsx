@@ -350,6 +350,7 @@ const AdminDashboard = () => {
     { icon: FileText, label: t("postManagement"), tab: "posts" as AdminTab },
     { icon: ShieldAlert, label: t("moderation"), tab: "moderation" as AdminTab },
     { icon: Calendar, label: t("eventManagement"), tab: "events" as AdminTab },
+    { icon: GraduationCap, label: t("courseManagement"), tab: "courses" as AdminTab },
     { icon: Crown, label: t("membersAdmin"), tab: "members" as AdminTab },
     { icon: Users, label: t("memberManagement"), tab: "users" as AdminTab },
     { icon: ImagePlus, label: t("assetManager"), tab: "assets" as AdminTab },
