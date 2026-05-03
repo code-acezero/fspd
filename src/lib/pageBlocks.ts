@@ -506,3 +506,143 @@ export function mergeMembersConfig(raw: any): MembersSectionConfig {
     : undefined;
   return { ...base, items };
 }
+
+// =============================================================
+// Body block — bilingual rich-text intro/outro for secondary pages
+// =============================================================
+
+export interface BodyConfig {
+  heading_bn: string; heading_en: string;
+  text_bn: string;    text_en: string;
+}
+
+export const DEFAULT_BODY_CONFIG: BodyConfig = {
+  heading_bn: "", heading_en: "",
+  text_bn: "",    text_en: "",
+};
+
+export function mergeBodyConfig(raw: any): BodyConfig {
+  const r = (raw && typeof raw === "object") ? raw : {};
+  return {
+    heading_bn: r.heading_bn ?? "", heading_en: r.heading_en ?? "",
+    text_bn:    r.text_bn    ?? "", text_en:    r.text_en    ?? "",
+  };
+}
+
+// =============================================================
+// Listing block — bilingual filter/search/empty/intro for list pages
+// =============================================================
+
+export interface ListingConfig {
+  intro_bn: string; intro_en: string;
+  searchPlaceholder_bn: string; searchPlaceholder_en: string;
+  emptyState_bn: string; emptyState_en: string;
+  filterAllLabel_bn: string; filterAllLabel_en: string;
+  // generic filter override (for blog categories etc.)
+  filters?: ListingFilter[];
+}
+
+export interface ListingFilter {
+  id: string;
+  value: string;        // value used to match items (e.g. "সাহিত্য")
+  label_bn: string; label_en: string;
+  visible: boolean;
+}
+
+export const DEFAULT_LISTING_CONFIG: ListingConfig = {
+  intro_bn: "", intro_en: "",
+  searchPlaceholder_bn: "", searchPlaceholder_en: "",
+  emptyState_bn: "", emptyState_en: "",
+  filterAllLabel_bn: "", filterAllLabel_en: "",
+};
+
+export function mergeListingConfig(raw: any): ListingConfig {
+  const r = (raw && typeof raw === "object") ? raw : {};
+  const filters: ListingFilter[] | undefined = Array.isArray(r.filters)
+    ? r.filters.map((f: any, i: number) => ({
+        id: typeof f?.id === "string" ? f.id : `f_${i}`,
+        value: f?.value ?? "",
+        label_bn: f?.label_bn ?? "", label_en: f?.label_en ?? "",
+        visible: f?.visible !== false,
+      }))
+    : undefined;
+  return {
+    intro_bn: r.intro_bn ?? "", intro_en: r.intro_en ?? "",
+    searchPlaceholder_bn: r.searchPlaceholder_bn ?? "", searchPlaceholder_en: r.searchPlaceholder_en ?? "",
+    emptyState_bn: r.emptyState_bn ?? "", emptyState_en: r.emptyState_en ?? "",
+    filterAllLabel_bn: r.filterAllLabel_bn ?? "", filterAllLabel_en: r.filterAllLabel_en ?? "",
+    filters,
+  };
+}
+
+// =============================================================
+// Anniversaries block — list of centenary celebrations
+// =============================================================
+
+export interface AnniversaryItem {
+  id: string;
+  person_bn: string; person_en: string;
+  date_bn: string;   date_en: string;
+  venue_bn: string;  venue_en: string;
+  visible: boolean;
+}
+
+export interface AnniversariesConfig {
+  heading_bn: string; heading_en: string;
+  subtitle_bn: string; subtitle_en: string;
+  items?: AnniversaryItem[];
+}
+
+export function mergeAnniversariesConfig(raw: any): AnniversariesConfig {
+  const r = (raw && typeof raw === "object") ? raw : {};
+  const items: AnniversaryItem[] | undefined = Array.isArray(r.items)
+    ? r.items.map((it: any, i: number) => ({
+        id: typeof it?.id === "string" ? it.id : `a_${i}`,
+        person_bn: it?.person_bn ?? "", person_en: it?.person_en ?? "",
+        date_bn:   it?.date_bn   ?? "", date_en:   it?.date_en   ?? "",
+        venue_bn:  it?.venue_bn  ?? "", venue_en:  it?.venue_en  ?? "",
+        visible: it?.visible !== false,
+      }))
+    : undefined;
+  return {
+    heading_bn: r.heading_bn ?? "", heading_en: r.heading_en ?? "",
+    subtitle_bn: r.subtitle_bn ?? "", subtitle_en: r.subtitle_en ?? "",
+    items,
+  };
+}
+
+// =============================================================
+// Honoured personalities block — grouped by year
+// =============================================================
+
+export interface HonouredGroup {
+  id: string;
+  year_bn: string; year_en: string;
+  names_bn: string[];  // one per line
+  names_en: string[];
+  visible: boolean;
+}
+
+export interface HonouredConfig {
+  heading_bn: string; heading_en: string;
+  subtitle_bn: string; subtitle_en: string;
+  groups?: HonouredGroup[];
+}
+
+export function mergeHonouredConfig(raw: any): HonouredConfig {
+  const r = (raw && typeof raw === "object") ? raw : {};
+  const groups: HonouredGroup[] | undefined = Array.isArray(r.groups)
+    ? r.groups.map((g: any, i: number) => ({
+        id: typeof g?.id === "string" ? g.id : `g_${i}`,
+        year_bn: g?.year_bn ?? "", year_en: g?.year_en ?? "",
+        names_bn: Array.isArray(g?.names_bn) ? g.names_bn.map((n: any) => String(n ?? "")) : [],
+        names_en: Array.isArray(g?.names_en) ? g.names_en.map((n: any) => String(n ?? "")) : [],
+        visible: g?.visible !== false,
+      }))
+    : undefined;
+  return {
+    heading_bn: r.heading_bn ?? "", heading_en: r.heading_en ?? "",
+    subtitle_bn: r.subtitle_bn ?? "", subtitle_en: r.subtitle_en ?? "",
+    groups,
+  };
+}
