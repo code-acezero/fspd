@@ -123,7 +123,7 @@ const HeroEditorPanel = () => {
             <div className="min-w-0">
               <p className="text-sm font-semibold truncate">Hero Section</p>
               <p className="text-[10px] text-muted-foreground">
-                {heroRow.has_unpublished_changes ? "Unpublished changes" : "All changes published"}
+                {heroRow?.has_unpublished_changes ? "Unpublished changes" : "All changes published"}
                 {saving && " · saving…"}
               </p>
             </div>
@@ -281,7 +281,7 @@ const HeroEditorPanel = () => {
         <div className="border-t border-border p-3 bg-muted/30 flex items-center gap-2">
           <button
             onClick={handleRevert}
-            disabled={saving || !heroRow.has_unpublished_changes}
+            disabled={saving || !heroRow?.has_unpublished_changes}
             className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-full bg-background hover:bg-foreground/5 text-xs font-medium border border-border disabled:opacity-40"
           >
             <RotateCcw className="w-3.5 h-3.5" />
@@ -289,7 +289,7 @@ const HeroEditorPanel = () => {
           </button>
           <button
             onClick={handlePublish}
-            disabled={saving || !heroRow.has_unpublished_changes}
+            disabled={saving || !heroRow?.has_unpublished_changes}
             className="flex-[1.5] inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 text-xs font-semibold disabled:opacity-40"
           >
             {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
