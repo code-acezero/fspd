@@ -101,10 +101,12 @@ const LogoTile = ({
   // Without an admin-uploaded logo, render nothing (no hardcoded fallback).
   if (!logoSrc) return null;
 
-  // Cache-bust: derive token from URL so a new logo URL invalidates the cached image.
-  const cacheBustedSrc = logoSrc.startsWith("/")
-    ? `${logoSrc}?v=${encodeURIComponent(logoSrc)}`
-    : logoSrc;
+  // Use the logo URL as-is. The previous `?v=encodeURIComponent(url)` was a
+  // no-op cache-buster (token derived from the same URL never changes) but
+  // it prevented browsers from caching the asset across visits and broke
+  // any future CDN cache headers. Admin uploads always go to new storage
+  // paths, so URL change alone is enough to invalidate.
+  const cacheBustedSrc = logoSrc;
 
   // Sitewide intensity (admin can dial down): settings.appearance.logo_glow.
   const appearance = settings.appearance as unknown as {
