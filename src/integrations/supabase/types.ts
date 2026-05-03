@@ -206,6 +206,57 @@ export type Database = {
         }
         Relationships: []
       }
+      home_banners: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          image_url: string
+          is_active: boolean
+          link_url: string
+          sort_order: number
+          subtitle: string
+          subtitle_en: string
+          tag: string
+          tag_en: string
+          title: string
+          title_en: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          image_url?: string
+          is_active?: boolean
+          link_url?: string
+          sort_order?: number
+          subtitle?: string
+          subtitle_en?: string
+          tag?: string
+          tag_en?: string
+          title?: string
+          title_en?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          image_url?: string
+          is_active?: boolean
+          link_url?: string
+          sort_order?: number
+          subtitle?: string
+          subtitle_en?: string
+          tag?: string
+          tag_en?: string
+          title?: string
+          title_en?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       members: {
         Row: {
           avatar_url: string
