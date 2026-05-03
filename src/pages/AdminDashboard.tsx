@@ -361,12 +361,20 @@ const AdminDashboard = () => {
   return (
     <div className="min-h-screen bg-muted flex">
       <motion.aside initial={false} animate={{ width: sidebarOpen ? 260 : 64 }} className="bg-slate-900 text-slate-100 flex flex-col shrink-0 sticky top-0 h-screen overflow-hidden z-40 rounded-r-3xl">
-        <div className="p-4 flex items-center justify-between border-b border-white/10">
-          <div className="flex items-center gap-2 min-w-0">
-            <LogoTile size="sm" glow="subtle" contained />
-            {sidebarOpen && <span className="font-bengali font-bold text-sm text-white truncate">{t("adminPanel")}</span>}
-          </div>
-          <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-1.5 rounded-full hover:bg-white/10 text-white shrink-0">{sidebarOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}</button>
+        <div className={`p-3 border-b border-white/10 flex items-center gap-2 ${sidebarOpen ? "justify-between" : "justify-center flex-col"}`}>
+          {sidebarOpen && (
+            <div className="flex items-center gap-2 min-w-0">
+              <LogoTile size="sm" glow="subtle" contained />
+              <span className="font-bengali font-bold text-sm text-white truncate">{t("adminPanel")}</span>
+            </div>
+          )}
+          <button
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            aria-label={sidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
+            className="p-2 rounded-full hover:bg-white/10 text-white shrink-0"
+          >
+            {sidebarOpen ? <X className="w-4 h-4" /> : <Menu className="w-5 h-5" />}
+          </button>
         </div>
         <nav className="flex-1 py-4 px-2 space-y-1 overflow-y-auto">
           {sidebarItems.map((item) => (<button key={item.tab} onClick={() => setActiveTab(item.tab)} className={`flex items-center gap-3 px-3 py-2.5 rounded-full text-sm transition-all w-full ${activeTab === item.tab ? "bg-primary text-primary-foreground shadow-md shadow-primary/40 ring-1 ring-white/20" : "text-slate-200 hover:bg-white/10 hover:text-white"}`}><item.icon className="w-5 h-5 shrink-0" />{sidebarOpen && <span className="font-bengali">{item.label}</span>}</button>))}
