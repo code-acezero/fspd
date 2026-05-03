@@ -206,3 +206,28 @@ img, video { content-visibility: auto; }
 @media (prefers-reduced-motion: reduce) {
   .logo-halo-spin, .logo-halo-pulse { animation: none; }
 }
+
+/* Shine / reflection sweep across text */
+@keyframes text-shine {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.text-shine {
+  background-image: linear-gradient(
+    100deg,
+    rgba(255,255,255,0.85) 0%,
+    rgba(255,255,255,0.85) 35%,
+    rgba(255,255,255,1) 50%,
+    rgba(255,255,255,0.85) 65%,
+    rgba(255,255,255,0.85) 100%
+  );
+  background-size: 200% 100%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  animation: text-shine 4s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .text-shine { animation: none; color: #fff; -webkit-text-fill-color: #fff; }
+}
