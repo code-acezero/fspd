@@ -10,13 +10,17 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { createSlug } from "@/lib/slugify";
-
-
+import { usePageBlocks } from "@/contexts/PageBlocksContext";
 
 const BlogListPage = () => {
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState("সব");
   const { t, lang } = useLanguage();
+  const { getListing, isVisible } = usePageBlocks();
+  const listing = getListing("blog");
+  const listingVisible = isVisible("listing", "blog");
+  const pickL = (bn: string, en: string, fbBn: string, fbEn: string) =>
+    (lang === "bn" ? (bn || fbBn) : (en || fbEn));
 
   const { data: dbPosts, isLoading } = useQuery({
     queryKey: ["posts"],
