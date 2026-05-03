@@ -25,11 +25,11 @@ const LandingPage = () => (
     <EditorToolbar />
     <SectionSwitcher />
     <HeroEditorPanel />
-    <SectionEditorPanel blockKey="about" />
-    <SectionEditorPanel blockKey="services" />
-    <SectionEditorPanel blockKey="events_preview" />
-    <SectionEditorPanel blockKey="members" />
-    <SectionEditorPanel blockKey="footer" />
+    <SectionEditorPanel blockKey="about" page="landing" />
+    <SectionEditorPanel blockKey="services" page="landing" />
+    <SectionEditorPanel blockKey="events_preview" page="landing" />
+    <SectionEditorPanel blockKey="members" page="landing" />
+    <SectionEditorPanel blockKey="footer" page="landing" />
   </div>
 );
 

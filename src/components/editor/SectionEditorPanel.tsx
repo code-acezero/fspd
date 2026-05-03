@@ -6,16 +6,17 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X, Eye, EyeOff, Sparkles, Languages, Save, RotateCcw, Settings2,
-  Type as TypeIcon, Wand2, Loader2,
+  Type as TypeIcon, Wand2, Loader2, Plus, Trash2, ChevronUp, ChevronDown, Layers,
 } from "lucide-react";
+import * as LucideIcons from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useVisualEditor } from "@/contexts/VisualEditorContext";
 import { usePageBlocks } from "@/contexts/PageBlocksContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import {
-  BLOCK_LABELS,
-  type AnyBlockKey, type SectionConfig,
+  BLOCK_LABELS, SERVICE_ICONS, DEFAULT_SERVICES_ITEMS, newId,
+  type AnyBlockKey, type SectionConfig, type ServicesItem, type ServiceIcon,
   type HeroAlign, type HeroSizeScale, type HeroSpacing, type HeroAnimation,
 } from "@/lib/pageBlocks";
 
@@ -24,49 +25,70 @@ const SIZES: HeroSizeScale[] = ["s", "m", "l", "xl"];
 const SPACINGS: HeroSpacing[] = ["tight", "comfortable", "spacious"];
 const ANIMS: HeroAnimation[] = ["none", "subtle", "elegant", "dramatic"];
 
-type Tab = "text" | "show" | "style" | "advanced";
+type Tab = "text" | "items" | "show" | "style" | "advanced";
 
 interface Props {
-  blockKey: Exclude<AnyBlockKey, "hero">;
+  blockKey: string;
+  page?: string;          // default "landing"
+  label?: string;         // override BLOCK_LABELS
 }
 
-const SectionEditorPanel = ({ blockKey }: Props) => {
+const SectionEditorPanel = ({ blockKey, page = "landing", label }: Props) => {
   const { role } = useAuth();
   const { editMode } = useVisualEditor();
   const {
     activeBlock, setActiveBlock, setPreviewDraft,
     getRow, getSectionDraft, isVisible,
     updateSectionDraft, setBlockVisible, publishBlock, revertBlockDraft, saving,
+    updateRawDraft, getRawDraft,
   } = usePageBlocks();
   const { toast } = useToast();
   const [tab, setTab] = useState<Tab>("text");
   const [translating, setTranslating] = useState<string | null>(null);
 
   const isEditor = role === "admin" || role === "moderator";
-  const row = getRow(blockKey);
-  const shouldShow = isEditor && editMode && activeBlock === blockKey && !!row;
+  const row = getRow(blockKey, page);
+  const activeKey = `${page}:${blockKey}`;
+  const shouldShow = isEditor && editMode && (activeBlock as unknown as string) === activeKey && !!row;
 
   useEffect(() => {
     if (shouldShow) setPreviewDraft(true);
-    // we don't unset on close — Hero panel manages global preview
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [shouldShow]);
 
   if (!shouldShow) return null;
 
-  const cfg: SectionConfig = getSectionDraft(blockKey);
-  const visible = isVisible(blockKey);
+  const cfg: SectionConfig = getSectionDraft(blockKey, page);
+  const visible = isVisible(blockKey, page);
+  const isServices = page === "landing" && blockKey === "services";
+  const rawDraft = getRawDraft(blockKey, page);
+  const items: ServicesItem[] = Array.isArray(rawDraft?.items) ? rawDraft.items : DEFAULT_SERVICES_ITEMS;
+  const blockLabel = label ?? BLOCK_LABELS[blockKey] ?? blockKey;
 
   const setText = (k: keyof SectionConfig["text"], v: string) =>
-    updateSectionDraft(blockKey, { ...cfg, text: { ...cfg.text, [k]: v } });
+    updateSectionDraft(blockKey, { ...cfg, text: { ...cfg.text, [k]: v } }, page);
   const setShow = (k: keyof SectionConfig["show"], v: boolean) =>
-    updateSectionDraft(blockKey, { ...cfg, show: { ...cfg.show, [k]: v } });
+    updateSectionDraft(blockKey, { ...cfg, show: { ...cfg.show, [k]: v } }, page);
   const setStyle = <K extends keyof SectionConfig["style"]>(k: K, v: SectionConfig["style"][K]) =>
-    updateSectionDraft(blockKey, { ...cfg, style: { ...cfg.style, [k]: v } });
+    updateSectionDraft(blockKey, { ...cfg, style: { ...cfg.style, [k]: v } }, page);
   const setAdv = (k: keyof SectionConfig["style"]["advanced"], v: any) =>
-    updateSectionDraft(blockKey, { ...cfg, style: { ...cfg.style, advanced: { ...cfg.style.advanced, [k]: v } } });
+    updateSectionDraft(blockKey, { ...cfg, style: { ...cfg.style, advanced: { ...cfg.style.advanced, [k]: v } } }, page);
 
-  const autoTranslate = async (sourceText: string, targetLang: "bn" | "en", targetField: string) => {
+  // ---- items helpers (services only) ----
+  const setItems = (next: ServicesItem[]) =>
+    updateRawDraft(blockKey, (prev: any) => ({ ...prev, items: next }), page);
+  const addItem = () => setItems([...items, { id: newId("svc"), icon: "BookOpen", title_bn: "নতুন সেবা", title_en: "New Service", desc_bn: "", desc_en: "", visible: true }]);
+  const removeItem = (id: string) => setItems(items.filter((x) => x.id !== id));
+  const moveItem = (id: string, dir: -1 | 1) => {
+    const i = items.findIndex((x) => x.id === id); if (i < 0) return;
+    const j = i + dir; if (j < 0 || j >= items.length) return;
+    const arr = [...items]; [arr[i], arr[j]] = [arr[j], arr[i]];
+    setItems(arr);
+  };
+  const updateItem = (id: string, patch: Partial<ServicesItem>) =>
+    setItems(items.map((x) => (x.id === id ? { ...x, ...patch } : x)));
+
+  const autoTranslate = async (sourceText: string, targetLang: "bn" | "en", targetField: string, applyTo?: (v: string) => void) => {
     if (!sourceText.trim()) { toast({ title: "Source field is empty", variant: "destructive" }); return; }
     setTranslating(targetField);
     try {
@@ -75,27 +97,32 @@ const SectionEditorPanel = ({ blockKey }: Props) => {
       });
       if (error) throw error;
       const translated = data?.translatedText || "";
-      if (translated) setText(targetField as any, translated);
+      if (translated) {
+        if (applyTo) applyTo(translated);
+        else setText(targetField as any, translated);
+      }
     } catch (e: any) {
       toast({ title: "Translation failed", description: e?.message, variant: "destructive" });
     } finally { setTranslating(null); }
   };
 
   const handlePublish = async () => {
-    await publishBlock(blockKey);
-    toast({ title: "Published", description: `${BLOCK_LABELS[blockKey]} is now live.` });
+    await publishBlock(blockKey, page);
+    toast({ title: "Published", description: `${blockLabel} is now live.` });
   };
   const handleRevert = async () => {
-    await revertBlockDraft(blockKey);
+    await revertBlockDraft(blockKey, page);
     toast({ title: "Reverted to published version" });
   };
 
   const tabs: { id: Tab; label: string; icon: any }[] = [
     { id: "text", label: "Text", icon: TypeIcon },
+    ...(isServices ? [{ id: "items" as Tab, label: "Items", icon: Layers }] : []),
     { id: "show", label: "Show/Hide", icon: Eye },
     { id: "style", label: "Style", icon: Wand2 },
     { id: "advanced", label: "Advanced", icon: Settings2 },
   ];
+
 
   return (
     <AnimatePresence>
@@ -110,7 +137,7 @@ const SectionEditorPanel = ({ blockKey }: Props) => {
           <div className="flex items-center gap-2 min-w-0">
             <Sparkles className="w-4 h-4 text-primary shrink-0" />
             <div className="min-w-0">
-              <p className="text-sm font-semibold truncate">{BLOCK_LABELS[blockKey]} Section</p>
+              <p className="text-sm font-semibold truncate">{blockLabel} Section</p>
               <p className="text-[10px] text-muted-foreground">
                 {row?.has_unpublished_changes ? "Unpublished changes" : "All changes published"}
                 {saving && " · saving…"}
@@ -128,7 +155,7 @@ const SectionEditorPanel = ({ blockKey }: Props) => {
             <span>Section {visible ? "visible" : "hidden"}</span>
           </div>
           <button
-            onClick={() => setBlockVisible(blockKey, !visible)}
+            onClick={() => setBlockVisible(blockKey, !visible, page)}
             className={`text-[11px] px-2 py-1 rounded-full font-medium ${visible ? "bg-destructive/10 text-destructive hover:bg-destructive/20" : "bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20"}`}
           >
             {visible ? "Hide" : "Show"}
@@ -167,6 +194,58 @@ const SectionEditorPanel = ({ blockKey }: Props) => {
                 onTranslate={autoTranslate}
                 bnField="subtitle_bn" enField="subtitle_en" translating={translating} multiline />
             </>
+          )}
+
+          {tab === "items" && isServices && (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <p className="text-[11px] text-muted-foreground">{items.length} item{items.length === 1 ? "" : "s"}</p>
+                <button onClick={addItem} className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-primary/10 text-primary text-[11px] font-medium hover:bg-primary/20">
+                  <Plus className="w-3 h-3" /> Add card
+                </button>
+              </div>
+              {items.map((it, idx) => {
+                const Icon = (LucideIcons as any)[it.icon] || LucideIcons.BookOpen;
+                return (
+                  <div key={it.id} className="border border-border rounded-xl p-3 space-y-2 bg-background/50">
+                    <div className="flex items-center gap-2">
+                      <Icon className="w-4 h-4 text-primary shrink-0" />
+                      <select value={it.icon} onChange={(e) => updateItem(it.id, { icon: e.target.value as ServiceIcon })}
+                        className={`${inputCls} text-xs flex-1`}>
+                        {SERVICE_ICONS.map((ic) => <option key={ic} value={ic}>{ic}</option>)}
+                      </select>
+                      <button onClick={() => updateItem(it.id, { visible: !it.visible })}
+                        className="p-1.5 rounded-lg hover:bg-foreground/5" title={it.visible ? "Hide" : "Show"}>
+                        {it.visible ? <Eye className="w-3.5 h-3.5 text-emerald-600" /> : <EyeOff className="w-3.5 h-3.5 text-muted-foreground" />}
+                      </button>
+                      <button disabled={idx === 0} onClick={() => moveItem(it.id, -1)} className="p-1 rounded hover:bg-foreground/5 disabled:opacity-30" title="Move up">
+                        <ChevronUp className="w-3.5 h-3.5" />
+                      </button>
+                      <button disabled={idx === items.length - 1} onClick={() => moveItem(it.id, 1)} className="p-1 rounded hover:bg-foreground/5 disabled:opacity-30" title="Move down">
+                        <ChevronDown className="w-3.5 h-3.5" />
+                      </button>
+                      <button onClick={() => removeItem(it.id)} className="p-1 rounded hover:bg-destructive/10 text-destructive" title="Remove">
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-1 gap-1.5">
+                      <div className="flex gap-1">
+                        <input className={`${inputCls} font-bengali text-xs`} placeholder="বাংলা শিরোনাম" value={it.title_bn} onChange={(e) => updateItem(it.id, { title_bn: e.target.value })} />
+                        <button onClick={() => autoTranslate(it.title_bn, "en", `it_${it.id}_t_en`, (v) => updateItem(it.id, { title_en: v }))} disabled={translating === `it_${it.id}_t_en` || !it.title_bn.trim()} className="p-1.5 rounded-lg bg-muted hover:bg-foreground/10 disabled:opacity-40 shrink-0" title="BN→EN">
+                          {translating === `it_${it.id}_t_en` ? <Loader2 className="w-3 h-3 animate-spin" /> : <Languages className="w-3 h-3" />}
+                        </button>
+                      </div>
+                      <input className={`${inputCls} text-xs`} placeholder="English title" value={it.title_en} onChange={(e) => updateItem(it.id, { title_en: e.target.value })} />
+                      <textarea className={`${inputCls} font-bengali text-xs min-h-[44px]`} placeholder="বাংলা বিবরণ" value={it.desc_bn} onChange={(e) => updateItem(it.id, { desc_bn: e.target.value })} />
+                      <textarea className={`${inputCls} text-xs min-h-[44px]`} placeholder="English description" value={it.desc_en} onChange={(e) => updateItem(it.id, { desc_en: e.target.value })} />
+                    </div>
+                  </div>
+                );
+              })}
+              {items.length === 0 && (
+                <p className="text-xs text-muted-foreground italic text-center py-4">No items. Add a card to get started.</p>
+              )}
+            </div>
           )}
 
           {tab === "show" && (

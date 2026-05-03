@@ -1,14 +1,16 @@
-// PageBlocksContext — generic loader for ALL page blocks on a given page.
-// Phase 2: supports hero + about/services/events_preview/members/footer.
-// Editors read draft (preview), publish (push draft → published_config),
-// or revert (copy published → draft). Each row keyed by (page, block_key).
+// PageBlocksContext — generic loader for ALL page blocks across ALL pages.
+// Phase 3: loads landing + global + secondary-page blocks in one shot.
+// Editors keyed by `${page}:${block_key}` internally; convenience helpers
+// keep landing-page back-compat (single block_key string).
 
 import { createContext, useContext, useEffect, useState, ReactNode, useCallback, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   mergeHeroConfig, mergeSectionConfig,
+  mergeServicesConfig, mergeNavConfig, mergeFooterLinksConfig,
   type HeroConfig, type SectionConfig, type AnyBlockKey,
+  type ServicesSectionConfig, type NavConfig, type FooterLinksConfig,
 } from "@/lib/pageBlocks";
 
 interface BlockRow {
@@ -24,8 +26,11 @@ interface BlockRow {
   sort_order: number;
 }
 
+// internal storage key — `${page}:${block_key}`
+const k = (page: string, key: string) => `${page}:${key}`;
+
 interface PageBlocksContextType {
-  // raw rows
+  // raw rows by composite key
   rows: Record<string, BlockRow>;
   loading: boolean;
   saving: boolean;
@@ -34,9 +39,9 @@ interface PageBlocksContextType {
   previewDraft: boolean;
   setPreviewDraft: (v: boolean) => void;
 
-  // currently-selected block in the editor (null = nothing open)
-  activeBlock: AnyBlockKey | null;
-  setActiveBlock: (k: AnyBlockKey | null) => void;
+  // currently-selected block in the editor (composite key `${page}:${block_key}`, or null)
+  activeBlock: string | null;
+  setActiveBlock: (k: string | null) => void;
 
   // ---- hero (back-compat for HeroEditorPanel + HeroSection) ----
   hero: HeroConfig;
@@ -48,15 +53,28 @@ interface PageBlocksContextType {
   publishHero: () => Promise<void>;
   revertHeroDraft: () => Promise<void>;
 
-  // ---- generic section helpers ----
-  getSection: (key: string) => SectionConfig;
-  getSectionDraft: (key: string) => SectionConfig;
-  getRow: (key: string) => BlockRow | null;
-  isVisible: (key: string) => boolean;
-  updateSectionDraft: (key: string, patch: Partial<SectionConfig> | ((prev: SectionConfig) => SectionConfig)) => Promise<void>;
-  setBlockVisible: (key: string, v: boolean) => Promise<void>;
-  publishBlock: (key: string) => Promise<void>;
-  revertBlockDraft: (key: string) => Promise<void>;
+  // ---- generic helpers (default page = "landing" for back-compat) ----
+  getSection: (key: string, page?: string) => SectionConfig;
+  getSectionDraft: (key: string, page?: string) => SectionConfig;
+  getRow: (key: string, page?: string) => BlockRow | null;
+  isVisible: (key: string, page?: string) => boolean;
+  updateSectionDraft: (key: string, patch: Partial<SectionConfig> | ((prev: SectionConfig) => SectionConfig), page?: string) => Promise<void>;
+  setBlockVisible: (key: string, v: boolean, page?: string) => Promise<void>;
+  publishBlock: (key: string, page?: string) => Promise<void>;
+  revertBlockDraft: (key: string, page?: string) => Promise<void>;
+
+  // ---- raw draft updater (for blocks that aren't pure SectionConfig: services items, nav, footer_links) ----
+  updateRawDraft: (key: string, patch: any | ((prev: any) => any), page?: string) => Promise<void>;
+  getRawPublished: (key: string, page?: string) => any;
+  getRawDraft: (key: string, page?: string) => any;
+
+  // ---- typed helpers for new blocks ----
+  getServices: () => ServicesSectionConfig;
+  getServicesDraft: () => ServicesSectionConfig;
+  getNav: () => NavConfig;
+  getNavDraft: () => NavConfig;
+  getFooterLinks: () => FooterLinksConfig;
+  getFooterLinksDraft: () => FooterLinksConfig;
 
   refresh: () => Promise<void>;
 }
@@ -69,17 +87,16 @@ export const PageBlocksProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [previewDraft, setPreviewDraft] = useState(false);
-  const [activeBlock, setActiveBlock] = useState<AnyBlockKey | null>(null);
+  const [activeBlock, setActiveBlock] = useState<string | null>(null);
 
   const fetchBlocks = useCallback(async () => {
     const { data } = await supabase
       .from("page_blocks")
       .select("*")
-      .eq("page", "landing")
       .order("sort_order", { ascending: true });
     if (data) {
       const map: Record<string, BlockRow> = {};
-      for (const r of data as BlockRow[]) map[r.block_key] = r;
+      for (const r of data as BlockRow[]) map[k(r.page, r.block_key)] = r;
       setRows(map);
     }
     setLoading(false);
@@ -87,16 +104,13 @@ export const PageBlocksProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => { fetchBlocks(); }, [fetchBlocks]);
 
-  // When admin closes edit mode entirely, also close any open block panel + preview.
-  // (preview toggle is otherwise driven by the active panel.)
-
-
-  // -------- generic helpers --------
-  const getRow = useCallback((key: string) => rows[key] ?? null, [rows]);
-  const isVisible = useCallback((key: string) => rows[key]?.visible ?? true, [rows]);
+  // -------- generic helpers (default landing for back-compat) --------
+  const getRow = useCallback((key: string, page = "landing") => rows[k(page, key)] ?? null, [rows]);
+  const isVisible = useCallback((key: string, page = "landing") => rows[k(page, key)]?.visible ?? true, [rows]);
 
   const persistDraft = useCallback(async (row: BlockRow, next: any) => {
-    setRows((prev) => ({ ...prev, [row.block_key]: { ...row, draft_config: next, has_unpublished_changes: true } }));
+    const ck = k(row.page, row.block_key);
+    setRows((prev) => ({ ...prev, [ck]: { ...row, draft_config: next, has_unpublished_changes: true } }));
     setSaving(true);
     await supabase
       .from("page_blocks")
@@ -105,14 +119,14 @@ export const PageBlocksProvider = ({ children }: { children: ReactNode }) => {
     setSaving(false);
   }, [user?.id]);
 
-  const setBlockVisible = useCallback(async (key: string, v: boolean) => {
-    const row = rows[key]; if (!row) return;
-    setRows((prev) => ({ ...prev, [key]: { ...row, visible: v } }));
+  const setBlockVisible = useCallback(async (key: string, v: boolean, page = "landing") => {
+    const row = rows[k(page, key)]; if (!row) return;
+    setRows((prev) => ({ ...prev, [k(page, key)]: { ...row, visible: v } }));
     await supabase.from("page_blocks").update({ visible: v }).eq("id", row.id);
   }, [rows]);
 
-  const publishBlock = useCallback(async (key: string) => {
-    const row = rows[key]; if (!row) return;
+  const publishBlock = useCallback(async (key: string, page = "landing") => {
+    const row = rows[k(page, key)]; if (!row) return;
     setSaving(true);
     const { data } = await supabase
       .from("page_blocks")
@@ -123,43 +137,80 @@ export const PageBlocksProvider = ({ children }: { children: ReactNode }) => {
         published_by: user?.id ?? null,
       })
       .eq("id", row.id).select().maybeSingle();
-    if (data) setRows((prev) => ({ ...prev, [key]: data as BlockRow }));
+    if (data) setRows((prev) => ({ ...prev, [k(page, key)]: data as BlockRow }));
     setSaving(false);
   }, [rows, user?.id]);
 
-  const revertBlockDraft = useCallback(async (key: string) => {
-    const row = rows[key]; if (!row) return;
+  const revertBlockDraft = useCallback(async (key: string, page = "landing") => {
+    const row = rows[k(page, key)]; if (!row) return;
     setSaving(true);
     const { data } = await supabase
       .from("page_blocks")
       .update({ draft_config: row.published_config, has_unpublished_changes: false })
       .eq("id", row.id).select().maybeSingle();
-    if (data) setRows((prev) => ({ ...prev, [key]: data as BlockRow }));
+    if (data) setRows((prev) => ({ ...prev, [k(page, key)]: data as BlockRow }));
     setSaving(false);
   }, [rows]);
 
   // -------- section-typed helpers --------
-  const getSection = useCallback((key: string): SectionConfig => {
-    const r = rows[key];
+  const getSection = useCallback((key: string, page = "landing"): SectionConfig => {
+    const r = rows[k(page, key)];
     return mergeSectionConfig(previewDraft ? r?.draft_config : r?.published_config);
   }, [rows, previewDraft]);
 
-  const getSectionDraft = useCallback((key: string): SectionConfig => {
-    return mergeSectionConfig(rows[key]?.draft_config);
+  const getSectionDraft = useCallback((key: string, page = "landing"): SectionConfig => {
+    return mergeSectionConfig(rows[k(page, key)]?.draft_config);
   }, [rows]);
 
   const updateSectionDraft = useCallback(async (
     key: string,
     patch: Partial<SectionConfig> | ((prev: SectionConfig) => SectionConfig),
+    page = "landing",
   ) => {
-    const row = rows[key]; if (!row) return;
+    const row = rows[k(page, key)]; if (!row) return;
     const prev = mergeSectionConfig(row.draft_config);
     const next = typeof patch === "function" ? patch(prev) : mergeSectionConfig({ ...prev, ...patch });
+    // preserve any non-SectionConfig fields (e.g., services items)
+    const merged = { ...row.draft_config, ...next };
+    await persistDraft(row, merged);
+  }, [rows, persistDraft]);
+
+  // raw draft updater — for non-Section configs (services items, nav, footer_links)
+  const updateRawDraft = useCallback(async (
+    key: string,
+    patch: any | ((prev: any) => any),
+    page = "landing",
+  ) => {
+    const row = rows[k(page, key)]; if (!row) return;
+    const prev = row.draft_config ?? {};
+    const next = typeof patch === "function" ? patch(prev) : { ...prev, ...patch };
     await persistDraft(row, next);
   }, [rows, persistDraft]);
 
+  const getRawPublished = useCallback((key: string, page = "landing") => rows[k(page, key)]?.published_config ?? {}, [rows]);
+  const getRawDraft = useCallback((key: string, page = "landing") => rows[k(page, key)]?.draft_config ?? {}, [rows]);
+
+  // -------- typed helpers --------
+  const getServices = useCallback((): ServicesSectionConfig => {
+    const r = rows[k("landing", "services")];
+    return mergeServicesConfig(previewDraft ? r?.draft_config : r?.published_config);
+  }, [rows, previewDraft]);
+  const getServicesDraft = useCallback(() => mergeServicesConfig(rows[k("landing", "services")]?.draft_config), [rows]);
+
+  const getNav = useCallback((): NavConfig => {
+    const r = rows[k("global", "nav")];
+    return mergeNavConfig(previewDraft ? r?.draft_config : r?.published_config);
+  }, [rows, previewDraft]);
+  const getNavDraft = useCallback(() => mergeNavConfig(rows[k("global", "nav")]?.draft_config), [rows]);
+
+  const getFooterLinks = useCallback((): FooterLinksConfig => {
+    const r = rows[k("global", "footer_links")];
+    return mergeFooterLinksConfig(previewDraft ? r?.draft_config : r?.published_config);
+  }, [rows, previewDraft]);
+  const getFooterLinksDraft = useCallback(() => mergeFooterLinksConfig(rows[k("global", "footer_links")]?.draft_config), [rows]);
+
   // -------- hero back-compat --------
-  const heroRow = rows["hero"] ?? null;
+  const heroRow = rows[k("landing", "hero")] ?? null;
   const heroDraft = useMemo(() => mergeHeroConfig(heroRow?.draft_config), [heroRow]);
   const heroPublished = useMemo(() => mergeHeroConfig(heroRow?.published_config), [heroRow]);
   const hero = previewDraft ? heroDraft : heroPublished;
@@ -186,6 +237,10 @@ export const PageBlocksProvider = ({ children }: { children: ReactNode }) => {
       updateHeroDraft, setHeroVisible, publishHero, revertHeroDraft,
       getSection, getSectionDraft, getRow, isVisible,
       updateSectionDraft, setBlockVisible, publishBlock, revertBlockDraft,
+      updateRawDraft, getRawPublished, getRawDraft,
+      getServices, getServicesDraft,
+      getNav, getNavDraft,
+      getFooterLinks, getFooterLinksDraft,
       refresh: fetchBlocks,
     }}>
       {children}
