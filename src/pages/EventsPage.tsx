@@ -9,9 +9,15 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { createSlug } from "@/lib/slugify";
+import { usePageBlocks } from "@/contexts/PageBlocksContext";
 
 const EventsPage = () => {
   const { t, lang } = useLanguage();
+  const { getListing } = usePageBlocks();
+  const listing = getListing("events");
+  const pickL = (bn: string, en: string, fb: string) => (lang === "bn" ? (bn || fb) : (en || fb));
+  const introText = pickL(listing.intro_bn, listing.intro_en, "");
+  const emptyText = pickL(listing.emptyState_bn, listing.emptyState_en, t("noEvents"));
 
   const { data: dbEvents, isLoading } = useQuery({
     queryKey: ["events"],
