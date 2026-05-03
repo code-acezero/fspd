@@ -102,7 +102,10 @@ const AdminDashboard = () => {
       const { data } = await supabase.from("members").select("*").order("sort_order", { ascending: true });
       if (data) setMembers(data);
     }
-    if (activeTab === "assets") {
+    if (activeTab === "courses" || activeTab === "dashboard") {
+      const { data } = await supabase.from("courses").select("*").order("sort_order", { ascending: true });
+      if (data) setCourses(data);
+    }
       const { data } = await supabase.from("site_assets").select("*").order("slot", { ascending: true }).order("sort_order", { ascending: true });
       if (data) setAssets(data);
     }
