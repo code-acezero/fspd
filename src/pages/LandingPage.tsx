@@ -7,6 +7,8 @@ import Footer from "@/components/landing/Footer";
 import ParticleField from "@/components/effects/ParticleField";
 import EditorToolbar from "@/components/editor/EditorToolbar";
 import HeroEditorPanel from "@/components/editor/HeroEditorPanel";
+import SectionEditorPanel from "@/components/editor/SectionEditorPanel";
+import SectionSwitcher from "@/components/editor/SectionSwitcher";
 
 const LandingPage = () => (
   <div className="min-h-screen bg-background relative">
@@ -21,7 +23,13 @@ const LandingPage = () => (
     </div>
     {/* Admin-only inline CMS editor (mounts only for admins/mods) */}
     <EditorToolbar />
+    <SectionSwitcher />
     <HeroEditorPanel />
+    <SectionEditorPanel blockKey="about" />
+    <SectionEditorPanel blockKey="services" />
+    <SectionEditorPanel blockKey="events_preview" />
+    <SectionEditorPanel blockKey="members" />
+    <SectionEditorPanel blockKey="footer" />
   </div>
 );
 
