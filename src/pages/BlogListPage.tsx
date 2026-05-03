@@ -136,7 +136,7 @@ const BlogListPage = () => {
         )}
 
         {!isLoading && filtered.length === 0 && (
-          <div className="text-center py-16"><BookOpen className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" /><p className="font-bengali text-muted-foreground">{t("noPosts")}</p></div>
+          <div className="text-center py-16"><BookOpen className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" /><p className="font-bengali text-muted-foreground">{emptyText}</p></div>
         )}
       </div>
       <Footer />
