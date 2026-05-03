@@ -4,7 +4,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLocation } from "react-router-dom";
-import { Eye, EyeOff, Pencil, Layers, X, GripVertical, Plus } from "lucide-react";
+import { Eye, EyeOff, Pencil, Layers, X, GripVertical, Plus, Rocket, Loader2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 import {
   DndContext, closestCenter, PointerSensor, useSensor, useSensors,
   type DragEndEvent,
@@ -95,9 +96,12 @@ const SectionSwitcher = () => {
   const { editMode, setEditMode } = useVisualEditor();
   const {
     rows, activeBlock, setPreviewDraft, getOrderedKeys, reorderBlocks, setBlockVisible,
+    dirtyKeys, publishAll, saving,
   } = usePageBlocks();
   const { pathname } = useLocation();
+  const { toast } = useToast();
   const [showAddMenu, setShowAddMenu] = useState(false);
+  const [publishingAll, setPublishingAll] = useState(false);
 
   useEffect(() => { setPreviewDraft(editMode); }, [editMode, setPreviewDraft]);
 
