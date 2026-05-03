@@ -114,14 +114,16 @@ const HeroSection = () => {
         </motion.h1>
 
         {/* Founding year — change the year in one place if needed. */}
-        <motion.p
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.3 }}
-          className="text-shine text-sm md:text-base tracking-[2em] uppercase mb-6 font-medium font-bengali pl-[2em]"
+          className="inline-block mb-6 px-6 py-2 rounded-full border border-accent/30 bg-gradient-to-r from-primary/15 via-accent/10 to-primary/15 backdrop-blur-sm shadow-[0_4px_20px_-4px_hsl(var(--primary)/0.35)]"
         >
-          {lang === "en" ? "Established 1975" : "প্রতিষ্ঠিত ১৯৭৫"}
-        </motion.p>
+          <p className="text-shine text-sm md:text-base tracking-[2em] uppercase font-medium font-bengali pl-[2em] mb-0">
+            {lang === "en" ? "Established 1975" : "প্রতিষ্ঠিত ১৯৭৫"}
+          </p>
+        </motion.div>
 
         <motion.p initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.4 }} className="text-muted-foreground text-lg md:text-xl max-w-2xl mx-auto mb-4 font-bengali">
           {t("heroSubtitle")}
