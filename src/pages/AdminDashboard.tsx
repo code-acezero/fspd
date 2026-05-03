@@ -65,6 +65,12 @@ const AdminDashboard = () => {
   const [featuresForm, setFeaturesForm] = useState(settings.features);
   const [savingSettings, setSavingSettings] = useState(false);
   const [previewDevice, setPreviewDevice] = useState<"desktop" | "mobile">("desktop");
+  const [courses, setCourses] = useState<any[]>([]);
+  const [editingCourse, setEditingCourse] = useState<any>(null);
+  const [courseForm, setCourseForm] = useState({ ...emptyCourseForm });
+  const [savingCourse, setSavingCourse] = useState(false);
+  const [uploadingCourseImage, setUploadingCourseImage] = useState(false);
+  const courseImageRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!user) { navigate("/login"); return; }
