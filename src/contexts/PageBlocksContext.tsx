@@ -9,8 +9,10 @@ import { useAuth } from "@/contexts/AuthContext";
 import {
   mergeHeroConfig, mergeSectionConfig,
   mergeServicesConfig, mergeNavConfig, mergeFooterLinksConfig,
+  mergeAboutConfig, mergeEventsConfig, mergeMembersConfig,
   type HeroConfig, type SectionConfig, type AnyBlockKey,
   type ServicesSectionConfig, type NavConfig, type FooterLinksConfig,
+  type AboutSectionConfig, type EventsSectionConfig, type MembersSectionConfig,
 } from "@/lib/pageBlocks";
 
 interface BlockRow {
