@@ -137,7 +137,7 @@ const SectionEditorPanel = ({ blockKey, page = "landing", label }: Props) => {
           <div className="flex items-center gap-2 min-w-0">
             <Sparkles className="w-4 h-4 text-primary shrink-0" />
             <div className="min-w-0">
-              <p className="text-sm font-semibold truncate">{BLOCK_LABELS[blockKey]} Section</p>
+              <p className="text-sm font-semibold truncate">{blockLabel} Section</p>
               <p className="text-[10px] text-muted-foreground">
                 {row?.has_unpublished_changes ? "Unpublished changes" : "All changes published"}
                 {saving && " · saving…"}
@@ -155,7 +155,7 @@ const SectionEditorPanel = ({ blockKey, page = "landing", label }: Props) => {
             <span>Section {visible ? "visible" : "hidden"}</span>
           </div>
           <button
-            onClick={() => setBlockVisible(blockKey, !visible)}
+            onClick={() => setBlockVisible(blockKey, !visible, page)}
             className={`text-[11px] px-2 py-1 rounded-full font-medium ${visible ? "bg-destructive/10 text-destructive hover:bg-destructive/20" : "bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20"}`}
           >
             {visible ? "Hide" : "Show"}
@@ -194,6 +194,58 @@ const SectionEditorPanel = ({ blockKey, page = "landing", label }: Props) => {
                 onTranslate={autoTranslate}
                 bnField="subtitle_bn" enField="subtitle_en" translating={translating} multiline />
             </>
+          )}
+
+          {tab === "items" && isServices && (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <p className="text-[11px] text-muted-foreground">{items.length} item{items.length === 1 ? "" : "s"}</p>
+                <button onClick={addItem} className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-primary/10 text-primary text-[11px] font-medium hover:bg-primary/20">
+                  <Plus className="w-3 h-3" /> Add card
+                </button>
+              </div>
+              {items.map((it, idx) => {
+                const Icon = (LucideIcons as any)[it.icon] || LucideIcons.BookOpen;
+                return (
+                  <div key={it.id} className="border border-border rounded-xl p-3 space-y-2 bg-background/50">
+                    <div className="flex items-center gap-2">
+                      <Icon className="w-4 h-4 text-primary shrink-0" />
+                      <select value={it.icon} onChange={(e) => updateItem(it.id, { icon: e.target.value as ServiceIcon })}
+                        className={`${inputCls} text-xs flex-1`}>
+                        {SERVICE_ICONS.map((ic) => <option key={ic} value={ic}>{ic}</option>)}
+                      </select>
+                      <button onClick={() => updateItem(it.id, { visible: !it.visible })}
+                        className="p-1.5 rounded-lg hover:bg-foreground/5" title={it.visible ? "Hide" : "Show"}>
+                        {it.visible ? <Eye className="w-3.5 h-3.5 text-emerald-600" /> : <EyeOff className="w-3.5 h-3.5 text-muted-foreground" />}
+                      </button>
+                      <button disabled={idx === 0} onClick={() => moveItem(it.id, -1)} className="p-1 rounded hover:bg-foreground/5 disabled:opacity-30" title="Move up">
+                        <ChevronUp className="w-3.5 h-3.5" />
+                      </button>
+                      <button disabled={idx === items.length - 1} onClick={() => moveItem(it.id, 1)} className="p-1 rounded hover:bg-foreground/5 disabled:opacity-30" title="Move down">
+                        <ChevronDown className="w-3.5 h-3.5" />
+                      </button>
+                      <button onClick={() => removeItem(it.id)} className="p-1 rounded hover:bg-destructive/10 text-destructive" title="Remove">
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-1 gap-1.5">
+                      <div className="flex gap-1">
+                        <input className={`${inputCls} font-bengali text-xs`} placeholder="বাংলা শিরোনাম" value={it.title_bn} onChange={(e) => updateItem(it.id, { title_bn: e.target.value })} />
+                        <button onClick={() => autoTranslate(it.title_bn, "en", `it_${it.id}_t_en`, (v) => updateItem(it.id, { title_en: v }))} disabled={translating === `it_${it.id}_t_en` || !it.title_bn.trim()} className="p-1.5 rounded-lg bg-muted hover:bg-foreground/10 disabled:opacity-40 shrink-0" title="BN→EN">
+                          {translating === `it_${it.id}_t_en` ? <Loader2 className="w-3 h-3 animate-spin" /> : <Languages className="w-3 h-3" />}
+                        </button>
+                      </div>
+                      <input className={`${inputCls} text-xs`} placeholder="English title" value={it.title_en} onChange={(e) => updateItem(it.id, { title_en: e.target.value })} />
+                      <textarea className={`${inputCls} font-bengali text-xs min-h-[44px]`} placeholder="বাংলা বিবরণ" value={it.desc_bn} onChange={(e) => updateItem(it.id, { desc_bn: e.target.value })} />
+                      <textarea className={`${inputCls} text-xs min-h-[44px]`} placeholder="English description" value={it.desc_en} onChange={(e) => updateItem(it.id, { desc_en: e.target.value })} />
+                    </div>
+                  </div>
+                );
+              })}
+              {items.length === 0 && (
+                <p className="text-xs text-muted-foreground italic text-center py-4">No items. Add a card to get started.</p>
+              )}
+            </div>
           )}
 
           {tab === "show" && (
