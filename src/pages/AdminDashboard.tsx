@@ -241,6 +241,62 @@ const AdminDashboard = () => {
 
   const deletePost = async (id: string) => { await supabase.from("posts").delete().eq("id", id); toast({ title: t("deleted") }); fetchData(); };
 
+  const handleCourseImageUpload = async (file: File) => {
+    if (file.size > 5 * 1024 * 1024) { toast({ title: t("error"), description: "Max 5MB", variant: "destructive" }); return; }
+    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) { toast({ title: t("error"), description: t("invalidImageType"), variant: "destructive" }); return; }
+    setUploadingCourseImage(true);
+    const filePath = `courses/${Date.now()}-${file.name}`;
+    const { error: uploadError } = await supabase.storage.from("content-images").upload(filePath, file, { upsert: true });
+    if (uploadError) toast({ title: t("uploadFailed"), description: uploadError.message, variant: "destructive" });
+    else {
+      const { data: urlData } = supabase.storage.from("content-images").getPublicUrl(filePath);
+      setCourseForm((p) => ({ ...p, cover_image: urlData.publicUrl }));
+      toast({ title: t("success"), description: t("imageUploaded") });
+    }
+    setUploadingCourseImage(false);
+  };
+
+  const splitCsv = (s: string) => s.split(",").map((x) => x.trim()).filter(Boolean);
+
+  const saveCourse = async () => {
+    setSavingCourse(true);
+    let form = { ...courseForm };
+    if (form.title && !form.title_en) form.title_en = await autoTranslate(form.title, "en");
+    else if (form.title_en && !form.title) form.title = await autoTranslate(form.title_en, "bn");
+    if (form.description && !form.description_en) form.description_en = await autoTranslate(form.description, "en");
+    else if (form.description_en && !form.description) form.description = await autoTranslate(form.description_en, "bn");
+    if (form.instructor && !form.instructor_en) form.instructor_en = await autoTranslate(form.instructor, "en");
+    if (form.duration && !form.duration_en) form.duration_en = await autoTranslate(form.duration, "en");
+    const payload: any = {
+      title: form.title, title_en: form.title_en,
+      instructor: form.instructor, instructor_en: form.instructor_en,
+      duration: form.duration, duration_en: form.duration_en,
+      modules: Number(form.modules) || 0, enrolled: Number(form.enrolled) || 0,
+      status: form.status, description: form.description, description_en: form.description_en,
+      highlights: splitCsv(form.highlights), highlights_en: splitCsv(form.highlights_en),
+      cover_image: form.cover_image, sort_order: Number(form.sort_order) || 0,
+      is_active: form.is_active, created_by: user?.id,
+    };
+    const { error } = editingCourse
+      ? await supabase.from("courses").update(payload).eq("id", editingCourse.id)
+      : await supabase.from("courses").insert(payload);
+    if (error) toast({ title: t("error"), description: error.message, variant: "destructive" });
+    else {
+      toast({ title: t("success"), description: t("courseSaved") });
+      setEditingCourse(null);
+      setCourseForm({ ...emptyCourseForm });
+      fetchData();
+    }
+    setSavingCourse(false);
+  };
+
+  const deleteCourse = async (id: string) => {
+    await supabase.from("courses").delete().eq("id", id);
+    toast({ title: t("deleted") });
+    fetchData();
+  };
+
+
   const saveEvent = async () => {
     let form = { ...eventForm };
     // Auto-translate event title
