@@ -1,7 +1,8 @@
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { GraduationCap, Clock, BookOpen, Users, CheckCircle } from "lucide-react";
+import { GraduationCap, Clock, BookOpen, Users, CheckCircle, Loader2 } from "lucide-react";
 import { Link } from "react-router-dom";
-import { courses } from "@/data/mockData";
+import { supabase } from "@/integrations/supabase/client";
 import { createSlug } from "@/lib/slugify";
 import MainNav from "@/components/MainNav";
 import Footer from "@/components/landing/Footer";
@@ -9,10 +10,43 @@ import PageHeader from "@/components/landing/PageHeader";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { usePageBlocks } from "@/contexts/PageBlocksContext";
 
+interface CourseRow {
+  id: string;
+  title: string;
+  title_en: string;
+  instructor: string;
+  instructor_en: string;
+  duration: string;
+  duration_en: string;
+  modules: number;
+  enrolled: number;
+  status: string;
+  description: string;
+  description_en: string;
+  highlights: string[];
+  highlights_en: string[];
+  cover_image: string;
+}
+
 const CoursesPage = () => {
   const { t, lang } = useLanguage();
   const { getListing } = usePageBlocks();
   const listing = getListing("courses");
+  const [courses, setCourses] = useState<CourseRow[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase
+        .from("courses")
+        .select("*")
+        .eq("is_active", true)
+        .order("sort_order", { ascending: true });
+      setCourses((data as CourseRow[]) || []);
+      setLoading(false);
+    })();
+  }, []);
+
   const pickL = (bn: string, en: string, fb: string) => (lang === "bn" ? (bn || fb) : (en || fb));
   const introText = pickL(listing.intro_bn, listing.intro_en, "");
   const emptyText = pickL(listing.emptyState_bn, listing.emptyState_en, lang === "bn" ? "শীঘ্রই কোর্স প্রকাশিত হবে।" : "Courses will be published soon.");
@@ -31,7 +65,9 @@ const CoursesPage = () => {
         {introText && (
           <p className="font-bengali text-center text-muted-foreground max-w-3xl mx-auto mb-8 whitespace-pre-line">{introText}</p>
         )}
-        {courses.length === 0 ? (
+        {loading ? (
+          <div className="flex justify-center py-20"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
+        ) : courses.length === 0 ? (
           <div className="text-center py-20">
             <GraduationCap className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
             <p className="font-bengali text-muted-foreground">{emptyText}</p>
@@ -39,24 +75,35 @@ const CoursesPage = () => {
         ) : (
           <div className="flex flex-wrap justify-center gap-6">
             {courses.map((course, index) => {
-              const status = statusLabels[course.status];
+              const status = statusLabels[course.status] ?? statusLabels.coming_soon;
+              const titleBn = course.title;
+              const titleEn = course.title_en;
+              const descBn = course.description;
+              const descEn = course.description_en;
+              const durBn = course.duration;
+              const durEn = course.duration_en;
+              const hlBn = course.highlights || [];
+              const hlEn = course.highlights_en || [];
               return (
-                <Link to={`/courses/${createSlug(course.titleEn || course.title, course.id)}`} key={course.id} className="block w-full md:w-[calc(50%-12px)] lg:w-[calc(33.333%-16px)]">
-                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.1 }} whileHover={{ y: -4 }} className="bg-card rounded-3xl border border-border overflow-hidden depth-card-3d group h-full">
-                  <div className="h-36 bg-gradient-to-br from-primary/15 to-forest/15 flex items-center justify-center relative"><GraduationCap className="w-12 h-12 text-primary/30" /><div className="absolute inset-0 bg-gradient-to-t from-card/30 to-transparent" /></div>
+                <Link to={`/courses/${createSlug(titleEn || titleBn, course.id)}`} key={course.id} className="block w-full md:w-[calc(50%-12px)] lg:w-[calc(33.333%-16px)]">
+                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.05 }} whileHover={{ y: -4 }} className="bg-card rounded-3xl border border-border overflow-hidden depth-card-3d group h-full">
+                  <div className="h-36 bg-gradient-to-br from-primary/15 to-forest/15 flex items-center justify-center relative overflow-hidden">
+                    {course.cover_image ? <img src={course.cover_image} alt="" className="w-full h-full object-cover" /> : <GraduationCap className="w-12 h-12 text-primary/30" />}
+                    <div className="absolute inset-0 bg-gradient-to-t from-card/30 to-transparent" />
+                  </div>
                   <div className="p-6">
                     <span className={`inline-block px-4 py-1 rounded-full text-xs font-semibold mb-3 ${status.color}`}>{status.label}</span>
                     <h3 className="font-bengali text-lg font-bold text-foreground mb-1 group-hover:text-primary transition-colors">
-                      {lang === "en" ? course.titleEn : course.title}
+                      {lang === "en" ? (titleEn || titleBn) : titleBn}
                     </h3>
-                    <p className="text-xs text-muted-foreground mb-3">{lang === "en" ? course.title : course.titleEn}</p>
-                    <p className="font-bengali text-sm text-muted-foreground mb-4">{lang === "en" ? course.descriptionEn : course.description}</p>
+                    <p className="text-xs text-muted-foreground mb-3">{lang === "en" ? titleBn : titleEn}</p>
+                    <p className="font-bengali text-sm text-muted-foreground mb-4">{lang === "en" ? (descEn || descBn) : descBn}</p>
                     <div className="flex flex-wrap gap-3 text-xs text-muted-foreground mb-4">
-                      <span className="flex items-center gap-1 px-3 py-1 rounded-full bg-secondary/80"><Clock className="w-3.5 h-3.5" />{lang === "en" ? course.durationEn : course.duration}</span>
+                      <span className="flex items-center gap-1 px-3 py-1 rounded-full bg-secondary/80"><Clock className="w-3.5 h-3.5" />{lang === "en" ? (durEn || durBn) : durBn}</span>
                       <span className="flex items-center gap-1 px-3 py-1 rounded-full bg-secondary/80"><BookOpen className="w-3.5 h-3.5" />{course.modules} {t("modules")}</span>
                       <span className="flex items-center gap-1 px-3 py-1 rounded-full bg-secondary/80"><Users className="w-3.5 h-3.5" />{course.enrolled} {t("enrolled")}</span>
                     </div>
-                    <div className="space-y-1.5 mb-5">{(lang === "en" ? course.highlightsEn : course.highlights).map((h) => (<div key={h} className="flex items-center gap-2 text-xs text-muted-foreground"><CheckCircle className="w-3.5 h-3.5 text-forest shrink-0" /><span className="font-bengali">{h}</span></div>))}</div>
+                    <div className="space-y-1.5 mb-5">{(lang === "en" ? hlEn : hlBn).slice(0, 4).map((h) => (<div key={h} className="flex items-center gap-2 text-xs text-muted-foreground"><CheckCircle className="w-3.5 h-3.5 text-forest shrink-0" /><span className="font-bengali">{h}</span></div>))}</div>
                     {course.status === "open" && (<button className="w-full py-2.5 rounded-full bg-primary text-primary-foreground text-sm font-semibold hover:bg-crimson-dark transition-colors font-bengali shadow-md shadow-primary/20">{t("register")}</button>)}
                   </div>
                 </motion.div>
