@@ -8,8 +8,9 @@
     <meta name="description" content="বাংলা সাহিত্য, সংস্কৃতি ও জ্ঞানচর্চার মাধ্যমে ঐতিহ্য সংরক্ষণে নিবেদিত সংগঠন">
     <meta name="author" content="Faridpur Shahitto Parishad" />
 
-    <!-- Preconnect to font origins so font bytes arrive earlier and the
-         post-load text reflow happens before LCP rather than after it. -->
+    <!-- Preconnect to critical third-party origins to shave TLS/DNS cost
+         off the longest network chain (Supabase REST + Google Fonts). -->
+    <link rel="preconnect" href="https://thvxiskgrndguzfjcvrs.supabase.co" crossorigin>
     <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
