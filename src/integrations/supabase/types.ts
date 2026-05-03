@@ -119,6 +119,48 @@ export type Database = {
         }
         Relationships: []
       }
+      custom_pages: {
+        Row: {
+          blocks: Json
+          created_at: string
+          created_by: string | null
+          id: string
+          is_published: boolean
+          show_in_nav: boolean
+          slug: string
+          sort_order: number
+          title: string
+          title_en: string
+          updated_at: string
+        }
+        Insert: {
+          blocks?: Json
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_published?: boolean
+          show_in_nav?: boolean
+          slug: string
+          sort_order?: number
+          title?: string
+          title_en?: string
+          updated_at?: string
+        }
+        Update: {
+          blocks?: Json
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_published?: boolean
+          show_in_nav?: boolean
+          slug?: string
+          sort_order?: number
+          title?: string
+          title_en?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       events: {
         Row: {
           cover_image: string
@@ -302,6 +344,54 @@ export type Database = {
           page?: string
           published_at?: string
           published_by?: string | null
+        }
+        Relationships: []
+      }
+      page_seo: {
+        Row: {
+          canonical: string
+          description: string
+          description_en: string
+          id: string
+          keywords: string
+          keywords_en: string
+          no_index: boolean
+          og_image: string
+          path: string
+          title: string
+          title_en: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          canonical?: string
+          description?: string
+          description_en?: string
+          id?: string
+          keywords?: string
+          keywords_en?: string
+          no_index?: boolean
+          og_image?: string
+          path: string
+          title?: string
+          title_en?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          canonical?: string
+          description?: string
+          description_en?: string
+          id?: string
+          keywords?: string
+          keywords_en?: string
+          no_index?: boolean
+          og_image?: string
+          path?: string
+          title?: string
+          title_en?: string
+          updated_at?: string
+          updated_by?: string | null
         }
         Relationships: []
       }
@@ -509,6 +599,54 @@ export type Database = {
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
+        }
+        Relationships: []
+      }
+      welcome_speeches: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          is_active: boolean
+          photo_url: string
+          role_label: string
+          role_label_en: string
+          sort_order: number
+          speaker_name: string
+          speaker_name_en: string
+          speech: string
+          speech_en: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          photo_url?: string
+          role_label?: string
+          role_label_en?: string
+          sort_order?: number
+          speaker_name?: string
+          speaker_name_en?: string
+          speech?: string
+          speech_en?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          photo_url?: string
+          role_label?: string
+          role_label_en?: string
+          sort_order?: number
+          speaker_name?: string
+          speaker_name_en?: string
+          speech?: string
+          speech_en?: string
+          updated_at?: string
         }
         Relationships: []
       }
