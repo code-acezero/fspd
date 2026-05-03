@@ -103,7 +103,7 @@ const EventsPreview = () => {
         ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5 lg:gap-6" style={{ perspective: "1000px" }}>
             {events.map((event, index) => (
-              <Link to={`/events/${createSlug(event.title_en || event.title, event.id)}`} key={event.id}>
+              <Link to={event.href} key={event.id}>
                 <motion.div
                   initial={animEnabled ? { opacity: 0, y: 30, rotateX: 5 } : false}
                   whileInView={{ opacity: 1, y: 0, rotateX: 0 }}
