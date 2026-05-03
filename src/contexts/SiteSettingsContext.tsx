@@ -78,6 +78,7 @@ const defaultSettings: SiteSettings = {
   appearance: { primary_color: "0 78% 45%", accent_color: "45 90% 52%", hero_style: "default", show_particles: true, palette: DEFAULT_PALETTE, logo_glow: "normal", logo_dilate: LOGO_DILATE_DEFAULT },
   features: { enable_blog: true, enable_events: true, enable_courses: true, enable_members: true, maintenance_mode: false },
   welcome_popup: { enabled: true, cooldown_minutes: 15 },
+  theme: DEFAULT_THEME,
 };
 
 interface SiteSettingsContextType {
