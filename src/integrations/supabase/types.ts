@@ -161,6 +161,81 @@ export type Database = {
         }
         Relationships: []
       }
+      page_blocks: {
+        Row: {
+          block_key: string
+          created_at: string
+          draft_config: Json
+          has_unpublished_changes: boolean
+          id: string
+          page: string
+          published_at: string | null
+          published_by: string | null
+          published_config: Json
+          sort_order: number
+          updated_at: string
+          updated_by: string | null
+          visible: boolean
+        }
+        Insert: {
+          block_key: string
+          created_at?: string
+          draft_config?: Json
+          has_unpublished_changes?: boolean
+          id?: string
+          page: string
+          published_at?: string | null
+          published_by?: string | null
+          published_config?: Json
+          sort_order?: number
+          updated_at?: string
+          updated_by?: string | null
+          visible?: boolean
+        }
+        Update: {
+          block_key?: string
+          created_at?: string
+          draft_config?: Json
+          has_unpublished_changes?: boolean
+          id?: string
+          page?: string
+          published_at?: string | null
+          published_by?: string | null
+          published_config?: Json
+          sort_order?: number
+          updated_at?: string
+          updated_by?: string | null
+          visible?: boolean
+        }
+        Relationships: []
+      }
+      page_blocks_history: {
+        Row: {
+          block_key: string
+          config: Json
+          id: string
+          page: string
+          published_at: string
+          published_by: string | null
+        }
+        Insert: {
+          block_key: string
+          config: Json
+          id?: string
+          page: string
+          published_at?: string
+          published_by?: string | null
+        }
+        Update: {
+          block_key?: string
+          config?: Json
+          id?: string
+          page?: string
+          published_at?: string
+          published_by?: string | null
+        }
+        Relationships: []
+      }
       posts: {
         Row: {
           approval_status: string
