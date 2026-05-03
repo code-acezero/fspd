@@ -284,7 +284,7 @@ const SectionEditorPanel = ({ blockKey, page = "landing", label }: Props) => {
             </ItemsList>
           )}
 
-          {tab === "items" && isAbout && (
+          {tab === "items" && showsStats && (
             <ItemsList
               count={aboutStats.length} label="stat"
               onAdd={addStat}
