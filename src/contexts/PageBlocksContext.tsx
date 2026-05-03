@@ -87,6 +87,10 @@ export const PageBlocksProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => { fetchBlocks(); }, [fetchBlocks]);
 
+  // When admin closes edit mode entirely, also close any open block panel + preview.
+  // (preview toggle is otherwise driven by the active panel.)
+
+
   // -------- generic helpers --------
   const getRow = useCallback((key: string) => rows[key] ?? null, [rows]);
   const isVisible = useCallback((key: string) => rows[key]?.visible ?? true, [rows]);
