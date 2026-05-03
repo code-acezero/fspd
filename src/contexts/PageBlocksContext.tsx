@@ -267,6 +267,9 @@ export const PageBlocksProvider = ({ children }: { children: ReactNode }) => {
       getServices, getServicesDraft,
       getNav, getNavDraft,
       getFooterLinks, getFooterLinksDraft,
+      getAbout, getAboutDraft,
+      getEventsPreview, getEventsPreviewDraft,
+      getMembers, getMembersDraft,
       refresh: fetchBlocks,
     }}>
       {children}
