@@ -1,25 +1,24 @@
-// SectionSwitcher — a floating list of all landing-page blocks.
+// SectionSwitcher — floating list of all page blocks with drag-to-reorder.
 // Visible only when admin/mod + editMode is on AND no specific block panel is open.
-// Lets the admin pick which section to edit and toggle visibility quickly.
 
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLocation } from "react-router-dom";
-import { Eye, EyeOff, Pencil, Layers, X } from "lucide-react";
+import { Eye, EyeOff, Pencil, Layers, X, GripVertical, Plus } from "lucide-react";
+import {
+  DndContext, closestCenter, PointerSensor, useSensor, useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext, arrayMove, useSortable, verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { useAuth } from "@/contexts/AuthContext";
 import { useVisualEditor } from "@/contexts/VisualEditorContext";
 import { usePageBlocks } from "@/contexts/PageBlocksContext";
 import { BLOCK_LABELS } from "@/lib/pageBlocks";
 
-// Group entries by section in the switcher.
-const LANDING_ORDER: Array<{ page: string; key: string }> = [
-  { page: "landing", key: "hero" },
-  { page: "landing", key: "about" },
-  { page: "landing", key: "services" },
-  { page: "landing", key: "events_preview" },
-  { page: "landing", key: "members" },
-  { page: "landing", key: "footer" },
-];
+const ALL_LANDING_KEYS = ["hero", "about", "services", "events_preview", "members", "footer"];
 const GLOBAL_ORDER: Array<{ page: string; key: string }> = [
   { page: "global", key: "nav" },
   { page: "global", key: "footer_links" },
@@ -34,63 +33,110 @@ const ROUTE_TO_PAGE: Array<{ test: RegExp; page: string }> = [
   { test: /^\/courses/, page: "courses" },
 ];
 
+interface RowProps {
+  page: string;
+  blockKey: string;
+  draggable?: boolean;
+}
+
+const SortableRow = ({ page, blockKey, draggable }: RowProps) => {
+  const ck = `${page}:${blockKey}`;
+  const { rows, setActiveBlock, setBlockVisible } = usePageBlocks();
+  const row = rows[ck];
+  const sortable = useSortable({ id: ck, disabled: !draggable });
+  const style = { transform: CSS.Transform.toString(sortable.transform), transition: sortable.transition };
+  if (!row) return null;
+  const visible = row.visible;
+  const dirty = row.has_unpublished_changes;
+  return (
+    <div
+      ref={sortable.setNodeRef}
+      style={style}
+      className={`flex items-center gap-1 p-2 rounded-lg group ${sortable.isDragging ? "bg-primary/10 ring-1 ring-primary/40" : "hover:bg-muted/40"}`}
+    >
+      {draggable && (
+        <button
+          {...sortable.attributes}
+          {...sortable.listeners}
+          className="p-1 cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground touch-none"
+          title="Drag to reorder"
+          aria-label="Drag to reorder"
+        >
+          <GripVertical className="w-4 h-4" />
+        </button>
+      )}
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium truncate">{BLOCK_LABELS[blockKey] ?? blockKey}</span>
+          {dirty && <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-amber-500/15 text-amber-600 font-semibold uppercase tracking-wide">Draft</span>}
+        </div>
+        <p className="text-[10px] text-muted-foreground">{visible ? "Visible to visitors" : "Hidden"}</p>
+      </div>
+      <button
+        onClick={() => setBlockVisible(blockKey, !visible, page)}
+        className={`p-1.5 rounded-full ${visible ? "hover:bg-destructive/15 text-muted-foreground hover:text-destructive" : "hover:bg-emerald-500/15 text-emerald-600"}`}
+        title={visible ? "Hide" : "Show"}
+      >
+        {visible ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+      </button>
+      <button
+        onClick={() => setActiveBlock(ck)}
+        className="p-1.5 rounded-full bg-primary/10 text-primary hover:bg-primary/20"
+        title="Edit"
+      >
+        <Pencil className="w-4 h-4" />
+      </button>
+    </div>
+  );
+};
+
 const SectionSwitcher = () => {
   const { role } = useAuth();
   const { editMode, setEditMode } = useVisualEditor();
-  const { rows, activeBlock, setActiveBlock, setBlockVisible, setPreviewDraft } = usePageBlocks();
+  const {
+    rows, activeBlock, setPreviewDraft, getOrderedKeys, reorderBlocks, setBlockVisible,
+  } = usePageBlocks();
   const { pathname } = useLocation();
+  const [showAddMenu, setShowAddMenu] = useState(false);
 
   useEffect(() => { setPreviewDraft(editMode); }, [editMode, setPreviewDraft]);
 
   const isEditor = role === "admin" || role === "moderator";
   const open = isEditor && editMode && activeBlock === null;
 
-  // Build groups based on current route. Landing page shows landing sections;
-  // secondary pages show their own page_hero. Global blocks always show.
-  const groups = useMemo(() => {
-    const currentPage = ROUTE_TO_PAGE.find((r) => r.test.test(pathname))?.page ?? null;
-    const result: Array<{ title: string; entries: Array<{ page: string; key: string }> }> = [];
+  const currentPage = useMemo(
+    () => ROUTE_TO_PAGE.find((r) => r.test.test(pathname))?.page ?? null,
+    [pathname]
+  );
 
-    if (currentPage === "landing") {
-      result.push({ title: "Landing Page", entries: LANDING_ORDER });
-    } else if (currentPage) {
-      result.push({ title: `${currentPage[0].toUpperCase()}${currentPage.slice(1)} Page`, entries: [{ page: currentPage, key: "page_hero" }] });
-    }
-    result.push({ title: "Global", entries: GLOBAL_ORDER });
-    return result;
-  }, [pathname]);
+  // For landing: ordered list comes from DB (footer pinned last visually);
+  // hidden blocks appear in the same list, just toggleable. Reorder via DnD.
+  const landingOrdered = useMemo(() => {
+    if (currentPage !== "landing") return [];
+    const fromDb = getOrderedKeys("landing").filter((k) => ALL_LANDING_KEYS.includes(k));
+    if (fromDb.length === 0) return ALL_LANDING_KEYS;
+    // include any landing keys that exist in rows but missing from order (defensive)
+    const missing = ALL_LANDING_KEYS.filter((k) => rows[`landing:${k}`] && !fromDb.includes(k));
+    return [...fromDb, ...missing];
+  }, [currentPage, getOrderedKeys, rows]);
 
-  const renderRow = ({ page, key }: { page: string; key: string }) => {
-    const ck = `${page}:${key}`;
-    const row = rows[ck];
-    if (!row) return null;
-    const visible = row.visible;
-    const dirty = row.has_unpublished_changes;
-    return (
-      <div key={ck} className="flex items-center gap-2 p-2 rounded-lg hover:bg-muted/40 group">
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium truncate">{BLOCK_LABELS[key] ?? key}</span>
-            {dirty && <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-amber-500/15 text-amber-600 font-semibold uppercase tracking-wide">Draft</span>}
-          </div>
-          <p className="text-[10px] text-muted-foreground">{visible ? "Visible to visitors" : "Hidden"}</p>
-        </div>
-        <button
-          onClick={() => setBlockVisible(key, !visible, page)}
-          className={`p-1.5 rounded-full ${visible ? "hover:bg-destructive/15 text-muted-foreground hover:text-destructive" : "hover:bg-emerald-500/15 text-emerald-600"}`}
-          title={visible ? "Hide" : "Show"}
-        >
-          {visible ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
-        </button>
-        <button
-          onClick={() => setActiveBlock(ck)}
-          className="p-1.5 rounded-full bg-primary/10 text-primary hover:bg-primary/20"
-          title="Edit"
-        >
-          <Pencil className="w-4 h-4" />
-        </button>
-      </div>
-    );
+  // "Add block" — landing keys that aren't present in rows at all (rare; allows recovery)
+  const missingLandingKeys = useMemo(
+    () => ALL_LANDING_KEYS.filter((k) => !rows[`landing:${k}`]),
+    [rows]
+  );
+
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }));
+
+  const onDragEnd = (e: DragEndEvent) => {
+    const { active, over } = e;
+    if (!over || active.id === over.id) return;
+    const ids = landingOrdered.map((k) => `landing:${k}`);
+    const oldIdx = ids.indexOf(String(active.id));
+    const newIdx = ids.indexOf(String(over.id));
+    if (oldIdx < 0 || newIdx < 0) return;
+    const next = arrayMove(landingOrdered, oldIdx, newIdx);
+    reorderBlocks("landing", next);
   };
 
   return (
@@ -114,16 +160,66 @@ const SectionSwitcher = () => {
           </div>
 
           <div className="p-2 overflow-y-auto flex-1">
-            {groups.map((g) => (
-              <div key={g.title} className="mb-2">
-                <p className="px-2 pt-2 pb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{g.title}</p>
-                {g.entries.map(renderRow)}
+            {currentPage === "landing" && (
+              <div className="mb-2">
+                <div className="px-2 pt-2 pb-1 flex items-center justify-between">
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Landing Page</p>
+                  {missingLandingKeys.length > 0 && (
+                    <button
+                      onClick={() => setShowAddMenu((s) => !s)}
+                      className="text-[10px] flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-primary/10 text-primary hover:bg-primary/20"
+                    >
+                      <Plus className="w-3 h-3" /> Add
+                    </button>
+                  )}
+                </div>
+                {showAddMenu && missingLandingKeys.length > 0 && (
+                  <div className="mx-2 mb-2 p-2 rounded-lg border border-dashed border-border space-y-1">
+                    {missingLandingKeys.map((k) => (
+                      <button
+                        key={k}
+                        onClick={async () => {
+                          // Re-enable by setting visible=true (row may exist but hidden);
+                          // if row truly missing, this is a no-op until DB seeds it.
+                          await setBlockVisible(k, true, "landing");
+                          setShowAddMenu(false);
+                        }}
+                        className="w-full text-left text-xs px-2 py-1 rounded hover:bg-primary/10"
+                      >
+                        + {BLOCK_LABELS[k] ?? k}
+                      </button>
+                    ))}
+                  </div>
+                )}
+                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
+                  <SortableContext items={landingOrdered.map((k) => `landing:${k}`)} strategy={verticalListSortingStrategy}>
+                    {landingOrdered.map((key) => (
+                      <SortableRow key={key} page="landing" blockKey={key} draggable />
+                    ))}
+                  </SortableContext>
+                </DndContext>
               </div>
-            ))}
+            )}
+
+            {currentPage && currentPage !== "landing" && (
+              <div className="mb-2">
+                <p className="px-2 pt-2 pb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  {currentPage[0].toUpperCase()}{currentPage.slice(1)} Page
+                </p>
+                <SortableRow page={currentPage} blockKey="page_hero" />
+              </div>
+            )}
+
+            <div className="mb-2">
+              <p className="px-2 pt-2 pb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Global</p>
+              {GLOBAL_ORDER.map(({ page, key }) => (
+                <SortableRow key={`${page}:${key}`} page={page} blockKey={key} />
+              ))}
+            </div>
           </div>
 
           <div className="px-4 py-2 border-t border-border bg-muted/20 text-[10px] text-muted-foreground">
-            Tip: edits autosave as draft. Publish from each section's panel to push live.
+            Drag <GripVertical className="inline w-3 h-3" /> to reorder. Edits autosave as draft.
           </div>
         </motion.aside>
       )}
