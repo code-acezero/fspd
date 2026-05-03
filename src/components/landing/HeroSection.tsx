@@ -3,7 +3,7 @@ import { motion, useScroll, useTransform } from "framer-motion";
 import { ChevronDown, Eye, Home } from "lucide-react";
 import { Link } from "react-router-dom";
 import heroBanner from "@/assets/hero-banner.jpg";
-import alponaMotif from "@/assets/alpona-motif.png";
+import alponaMotif from "@/assets/alpona-motif.webp";
 import LogoTile from "@/components/branding/LogoTile";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useSiteSettings } from "@/contexts/SiteSettingsContext";
