@@ -16,7 +16,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import {
   BLOCK_LABELS, SERVICE_ICONS, DEFAULT_SERVICES_ITEMS, newId,
+  STAT_ICONS, DEFAULT_ABOUT_STATS, TAG_COLORS, MEMBER_GRADIENTS,
   type AnyBlockKey, type SectionConfig, type ServicesItem, type ServiceIcon,
+  type AboutStatItem, type StatIcon, type EventsItem, type MembersItem,
   type HeroAlign, type HeroSizeScale, type HeroSpacing, type HeroAnimation,
 } from "@/lib/pageBlocks";
 
