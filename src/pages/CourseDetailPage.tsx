@@ -1,30 +1,69 @@
+import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowLeft, GraduationCap, Clock, BookOpen, Users, CheckCircle, Share2, Loader2 } from "lucide-react";
-import { courses as mockCourses } from "@/data/mockData";
 import MainNav from "@/components/MainNav";
 import Footer from "@/components/landing/Footer";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useState } from "react";
 import { extractIdFromSlug } from "@/lib/slugify";
+import { supabase } from "@/integrations/supabase/client";
 import CourseRegisterDialog from "@/components/courses/CourseRegisterDialog";
+
+interface CourseRow {
+  id: string;
+  title: string;
+  title_en: string;
+  instructor: string;
+  instructor_en: string;
+  duration: string;
+  duration_en: string;
+  modules: number;
+  enrolled: number;
+  status: string;
+  description: string;
+  description_en: string;
+  highlights: string[];
+  highlights_en: string[];
+  cover_image: string;
+}
 
 const CourseDetailPage = () => {
   const { slug } = useParams();
   const { t, lang } = useLanguage();
   const [showShareMenu, setShowShareMenu] = useState(false);
   const [registerOpen, setRegisterOpen] = useState(false);
+  const [course, setCourse] = useState<CourseRow | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  // Support slug-based, direct ID, or trailing-numeric-id formats.
-  const shortId = slug ? extractIdFromSlug(slug) : "";
-  const trailingNumeric = slug ? (slug.match(/-(\d+)$/)?.[1] ?? "") : "";
-  const course = mockCourses.find((c) => c.id === slug || c.id === shortId || c.id === trailingNumeric);
+  useEffect(() => {
+    if (!slug) return;
+    (async () => {
+      setLoading(true);
+      const shortId = extractIdFromSlug(slug);
+      const isFullUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(shortId);
+      let q = supabase.from("courses").select("*").eq("is_active", true).limit(1);
+      if (isFullUuid) q = q.eq("id", shortId);
+      else q = q.filter("id::text", "ilike", `${shortId}%`);
+      const { data } = await q;
+      setCourse(((data || [])[0] as CourseRow) || null);
+      setLoading(false);
+    })();
+  }, [slug]);
 
   const statusLabels: Record<string, { label: string; color: string }> = {
     open: { label: t("statusOpen"), color: "bg-forest text-primary-foreground" },
     ongoing: { label: t("statusOngoing"), color: "bg-accent text-accent-foreground" },
     coming_soon: { label: t("statusComingSoon"), color: "bg-muted text-muted-foreground" },
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <MainNav />
+        <div className="flex items-center justify-center py-32"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>
+      </div>
+    );
+  }
 
   if (!course) {
     return (
@@ -40,8 +79,18 @@ const CourseDetailPage = () => {
     );
   }
 
-  const status = statusLabels[course.status];
-  const displayTitle = lang === "en" ? course.titleEn : course.title;
+  const status = statusLabels[course.status] ?? statusLabels.coming_soon;
+  const titleBn = course.title;
+  const titleEn = course.title_en;
+  const displayTitle = lang === "en" ? (titleEn || titleBn) : titleBn;
+  const descBn = course.description;
+  const descEn = course.description_en;
+  const durBn = course.duration;
+  const durEn = course.duration_en;
+  const instBn = course.instructor;
+  const instEn = course.instructor_en;
+  const hlBn = course.highlights || [];
+  const hlEn = course.highlights_en || [];
   const shareUrl = window.location.href;
 
   return (
@@ -57,10 +106,10 @@ const CourseDetailPage = () => {
           <div className="max-w-3xl">
             <span className={`inline-block px-4 py-1 rounded-full text-sm font-semibold mb-3 ${status.color}`}>{status.label}</span>
             <h1 className="font-bengali text-2xl md:text-4xl font-bold text-primary-foreground mt-2 mb-3 drop-shadow-lg">{displayTitle}</h1>
-            <p className="text-primary-foreground/60 text-sm mb-4">{lang === "en" ? course.title : course.titleEn}</p>
+            <p className="text-primary-foreground/60 text-sm mb-4">{lang === "en" ? titleBn : titleEn}</p>
             <div className="flex flex-wrap items-center gap-3 text-sm text-primary-foreground/60">
-              <span className="flex items-center gap-1 px-3 py-1 rounded-full bg-primary-foreground/10 backdrop-blur-sm"><GraduationCap className="w-3.5 h-3.5" />{lang === "en" ? course.instructorEn : course.instructor}</span>
-              <span className="flex items-center gap-1 px-3 py-1 rounded-full bg-primary-foreground/10 backdrop-blur-sm"><Clock className="w-3.5 h-3.5" />{lang === "en" ? course.durationEn : course.duration}</span>
+              <span className="flex items-center gap-1 px-3 py-1 rounded-full bg-primary-foreground/10 backdrop-blur-sm"><GraduationCap className="w-3.5 h-3.5" />{lang === "en" ? (instEn || instBn) : instBn}</span>
+              <span className="flex items-center gap-1 px-3 py-1 rounded-full bg-primary-foreground/10 backdrop-blur-sm"><Clock className="w-3.5 h-3.5" />{lang === "en" ? (durEn || durBn) : durBn}</span>
               <span className="flex items-center gap-1 px-3 py-1 rounded-full bg-primary-foreground/10 backdrop-blur-sm"><BookOpen className="w-3.5 h-3.5" />{course.modules} {t("modules")}</span>
               <span className="flex items-center gap-1 px-3 py-1 rounded-full bg-primary-foreground/10 backdrop-blur-sm"><Users className="w-3.5 h-3.5" />{course.enrolled} {t("enrolled")}</span>
             </div>
@@ -72,23 +121,27 @@ const CourseDetailPage = () => {
         <div className="max-w-3xl mx-auto">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-card rounded-3xl border border-border p-6 md:p-10 depth-card mb-8">
             <h2 className="font-bengali text-xl font-bold text-foreground mb-4">{t("courseDescription")}</h2>
-            <p className="font-bengali text-foreground/80 leading-relaxed mb-8">{lang === "en" ? course.descriptionEn : course.description}</p>
+            <p className="font-bengali text-foreground/80 leading-relaxed mb-8 whitespace-pre-line">{lang === "en" ? (descEn || descBn) : descBn}</p>
 
-            <h3 className="font-bengali text-lg font-bold text-foreground mb-4">{t("courseHighlights")}</h3>
-            <div className="grid sm:grid-cols-2 gap-3 mb-8">
-              {(lang === "en" ? course.highlightsEn : course.highlights).map((h) => (
-                <div key={h} className="flex items-center gap-3 bg-secondary/50 rounded-2xl p-4">
-                  <CheckCircle className="w-5 h-5 text-forest shrink-0" />
-                  <span className="font-bengali text-sm text-foreground">{h}</span>
+            {(lang === "en" ? hlEn : hlBn).length > 0 && (
+              <>
+                <h3 className="font-bengali text-lg font-bold text-foreground mb-4">{t("courseHighlights")}</h3>
+                <div className="grid sm:grid-cols-2 gap-3 mb-8">
+                  {(lang === "en" ? hlEn : hlBn).map((h) => (
+                    <div key={h} className="flex items-center gap-3 bg-secondary/50 rounded-2xl p-4">
+                      <CheckCircle className="w-5 h-5 text-forest shrink-0" />
+                      <span className="font-bengali text-sm text-foreground">{h}</span>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
+              </>
+            )}
 
             <div className="grid sm:grid-cols-3 gap-4">
               <div className="bg-secondary/50 rounded-2xl p-4 text-center">
                 <Clock className="w-6 h-6 text-accent mx-auto mb-2" />
                 <p className="text-xs text-muted-foreground font-bengali">{t("duration")}</p>
-                <p className="text-sm font-semibold text-foreground font-bengali">{lang === "en" ? course.durationEn : course.duration}</p>
+                <p className="text-sm font-semibold text-foreground font-bengali">{lang === "en" ? (durEn || durBn) : durBn}</p>
               </div>
               <div className="bg-secondary/50 rounded-2xl p-4 text-center">
                 <BookOpen className="w-6 h-6 text-accent mx-auto mb-2" />
