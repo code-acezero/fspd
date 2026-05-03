@@ -1,11 +1,14 @@
 import { useRef } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
-import { BookOpen, Users, Calendar, Award } from "lucide-react";
+import * as LucideIcons from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useSectionBlock } from "@/hooks/useSectionBlock";
+import { usePageBlocks } from "@/contexts/PageBlocksContext";
+import { DEFAULT_ABOUT_STATS } from "@/lib/pageBlocks";
 
 const AboutSection = () => {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
+  const { getAbout } = usePageBlocks();
   const ref = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end start"] });
   const y1 = useTransform(scrollYProgress, [0, 1], [80, -80]);
@@ -20,12 +23,19 @@ const AboutSection = () => {
   if (block.hideForVisitors) return null;
   const { cfg, texts, classes, styles, animDur, animEnabled } = block;
 
-  const stats = [
-    { icon: BookOpen, value: "৫০০+", label: t("publications") },
-    { icon: Users, value: "২,৫০০+", label: t("activeMembers") },
-    { icon: Calendar, value: "১৫০+", label: t("annualEvents") },
-    { icon: Award, value: "৫০+", label: t("yearsLegacy") },
-  ];
+  // Resolve stat tiles: CMS-defined stats > DEFAULT_ABOUT_STATS (which mirror the original hardcoded list)
+  const aboutCfg = getAbout();
+  const cmsStats = (aboutCfg.stats ?? DEFAULT_ABOUT_STATS).filter((s) => s.visible !== false);
+  const stats = cmsStats.map((s) => {
+    const Icon = (LucideIcons as any)[s.icon] || LucideIcons.Star;
+    const labelFromKey = (key: string) => { try { return t(key); } catch { return ""; } };
+    // back-compat: if labels empty, fall back to translation key by stat id
+    const fallbackKey = ({ pubs: "publications", memb: "activeMembers", events: "annualEvents", years: "yearsLegacy" } as Record<string, string>)[s.id] ?? "";
+    const label = lang === "en"
+      ? (s.label_en || s.label_bn || (fallbackKey ? labelFromKey(fallbackKey) : ""))
+      : (s.label_bn || s.label_en || (fallbackKey ? labelFromKey(fallbackKey) : ""));
+    return { Icon, value: s.value, label };
+  });
 
   return (
     <section id="about" ref={ref} style={styles.section} className={`${classes.spacing} bg-warm-gradient relative overflow-hidden`}>
