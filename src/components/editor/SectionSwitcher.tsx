@@ -2,6 +2,7 @@
 // Visible only when admin/mod + editMode is on AND no specific block panel is open.
 // Lets the admin pick which section to edit and toggle visibility quickly.
 
+import { useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Eye, EyeOff, Pencil, Layers, X } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -14,7 +15,10 @@ const ORDER: AnyBlockKey[] = ["hero", "about", "services", "events_preview", "me
 const SectionSwitcher = () => {
   const { role } = useAuth();
   const { editMode, setEditMode } = useVisualEditor();
-  const { rows, activeBlock, setActiveBlock, setBlockVisible } = usePageBlocks();
+  const { rows, activeBlock, setActiveBlock, setBlockVisible, setPreviewDraft } = usePageBlocks();
+
+  // Drive draft preview based on edit mode (so switcher view also previews drafts).
+  useEffect(() => { setPreviewDraft(editMode); }, [editMode, setPreviewDraft]);
 
   const isEditor = role === "admin" || role === "moderator";
   const open = isEditor && editMode && activeBlock === null;
