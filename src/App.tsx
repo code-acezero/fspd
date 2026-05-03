@@ -9,6 +9,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { SiteSettingsProvider } from "@/contexts/SiteSettingsContext";
 import { VisualEditorProvider } from "@/contexts/VisualEditorContext";
+import { PageBlocksProvider } from "@/contexts/PageBlocksContext";
 import RequireRole from "@/components/auth/RequireRole";
 
 // Landing page is the LCP-critical entry — keep eager so first paint has no
@@ -48,6 +49,7 @@ const App = () => (
         <AuthProvider>
           <SiteSettingsProvider>
             <VisualEditorProvider>
+              <PageBlocksProvider>
               <TooltipProvider>
                 <Toaster />
                 <Sonner />
@@ -77,6 +79,7 @@ const App = () => (
                   </Suspense>
                 </BrowserRouter>
               </TooltipProvider>
+              </PageBlocksProvider>
             </VisualEditorProvider>
           </SiteSettingsProvider>
         </AuthProvider>
