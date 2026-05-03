@@ -4,14 +4,16 @@ import { useVisualEditor } from "@/contexts/VisualEditorContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { usePageBlocks } from "@/contexts/PageBlocksContext";
 
 const EditorToolbar = () => {
   const { role } = useAuth();
   const { editMode, setEditMode, saveOverrides, overrides } = useVisualEditor();
+  const { setActiveBlock } = usePageBlocks();
   const { toast } = useToast();
   const { t } = useLanguage();
 
-  if (role !== "admin") return null;
+  if (role !== "admin" && role !== "moderator") return null;
 
   return (
     <>
@@ -53,7 +55,7 @@ const EditorToolbar = () => {
             </button>
 
             <button
-              onClick={() => { setEditMode(false); }}
+              onClick={() => { setEditMode(false); setActiveBlock(null); }}
               className="p-1.5 rounded-full hover:bg-primary-foreground/10 transition-colors"
             >
               <X className="w-4 h-4" />
