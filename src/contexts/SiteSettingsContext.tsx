@@ -39,6 +39,7 @@ interface SiteSettings {
     enabled: boolean;
     cooldown_minutes: number;
   };
+  theme: ThemeSetting;
 }
 
 // --- Validation / clamping for appearance values ---
