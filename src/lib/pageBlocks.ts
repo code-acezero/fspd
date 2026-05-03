@@ -219,6 +219,13 @@ export const BLOCK_LABELS: Record<string, string> = {
   footer_links: "Footer Links",
   // per-page hero (one per secondary page)
   page_hero: "Page Header",
+  // secondary-page deep blocks
+  body_intro: "Body — Intro",
+  body_outro: "Body — Outro",
+  stats: "Stats Tiles",
+  anniversaries: "Centenary List",
+  honoured: "Honoured Personalities",
+  listing: "Listing Options",
 };
 
 // =============================================================
