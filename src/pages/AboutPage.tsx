@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { BookOpen, Users, Calendar, Award, MapPin, Phone, Mail } from "lucide-react";
 import MainNav from "@/components/MainNav";
 import Footer from "@/components/landing/Footer";
+import PageHeader from "@/components/landing/PageHeader";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useSiteSettings } from "@/contexts/SiteSettingsContext";
 
@@ -61,30 +62,14 @@ const AboutPage = () => {
       <MainNav />
 
       {/* Hero */}
-      <section className="bg-hero-gradient py-20 relative overflow-hidden">
-        <div className="absolute inset-0 alpona-pattern opacity-20" />
-        <div className="container mx-auto px-4 lg:px-8 text-center relative">
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="text-accent text-sm tracking-[0.2em] uppercase font-semibold mb-3"
-          >
-            {lang === "bn" ? "মহাফেজখানা থেকে" : "From the Archives"}
-          </motion.p>
-          <motion.h1
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="font-bengali text-3xl md:text-5xl font-bold text-primary-foreground mb-4 drop-shadow-lg"
-          >
-            {lang === "bn" ? "আমাদের সম্পর্কে" : "About Us"}
-          </motion.h1>
-          <p className="font-bengali text-primary-foreground/80 max-w-2xl mx-auto">
-            {lang === "bn"
-              ? "১৯৮৩ সালে প্রতিষ্ঠিত ফরিদপুরের অগ্রগণ্য সাহিত্য সংগঠনের ইতিহাস ও কর্মযজ্ঞ"
-              : "The history and work of Faridpur’s foremost literary society, founded in 1983."}
-          </p>
-        </div>
-      </section>
+      <PageHeader
+        page="about"
+        fallbackEyebrow={lang === "bn" ? "মহাফেজখানা থেকে" : "From the Archives"}
+        fallbackTitle={lang === "bn" ? "আমাদের সম্পর্কে" : "About Us"}
+        fallbackSubtitle={lang === "bn"
+          ? "১৯৮৩ সালে প্রতিষ্ঠিত ফরিদপুরের অগ্রগণ্য সাহিত্য সংগঠনের ইতিহাস ও কর্মযজ্ঞ"
+          : "The history and work of Faridpur's foremost literary society, founded in 1983."}
+      />
 
       {/* Stats */}
       <section className="py-12">

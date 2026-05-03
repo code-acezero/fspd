@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 // Mock fallback removed — only DB events.
 import MainNav from "@/components/MainNav";
 import Footer from "@/components/landing/Footer";
+import PageHeader from "@/components/landing/PageHeader";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -40,13 +41,7 @@ const EventsPage = () => {
   return (
     <div className="min-h-screen bg-background">
       <MainNav />
-      <div className="bg-hero-gradient py-16 relative overflow-hidden">
-        <div className="absolute inset-0 alpona-pattern opacity-20" />
-        <div className="container mx-auto px-4 lg:px-8 text-center relative">
-          <h1 className="font-bengali text-3xl md:text-5xl font-bold text-primary-foreground mb-4 drop-shadow-lg">{t("allEvents")}</h1>
-          <p className="font-bengali text-primary-foreground/70 max-w-lg mx-auto">{t("eventsPageSubtitle")}</p>
-        </div>
-      </div>
+      <PageHeader page="events" fallbackTitle={t("allEvents")} fallbackSubtitle={t("eventsPageSubtitle")} />
       <div className="container mx-auto px-4 lg:px-8 py-10">
         {isLoading ? (
           <div className="flex justify-center py-16"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>

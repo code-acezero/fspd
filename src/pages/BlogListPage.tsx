@@ -5,6 +5,7 @@ import { Search, BookOpen, Star, MessageSquare, Filter, Loader2 } from "lucide-r
 // Mock fallback removed — only DB posts.
 import MainNav from "@/components/MainNav";
 import Footer from "@/components/landing/Footer";
+import PageHeader from "@/components/landing/PageHeader";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -61,13 +62,7 @@ const BlogListPage = () => {
   return (
     <div className="min-h-screen bg-background">
       <MainNav />
-      <div className="bg-hero-gradient py-16 relative overflow-hidden">
-        <div className="absolute inset-0 alpona-pattern opacity-30" />
-        <div className="container mx-auto px-4 lg:px-8 text-center relative">
-          <h1 className="font-bengali text-3xl md:text-5xl font-bold text-primary-foreground mb-4 drop-shadow-lg">{t("blogAndPosts")}</h1>
-          <p className="font-bengali text-primary-foreground/70 max-w-lg mx-auto">{t("blogSubtitle")}</p>
-        </div>
-      </div>
+      <PageHeader page="blog" fallbackTitle={t("blogAndPosts")} fallbackSubtitle={t("blogSubtitle")} />
       <div className="container mx-auto px-4 lg:px-8 py-10">
         <div className="flex flex-col md:flex-row gap-4 mb-8">
           <div className="relative flex-1">

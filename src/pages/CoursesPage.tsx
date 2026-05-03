@@ -5,6 +5,7 @@ import { courses } from "@/data/mockData";
 import { createSlug } from "@/lib/slugify";
 import MainNav from "@/components/MainNav";
 import Footer from "@/components/landing/Footer";
+import PageHeader from "@/components/landing/PageHeader";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 const CoursesPage = () => {
@@ -19,13 +20,7 @@ const CoursesPage = () => {
   return (
     <div className="min-h-screen bg-background">
       <MainNav />
-      <div className="bg-hero-gradient py-16 relative overflow-hidden">
-        <div className="absolute inset-0 alpona-pattern opacity-20" />
-        <div className="container mx-auto px-4 lg:px-8 text-center relative">
-          <h1 className="font-bengali text-3xl md:text-5xl font-bold text-primary-foreground mb-4 drop-shadow-lg">{t("allCourses")}</h1>
-          <p className="font-bengali text-primary-foreground/70 max-w-lg mx-auto">{t("coursesSubtitle")}</p>
-        </div>
-      </div>
+      <PageHeader page="courses" fallbackTitle={t("allCourses")} fallbackSubtitle={t("coursesSubtitle")} />
       <div className="container mx-auto px-4 lg:px-8 py-10">
         {courses.length === 0 ? (
           <div className="text-center py-20">
