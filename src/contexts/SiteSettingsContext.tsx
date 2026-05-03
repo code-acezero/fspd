@@ -1,6 +1,8 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { applyPalette, DEFAULT_PALETTE, PALETTES, type PaletteId } from "@/lib/palettes";
+import { applyThemeTokens, DEFAULT_THEME, type ThemeSetting } from "@/lib/themeTokens";
+import { useTheme } from "@/contexts/ThemeContext";
 
 interface SiteSettings {
   general: {
