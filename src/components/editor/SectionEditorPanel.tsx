@@ -63,9 +63,26 @@ const SectionEditorPanel = ({ blockKey, page = "landing", label }: Props) => {
   const cfg: SectionConfig = getSectionDraft(blockKey, page);
   const visible = isVisible(blockKey, page);
   const isServices = page === "landing" && blockKey === "services";
+  const isAbout = page === "landing" && blockKey === "about";
+  const isEventsPreview = page === "landing" && blockKey === "events_preview";
+  const isMembers = page === "landing" && blockKey === "members";
+  const hasItems = isServices || isAbout || isEventsPreview || isMembers;
+  const itemsLabel = isAbout ? "Stats" : isMembers ? "Members" : isEventsPreview ? "Events" : "Cards";
   const rawDraft = getRawDraft(blockKey, page);
-  const items: ServicesItem[] = Array.isArray(rawDraft?.items) ? rawDraft.items : DEFAULT_SERVICES_ITEMS;
   const blockLabel = label ?? BLOCK_LABELS[blockKey] ?? blockKey;
+
+  // ---- services items
+  const svcItems: ServicesItem[] = isServices
+    ? (Array.isArray(rawDraft?.items) ? rawDraft.items : DEFAULT_SERVICES_ITEMS)
+    : [];
+  // ---- about stats
+  const aboutStats: AboutStatItem[] = isAbout
+    ? (Array.isArray(rawDraft?.stats) ? rawDraft.stats : DEFAULT_ABOUT_STATS)
+    : [];
+  // ---- events items (default empty → falls back to DB events)
+  const eventItems: EventsItem[] = isEventsPreview && Array.isArray(rawDraft?.items) ? rawDraft.items : [];
+  // ---- members items (default empty → falls back to DB members)
+  const memberItems: MembersItem[] = isMembers && Array.isArray(rawDraft?.items) ? rawDraft.items : [];
 
   const setText = (k: keyof SectionConfig["text"], v: string) =>
     updateSectionDraft(blockKey, { ...cfg, text: { ...cfg.text, [k]: v } }, page);
@@ -76,19 +93,48 @@ const SectionEditorPanel = ({ blockKey, page = "landing", label }: Props) => {
   const setAdv = (k: keyof SectionConfig["style"]["advanced"], v: any) =>
     updateSectionDraft(blockKey, { ...cfg, style: { ...cfg.style, advanced: { ...cfg.style.advanced, [k]: v } } }, page);
 
-  // ---- items helpers (services only) ----
-  const setItems = (next: ServicesItem[]) =>
-    updateRawDraft(blockKey, (prev: any) => ({ ...prev, items: next }), page);
-  const addItem = () => setItems([...items, { id: newId("svc"), icon: "BookOpen", title_bn: "নতুন সেবা", title_en: "New Service", desc_bn: "", desc_en: "", visible: true }]);
-  const removeItem = (id: string) => setItems(items.filter((x) => x.id !== id));
-  const moveItem = (id: string, dir: -1 | 1) => {
-    const i = items.findIndex((x) => x.id === id); if (i < 0) return;
-    const j = i + dir; if (j < 0 || j >= items.length) return;
-    const arr = [...items]; [arr[i], arr[j]] = [arr[j], arr[i]];
-    setItems(arr);
+  // ---- generic array helpers ----
+  const moveInArray = <T extends { id: string }>(arr: T[], id: string, dir: -1 | 1): T[] => {
+    const i = arr.findIndex((x) => x.id === id); if (i < 0) return arr;
+    const j = i + dir; if (j < 0 || j >= arr.length) return arr;
+    const out = [...arr]; [out[i], out[j]] = [out[j], out[i]]; return out;
   };
-  const updateItem = (id: string, patch: Partial<ServicesItem>) =>
-    setItems(items.map((x) => (x.id === id ? { ...x, ...patch } : x)));
+
+  // ---- services items helpers ----
+  const setSvcItems = (next: ServicesItem[]) =>
+    updateRawDraft(blockKey, (prev: any) => ({ ...prev, items: next }), page);
+  const addSvc = () => setSvcItems([...svcItems, { id: newId("svc"), icon: "BookOpen", title_bn: "নতুন সেবা", title_en: "New Service", desc_bn: "", desc_en: "", visible: true }]);
+  const removeSvc = (id: string) => setSvcItems(svcItems.filter((x) => x.id !== id));
+  const moveSvc = (id: string, dir: -1 | 1) => setSvcItems(moveInArray(svcItems, id, dir));
+  const updateSvc = (id: string, patch: Partial<ServicesItem>) =>
+    setSvcItems(svcItems.map((x) => (x.id === id ? { ...x, ...patch } : x)));
+
+  // ---- about stats helpers ----
+  const setStats = (next: AboutStatItem[]) =>
+    updateRawDraft(blockKey, (prev: any) => ({ ...prev, stats: next }), page);
+  const addStat = () => setStats([...aboutStats, { id: newId("stat"), icon: "Star", value: "১০০+", label_bn: "নতুন", label_en: "New", visible: true }]);
+  const removeStat = (id: string) => setStats(aboutStats.filter((x) => x.id !== id));
+  const moveStat = (id: string, dir: -1 | 1) => setStats(moveInArray(aboutStats, id, dir));
+  const updateStat = (id: string, patch: Partial<AboutStatItem>) =>
+    setStats(aboutStats.map((x) => (x.id === id ? { ...x, ...patch } : x)));
+
+  // ---- events items helpers ----
+  const setEvItems = (next: EventsItem[]) =>
+    updateRawDraft(blockKey, (prev: any) => ({ ...prev, items: next }), page);
+  const addEv = () => setEvItems([...eventItems, { id: newId("ev"), title_bn: "নতুন অনুষ্ঠান", title_en: "New Event", date: "", time: "", location: "", tag: "", tag_color: TAG_COLORS[0], href: "/events", visible: true }]);
+  const removeEv = (id: string) => setEvItems(eventItems.filter((x) => x.id !== id));
+  const moveEv = (id: string, dir: -1 | 1) => setEvItems(moveInArray(eventItems, id, dir));
+  const updateEv = (id: string, patch: Partial<EventsItem>) =>
+    setEvItems(eventItems.map((x) => (x.id === id ? { ...x, ...patch } : x)));
+
+  // ---- members items helpers ----
+  const setMemItems = (next: MembersItem[]) =>
+    updateRawDraft(blockKey, (prev: any) => ({ ...prev, items: next }), page);
+  const addMem = () => setMemItems([...memberItems, { id: newId("mem"), name_bn: "নাম", name_en: "Name", title_bn: "", title_en: "", bio_bn: "", bio_en: "", avatar_url: "", gradient_class: MEMBER_GRADIENTS[0], visible: true }]);
+  const removeMem = (id: string) => setMemItems(memberItems.filter((x) => x.id !== id));
+  const moveMem = (id: string, dir: -1 | 1) => setMemItems(moveInArray(memberItems, id, dir));
+  const updateMem = (id: string, patch: Partial<MembersItem>) =>
+    setMemItems(memberItems.map((x) => (x.id === id ? { ...x, ...patch } : x)));
 
   const autoTranslate = async (sourceText: string, targetLang: "bn" | "en", targetField: string, applyTo?: (v: string) => void) => {
     if (!sourceText.trim()) { toast({ title: "Source field is empty", variant: "destructive" }); return; }
