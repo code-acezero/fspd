@@ -1,23 +1,14 @@
-import HeroSection from "@/components/landing/HeroSection";
-import AboutSection from "@/components/landing/AboutSection";
-import ServicesSection from "@/components/landing/ServicesSection";
-import EventsPreview from "@/components/landing/EventsPreview";
-import MembersSection from "@/components/landing/MembersSection";
-import Footer from "@/components/landing/Footer";
+import LandingBlocks from "@/components/landing/LandingBlocks";
 import ParticleField from "@/components/effects/ParticleField";
 
 // Editor mount lives globally in App.tsx, no need to mount it per-page anymore.
+// Section order is driven by page_blocks.sort_order (Phase 5).
 
 const LandingPage = () => (
   <div className="min-h-screen bg-background relative">
     <ParticleField />
     <div className="relative z-[2]">
-      <HeroSection />
-      <AboutSection />
-      <ServicesSection />
-      <EventsPreview />
-      <MembersSection />
-      <Footer />
+      <LandingBlocks />
     </div>
   </div>
 );
