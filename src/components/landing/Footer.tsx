@@ -1,17 +1,24 @@
 import { useRef } from "react";
 import { useTheme } from "@/contexts/ThemeContext";
 import { motion, useScroll, useTransform } from "framer-motion";
-import { Facebook, Youtube, Mail, Phone, MapPin, Heart } from "lucide-react";
+import { Facebook, Youtube, Mail, Phone, MapPin, Heart, Instagram, Twitter } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useSiteSettings } from "@/contexts/SiteSettingsContext";
 import LogoTile from "@/components/branding/LogoTile";
 import { useSectionBlock } from "@/hooks/useSectionBlock";
+import { usePageBlocks } from "@/contexts/PageBlocksContext";
+import { DEFAULT_FOOTER_COLUMNS, DEFAULT_SOCIALS, type SocialLink } from "@/lib/pageBlocks";
+
+const SOCIAL_ICONS: Record<SocialLink["platform"], any> = {
+  facebook: Facebook, youtube: Youtube, instagram: Instagram, twitter: Twitter, mail: Mail,
+};
 
 const Footer = () => {
   const { lang, setLang, t } = useLanguage();
   const { settings } = useSiteSettings();
   const { theme } = useTheme();
+  const { getFooterLinks } = usePageBlocks();
   const footerRef = useRef<HTMLElement>(null);
   const { scrollYProgress } = useScroll({ target: footerRef, offset: ["start end", "end start"] });
   const lensX = useTransform(scrollYProgress, [0, 1], ["-10%", "110%"]);
@@ -20,13 +27,10 @@ const Footer = () => {
     subtitle: t("orgDesc"),
   });
 
-  const quickLinks = [
-    { label: t("footerHomePage"), to: "/home" },
-    { label: t("footerBlog"), to: "/blog" },
-    { label: t("footerEvents"), to: "/events" },
-    { label: t("footerCourses"), to: "/courses" },
-    { label: t("footerMembers"), to: "/members" },
-  ];
+  // CMS-driven columns + socials, fall back to defaults.
+  const linksCfg = getFooterLinks();
+  const columns = (linksCfg.columns ?? DEFAULT_FOOTER_COLUMNS).filter((c) => c.visible !== false);
+  const socials = (linksCfg.socials ?? DEFAULT_SOCIALS).filter((s) => s.visible !== false);
 
   const contactEmail = settings.general.contact_email || "info@fsp.org.bd";
   const contactPhone = settings.general.contact_phone || "+880 1XXX-XXXXXX";
