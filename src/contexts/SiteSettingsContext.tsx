@@ -33,6 +33,10 @@ interface SiteSettings {
     enable_members: boolean;
     maintenance_mode: boolean;
   };
+  welcome_popup: {
+    enabled: boolean;
+    cooldown_minutes: number;
+  };
 }
 
 // --- Validation / clamping for appearance values ---
