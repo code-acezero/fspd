@@ -33,6 +33,10 @@ interface SiteSettings {
     enable_members: boolean;
     maintenance_mode: boolean;
   };
+  welcome_popup: {
+    enabled: boolean;
+    cooldown_minutes: number;
+  };
 }
 
 // --- Validation / clamping for appearance values ---
@@ -70,6 +74,7 @@ const defaultSettings: SiteSettings = {
   general: { site_name_bn: "ফরিদপুর সাহিত্য পরিষদ", site_name_en: "Faridpur Shahitto Parishad", tagline_bn: "বাংলা সংস্কৃতির পাদপীঠ", tagline_en: "The Cradle of Bengali Culture", contact_email: "info@fsp.org.bd", contact_phone: "", address_bn: "", address_en: "", logo_url: "" },
   appearance: { primary_color: "0 78% 45%", accent_color: "45 90% 52%", hero_style: "default", show_particles: true, palette: DEFAULT_PALETTE, logo_glow: "normal", logo_dilate: LOGO_DILATE_DEFAULT },
   features: { enable_blog: true, enable_events: true, enable_courses: true, enable_members: true, maintenance_mode: false },
+  welcome_popup: { enabled: true, cooldown_minutes: 15 },
 };
 
 interface SiteSettingsContextType {

@@ -48,7 +48,7 @@ const MainNav = () => {
 
   // Resolve nav items from CMS, fall back to defaults.
   const navCfg = getNav();
-  const navItems = (navCfg.items ?? DEFAULT_NAV_ITEMS)
+  const baseNav = (navCfg.items ?? DEFAULT_NAV_ITEMS)
     .filter((it) => it.visible !== false)
     .map((it) => ({
       key: it.id,
@@ -56,6 +56,30 @@ const MainNav = () => {
       label: lang === "en" ? (it.label_en || it.label_bn) : (it.label_bn || it.label_en),
       icon: NAV_ICONS[it.id] || Info,
     }));
+
+  // Custom pages added via the Page Builder that opted into nav.
+  const [customNav, setCustomNav] = useState<{ key: string; to: string; label: string; icon: any }[]>([]);
+  useEffect(() => {
+    supabase
+      .from("custom_pages")
+      .select("slug, title, title_en")
+      .eq("is_published", true)
+      .eq("show_in_nav", true)
+      .order("sort_order")
+      .then(({ data }) => {
+        if (!data) return;
+        setCustomNav(
+          data.map((p: any) => ({
+            key: `custom-${p.slug}`,
+            to: `/p/${p.slug}`,
+            label: lang === "en" ? (p.title_en || p.title) : (p.title || p.title_en),
+            icon: Info,
+          })),
+        );
+      });
+  }, [lang]);
+
+  const navItems = [...baseNav, ...customNav];
 
   const siteName = lang === "en" ? settings.general.site_name_en : settings.general.site_name_bn;
   const themeToggleLabel = theme === "dark" ? t("lightMode") : t("darkMode");

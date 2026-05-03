@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { LayoutDashboard, FileText, Calendar, Settings, Users, Palette, Menu, X, Eye, UserPlus, MessageSquare, Globe, LogOut, Save, Loader2, Trash2, Edit3, Monitor, Smartphone, ShieldCheck, ImagePlus, Crown, Plus, ChevronUp, ChevronDown, Check, GraduationCap } from "lucide-react";
+import { LayoutDashboard, FileText, Calendar, Settings, Users, Palette, Menu, X, Eye, UserPlus, MessageSquare, Globe, LogOut, Save, Loader2, Trash2, Edit3, Monitor, Smartphone, ShieldCheck, ImagePlus, Crown, Plus, ChevronUp, ChevronDown, Check, GraduationCap, Quote, FileEdit, Search } from "lucide-react";
 import LogoTile from "@/components/branding/LogoTile";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSiteSettings } from "@/contexts/SiteSettingsContext";
@@ -11,9 +11,12 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import ModerationPanel from "@/components/admin/ModerationPanel";
 import SettingsHistoryPanel from "@/components/admin/SettingsHistoryPanel";
 import HealthCheckBanner from "@/components/admin/HealthCheckBanner";
+import SpeechesPanel from "@/components/admin/SpeechesPanel";
+import PageBuilderPanel from "@/components/admin/PageBuilderPanel";
+import SeoPanel from "@/components/admin/SeoPanel";
 import { ShieldAlert } from "lucide-react";
 
-type AdminTab = "dashboard" | "posts" | "events" | "courses" | "members" | "users" | "assets" | "theme" | "settings" | "moderation";
+type AdminTab = "dashboard" | "posts" | "events" | "courses" | "members" | "users" | "assets" | "theme" | "settings" | "moderation" | "speeches" | "pages" | "seo";
 
 const emptyMemberForm = { name: "", name_en: "", title: "", title_en: "", bio: "", bio_en: "", role: "member", avatar_url: "", gradient_class: "from-primary to-crimson", sort_order: 0, is_senior: false, is_active: true, is_approved: true };
 
@@ -353,6 +356,9 @@ const AdminDashboard = () => {
     { icon: GraduationCap, label: t("courseManagement"), tab: "courses" as AdminTab },
     { icon: Crown, label: t("membersAdmin"), tab: "members" as AdminTab },
     { icon: Users, label: t("memberManagement"), tab: "users" as AdminTab },
+    { icon: Quote, label: "Welcome Speeches", tab: "speeches" as AdminTab },
+    { icon: FileEdit, label: "Page Builder", tab: "pages" as AdminTab },
+    { icon: Search, label: "SEO Settings", tab: "seo" as AdminTab },
     { icon: ImagePlus, label: t("assetManager"), tab: "assets" as AdminTab },
     { icon: Palette, label: t("themeCustomization"), tab: "theme" as AdminTab },
     { icon: Settings, label: t("siteSettingsLabel"), tab: "settings" as AdminTab },
@@ -395,6 +401,9 @@ const AdminDashboard = () => {
         <main className="p-6">
           <HealthCheckBanner />
           {activeTab === "moderation" && <ModerationPanel />}
+          {activeTab === "speeches" && <SpeechesPanel />}
+          {activeTab === "pages" && <PageBuilderPanel />}
+          {activeTab === "seo" && <SeoPanel />}
           {/* Dashboard */}
           {activeTab === "dashboard" && (
             <div className="space-y-6">

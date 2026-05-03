@@ -12,6 +12,7 @@ import { VisualEditorProvider } from "@/contexts/VisualEditorContext";
 import { PageBlocksProvider } from "@/contexts/PageBlocksContext";
 import RequireRole from "@/components/auth/RequireRole";
 import GlobalEditorMount from "@/components/editor/GlobalEditorMount";
+import WelcomeSpeechPopup from "@/components/WelcomeSpeechPopup";
 
 // Landing page is the LCP-critical entry — keep eager so first paint has no
 // chunk waterfall. Every other route is lazy-loaded so its JS only ships
@@ -36,6 +37,7 @@ const HealthPage = lazy(() => import("./pages/HealthPage"));
 const ProfilePage = lazy(() => import("./pages/ProfilePage"));
 const SearchPage = lazy(() => import("./pages/SearchPage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
+const CustomPage = lazy(() => import("./pages/CustomPage"));
 
 const queryClient = new QueryClient();
 
@@ -75,10 +77,12 @@ const App = () => (
                       <Route path="/profile" element={<ProfilePage />} />
                       <Route path="/profile/:id" element={<ProfilePage />} />
                       <Route path="/search" element={<SearchPage />} />
+                      <Route path="/p/:slug" element={<CustomPage />} />
                       <Route path="*" element={<NotFound />} />
                     </Routes>
                   </Suspense>
                   <GlobalEditorMount />
+                  <WelcomeSpeechPopup />
                 </BrowserRouter>
               </TooltipProvider>
               </PageBlocksProvider>
