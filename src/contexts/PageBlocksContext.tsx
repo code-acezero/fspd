@@ -84,6 +84,10 @@ interface PageBlocksContextType {
   getMembers: () => MembersSectionConfig;
   getMembersDraft: () => MembersSectionConfig;
 
+  // ---- ordering ----
+  reorderBlocks: (page: string, orderedKeys: string[]) => Promise<void>;
+  getOrderedKeys: (page: string) => string[];
+
   refresh: () => Promise<void>;
 }
 
@@ -250,6 +254,33 @@ export const PageBlocksProvider = ({ children }: { children: ReactNode }) => {
     await persistDraft(heroRow, next);
   }, [heroRow, heroDraft, persistDraft]);
 
+  // -------- ordering --------
+  const getOrderedKeys = useCallback((page: string) => {
+    return Object.values(rows)
+      .filter((r) => r.page === page)
+      .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
+      .map((r) => r.block_key);
+  }, [rows]);
+
+  const reorderBlocks = useCallback(async (page: string, orderedKeys: string[]) => {
+    // optimistic update
+    setRows((prev) => {
+      const next = { ...prev };
+      orderedKeys.forEach((key, idx) => {
+        const ck = k(page, key);
+        if (next[ck]) next[ck] = { ...next[ck], sort_order: idx };
+      });
+      return next;
+    });
+    setSaving(true);
+    await Promise.all(orderedKeys.map((key, idx) => {
+      const row = rows[k(page, key)];
+      if (!row) return Promise.resolve();
+      return supabase.from("page_blocks").update({ sort_order: idx }).eq("id", row.id);
+    }));
+    setSaving(false);
+  }, [rows]);
+
   const setHeroVisible = useCallback((v: boolean) => setBlockVisible("hero", v), [setBlockVisible]);
   const publishHero = useCallback(() => publishBlock("hero"), [publishBlock]);
   const revertHeroDraft = useCallback(() => revertBlockDraft("hero"), [revertBlockDraft]);
@@ -270,6 +301,7 @@ export const PageBlocksProvider = ({ children }: { children: ReactNode }) => {
       getAbout, getAboutDraft,
       getEventsPreview, getEventsPreviewDraft,
       getMembers, getMembersDraft,
+      reorderBlocks, getOrderedKeys,
       refresh: fetchBlocks,
     }}>
       {children}
