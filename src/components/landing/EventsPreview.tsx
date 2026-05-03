@@ -6,29 +6,63 @@ import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { createSlug } from "@/lib/slugify";
 import { useSectionBlock } from "@/hooks/useSectionBlock";
+import { usePageBlocks } from "@/contexts/PageBlocksContext";
+
+interface EventCard {
+  id: string;
+  title: string; title_en: string;
+  date: string; time: string; location: string;
+  tag: string; tag_color: string;
+  href: string;
+}
 
 const EventsPreview = () => {
   const { t, lang } = useLanguage();
+  const { getEventsPreview } = usePageBlocks();
   const ref = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end start"] });
   const y = useTransform(scrollYProgress, [0, 1], [30, -30]);
-  const [events, setEvents] = useState<any[]>([]);
+  const [dbEvents, setDbEvents] = useState<EventCard[]>([]);
 
   const block = useSectionBlock("events_preview", {
     eyebrow: t("eventSchedule"),
     title: t("upcomingEventsTitle"),
   });
 
+  // CMS items override DB events when present
+  const evCfg = getEventsPreview();
+  const cmsItems = (evCfg.items ?? []).filter((e) => e.visible !== false);
+  const useCms = cmsItems.length > 0;
+
   useEffect(() => {
+    if (useCms) return; // skip DB fetch when CMS items exist
     (async () => {
       const { data } = await supabase
         .from("events")
         .select("id,title,title_en,date,time,location,tag,tag_color")
         .order("created_at", { ascending: false })
         .limit(3);
-      if (data) setEvents(data);
+      if (data) {
+        setDbEvents(data.map((d: any) => ({
+          id: d.id,
+          title: d.title, title_en: d.title_en,
+          date: d.date, time: d.time, location: d.location,
+          tag: d.tag, tag_color: d.tag_color,
+          href: `/events/${createSlug(d.title_en || d.title, d.id)}`,
+        })));
+      }
     })();
-  }, []);
+  }, [useCms]);
+
+  const events: EventCard[] = useCms
+    ? cmsItems.map((it) => ({
+        id: it.id,
+        title: it.title_bn, title_en: it.title_en,
+        date: it.date, time: it.time, location: it.location,
+        tag: it.tag, tag_color: it.tag_color,
+        href: it.href || "/events",
+      }))
+    : dbEvents;
 
   if (block.hideForVisitors) return null;
   if (events.length === 0 && !block.visible) return null;
@@ -69,7 +103,7 @@ const EventsPreview = () => {
         ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5 lg:gap-6" style={{ perspective: "1000px" }}>
             {events.map((event, index) => (
-              <Link to={`/events/${createSlug(event.title_en || event.title, event.id)}`} key={event.id}>
+              <Link to={event.href} key={event.id}>
                 <motion.div
                   initial={animEnabled ? { opacity: 0, y: 30, rotateX: 5 } : false}
                   whileInView={{ opacity: 1, y: 0, rotateX: 0 }}

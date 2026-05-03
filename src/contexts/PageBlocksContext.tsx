@@ -9,8 +9,10 @@ import { useAuth } from "@/contexts/AuthContext";
 import {
   mergeHeroConfig, mergeSectionConfig,
   mergeServicesConfig, mergeNavConfig, mergeFooterLinksConfig,
+  mergeAboutConfig, mergeEventsConfig, mergeMembersConfig,
   type HeroConfig, type SectionConfig, type AnyBlockKey,
   type ServicesSectionConfig, type NavConfig, type FooterLinksConfig,
+  type AboutSectionConfig, type EventsSectionConfig, type MembersSectionConfig,
 } from "@/lib/pageBlocks";
 
 interface BlockRow {
@@ -75,6 +77,12 @@ interface PageBlocksContextType {
   getNavDraft: () => NavConfig;
   getFooterLinks: () => FooterLinksConfig;
   getFooterLinksDraft: () => FooterLinksConfig;
+  getAbout: () => AboutSectionConfig;
+  getAboutDraft: () => AboutSectionConfig;
+  getEventsPreview: () => EventsSectionConfig;
+  getEventsPreviewDraft: () => EventsSectionConfig;
+  getMembers: () => MembersSectionConfig;
+  getMembersDraft: () => MembersSectionConfig;
 
   refresh: () => Promise<void>;
 }
@@ -209,6 +217,24 @@ export const PageBlocksProvider = ({ children }: { children: ReactNode }) => {
   }, [rows, previewDraft]);
   const getFooterLinksDraft = useCallback(() => mergeFooterLinksConfig(rows[k("global", "footer_links")]?.draft_config), [rows]);
 
+  const getAbout = useCallback((): AboutSectionConfig => {
+    const r = rows[k("landing", "about")];
+    return mergeAboutConfig(previewDraft ? r?.draft_config : r?.published_config);
+  }, [rows, previewDraft]);
+  const getAboutDraft = useCallback(() => mergeAboutConfig(rows[k("landing", "about")]?.draft_config), [rows]);
+
+  const getEventsPreview = useCallback((): EventsSectionConfig => {
+    const r = rows[k("landing", "events_preview")];
+    return mergeEventsConfig(previewDraft ? r?.draft_config : r?.published_config);
+  }, [rows, previewDraft]);
+  const getEventsPreviewDraft = useCallback(() => mergeEventsConfig(rows[k("landing", "events_preview")]?.draft_config), [rows]);
+
+  const getMembers = useCallback((): MembersSectionConfig => {
+    const r = rows[k("landing", "members")];
+    return mergeMembersConfig(previewDraft ? r?.draft_config : r?.published_config);
+  }, [rows, previewDraft]);
+  const getMembersDraft = useCallback(() => mergeMembersConfig(rows[k("landing", "members")]?.draft_config), [rows]);
+
   // -------- hero back-compat --------
   const heroRow = rows[k("landing", "hero")] ?? null;
   const heroDraft = useMemo(() => mergeHeroConfig(heroRow?.draft_config), [heroRow]);
@@ -241,6 +267,9 @@ export const PageBlocksProvider = ({ children }: { children: ReactNode }) => {
       getServices, getServicesDraft,
       getNav, getNavDraft,
       getFooterLinks, getFooterLinksDraft,
+      getAbout, getAboutDraft,
+      getEventsPreview, getEventsPreviewDraft,
+      getMembers, getMembersDraft,
       refresh: fetchBlocks,
     }}>
       {children}

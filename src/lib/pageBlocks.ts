@@ -365,3 +365,137 @@ export function mergeFooterLinksConfig(raw: any): FooterLinksConfig {
 
 // short helper — random id (for new items in the editor)
 export const newId = (prefix = "id") => `${prefix}_${Math.random().toString(36).slice(2, 8)}`;
+
+// =============================================================
+// About — stat tiles
+// =============================================================
+
+export const STAT_ICONS = [
+  "BookOpen", "Users", "Calendar", "Award", "Star", "Heart",
+  "Globe", "Music", "Mic2", "Library", "GraduationCap", "Palette",
+] as const;
+export type StatIcon = typeof STAT_ICONS[number];
+
+export interface AboutStatItem {
+  id: string;
+  icon: StatIcon;
+  value: string;            // free text (supports Bengali numerals)
+  label_bn: string; label_en: string;
+  visible: boolean;
+}
+
+export interface AboutSectionConfig extends SectionConfig {
+  stats?: AboutStatItem[];
+}
+
+export const DEFAULT_ABOUT_STATS: AboutStatItem[] = [
+  { id: "pubs",   icon: "BookOpen", value: "৫০০+",    label_bn: "প্রকাশনা",       label_en: "Publications",   visible: true },
+  { id: "memb",   icon: "Users",    value: "২,৫০০+",  label_bn: "সক্রিয় সদস্য",    label_en: "Active Members", visible: true },
+  { id: "events", icon: "Calendar", value: "১৫০+",    label_bn: "বার্ষিক অনুষ্ঠান", label_en: "Annual Events",  visible: true },
+  { id: "years",  icon: "Award",    value: "৫০+",     label_bn: "বছরের ঐতিহ্য",    label_en: "Years Legacy",   visible: true },
+];
+
+export function mergeAboutConfig(raw: any): AboutSectionConfig {
+  const base = mergeSectionConfig(raw);
+  const r = (raw && typeof raw === "object") ? raw : {};
+  const stats: AboutStatItem[] | undefined = Array.isArray(r.stats)
+    ? r.stats.map((s: any, i: number) => ({
+        id: typeof s?.id === "string" ? s.id : `s_${i}`,
+        icon: STAT_ICONS.includes(s?.icon) ? s.icon : "BookOpen",
+        value: s?.value ?? "",
+        label_bn: s?.label_bn ?? "", label_en: s?.label_en ?? "",
+        visible: s?.visible !== false,
+      }))
+    : undefined;
+  return { ...base, stats };
+}
+
+// =============================================================
+// Events preview — overrideable event cards
+// =============================================================
+
+export interface EventsItem {
+  id: string;
+  title_bn: string; title_en: string;
+  date: string;     // free text (e.g. "১৫ ফেব্রুয়ারি ২০২৬")
+  time: string;
+  location: string;
+  tag: string;
+  tag_color: string;          // tailwind classes, e.g. "bg-primary text-primary-foreground"
+  href: string;               // link target ("/events/slug" etc.)
+  visible: boolean;
+}
+
+export interface EventsSectionConfig extends SectionConfig {
+  items?: EventsItem[];       // when present, overrides DB events
+}
+
+export const TAG_COLORS = [
+  "bg-primary text-primary-foreground",
+  "bg-accent text-accent-foreground",
+  "bg-emerald-500 text-white",
+  "bg-amber-500 text-white",
+  "bg-sky-500 text-white",
+  "bg-rose-500 text-white",
+] as const;
+
+export function mergeEventsConfig(raw: any): EventsSectionConfig {
+  const base = mergeSectionConfig(raw);
+  const r = (raw && typeof raw === "object") ? raw : {};
+  const items: EventsItem[] | undefined = Array.isArray(r.items)
+    ? r.items.map((it: any, i: number) => ({
+        id: typeof it?.id === "string" ? it.id : `e_${i}`,
+        title_bn: it?.title_bn ?? "", title_en: it?.title_en ?? "",
+        date: it?.date ?? "", time: it?.time ?? "",
+        location: it?.location ?? "",
+        tag: it?.tag ?? "", tag_color: it?.tag_color ?? TAG_COLORS[0],
+        href: it?.href ?? "/events",
+        visible: it?.visible !== false,
+      }))
+    : undefined;
+  return { ...base, items };
+}
+
+// =============================================================
+// Members section — overrideable senior member cards
+// =============================================================
+
+export const MEMBER_GRADIENTS = [
+  "from-primary to-crimson",
+  "from-accent to-gold",
+  "from-emerald-500 to-teal-600",
+  "from-sky-500 to-indigo-600",
+  "from-amber-500 to-orange-600",
+  "from-rose-500 to-pink-600",
+] as const;
+
+export interface MembersItem {
+  id: string;
+  name_bn: string; name_en: string;
+  title_bn: string; title_en: string;
+  bio_bn: string; bio_en: string;
+  avatar_url: string;
+  gradient_class: string;
+  visible: boolean;
+}
+
+export interface MembersSectionConfig extends SectionConfig {
+  items?: MembersItem[];      // when present, overrides DB senior members
+}
+
+export function mergeMembersConfig(raw: any): MembersSectionConfig {
+  const base = mergeSectionConfig(raw);
+  const r = (raw && typeof raw === "object") ? raw : {};
+  const items: MembersItem[] | undefined = Array.isArray(r.items)
+    ? r.items.map((it: any, i: number) => ({
+        id: typeof it?.id === "string" ? it.id : `m_${i}`,
+        name_bn: it?.name_bn ?? "", name_en: it?.name_en ?? "",
+        title_bn: it?.title_bn ?? "", title_en: it?.title_en ?? "",
+        bio_bn: it?.bio_bn ?? "", bio_en: it?.bio_en ?? "",
+        avatar_url: it?.avatar_url ?? "",
+        gradient_class: it?.gradient_class ?? MEMBER_GRADIENTS[0],
+        visible: it?.visible !== false,
+      }))
+    : undefined;
+  return { ...base, items };
+}
