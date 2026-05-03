@@ -1,17 +1,24 @@
 import { useRef } from "react";
 import { useTheme } from "@/contexts/ThemeContext";
 import { motion, useScroll, useTransform } from "framer-motion";
-import { Facebook, Youtube, Mail, Phone, MapPin, Heart } from "lucide-react";
+import { Facebook, Youtube, Mail, Phone, MapPin, Heart, Instagram, Twitter } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useSiteSettings } from "@/contexts/SiteSettingsContext";
 import LogoTile from "@/components/branding/LogoTile";
 import { useSectionBlock } from "@/hooks/useSectionBlock";
+import { usePageBlocks } from "@/contexts/PageBlocksContext";
+import { DEFAULT_FOOTER_COLUMNS, DEFAULT_SOCIALS, type SocialLink } from "@/lib/pageBlocks";
+
+const SOCIAL_ICONS: Record<SocialLink["platform"], any> = {
+  facebook: Facebook, youtube: Youtube, instagram: Instagram, twitter: Twitter, mail: Mail,
+};
 
 const Footer = () => {
   const { lang, setLang, t } = useLanguage();
   const { settings } = useSiteSettings();
   const { theme } = useTheme();
+  const { getFooterLinks } = usePageBlocks();
   const footerRef = useRef<HTMLElement>(null);
   const { scrollYProgress } = useScroll({ target: footerRef, offset: ["start end", "end start"] });
   const lensX = useTransform(scrollYProgress, [0, 1], ["-10%", "110%"]);
@@ -20,13 +27,10 @@ const Footer = () => {
     subtitle: t("orgDesc"),
   });
 
-  const quickLinks = [
-    { label: t("footerHomePage"), to: "/home" },
-    { label: t("footerBlog"), to: "/blog" },
-    { label: t("footerEvents"), to: "/events" },
-    { label: t("footerCourses"), to: "/courses" },
-    { label: t("footerMembers"), to: "/members" },
-  ];
+  // CMS-driven columns + socials, fall back to defaults.
+  const linksCfg = getFooterLinks();
+  const columns = (linksCfg.columns ?? DEFAULT_FOOTER_COLUMNS).filter((c) => c.visible !== false);
+  const socials = (linksCfg.socials ?? DEFAULT_SOCIALS).filter((s) => s.visible !== false);
 
   const contactEmail = settings.general.contact_email || "info@fsp.org.bd";
   const contactPhone = settings.general.contact_phone || "+880 1XXX-XXXXXX";
@@ -64,27 +68,34 @@ const Footer = () => {
             </div>
             <p className="font-bengali text-[11px] text-muted-foreground leading-relaxed mb-2">{aboutText}</p>
             <div className="flex gap-1.5">
-              {[Facebook, Youtube, Mail].map((Icon, i) => (
-                <a key={i} href="#" className="w-6 h-6 rounded-full bg-secondary flex items-center justify-center hover:bg-primary hover:text-primary-foreground text-muted-foreground hover:scale-110 transition-all">
-                  <Icon className="w-3 h-3" />
-                </a>
-              ))}
+              {socials.map((s) => {
+                const Icon = SOCIAL_ICONS[s.platform] || Mail;
+                return (
+                  <a key={s.id} href={s.href} target="_blank" rel="noreferrer" className="w-6 h-6 rounded-full bg-secondary flex items-center justify-center hover:bg-primary hover:text-primary-foreground text-muted-foreground hover:scale-110 transition-all">
+                    <Icon className="w-3 h-3" />
+                  </a>
+                );
+              })}
             </div>
           </motion.div>
 
-          {/* Quick Links */}
-          <motion.div initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.05 }}>
-            <h4 className="font-bengali text-[10px] font-bold mb-2 text-accent uppercase tracking-wider">{t("quickLinks")}</h4>
-            <ul className="space-y-1">
-              {quickLinks.map((item) => (
-                <li key={item.to}>
-                  <Link to={item.to} className="text-[11px] text-muted-foreground hover:text-primary transition-colors font-bengali hover:translate-x-1 inline-block">
-                    {item.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </motion.div>
+          {/* Link columns (CMS-driven) */}
+          {columns.map((col, ci) => (
+            <motion.div key={col.id} initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.05 + ci * 0.05 }}>
+              <h4 className="font-bengali text-[10px] font-bold mb-2 text-accent uppercase tracking-wider">
+                {lang === "en" ? (col.title_en || col.title_bn) : (col.title_bn || col.title_en)}
+              </h4>
+              <ul className="space-y-1">
+                {col.links.filter((l) => l.visible !== false).map((l) => (
+                  <li key={l.id}>
+                    <Link to={l.to} className="text-[11px] text-muted-foreground hover:text-primary transition-colors font-bengali hover:translate-x-1 inline-block">
+                      {lang === "en" ? (l.label_en || l.label_bn) : (l.label_bn || l.label_en)}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </motion.div>
+          ))}
 
           {/* Contact */}
           <motion.div initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.1 }}>

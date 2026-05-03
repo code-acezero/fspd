@@ -11,15 +11,14 @@ import { courses as mockCourses } from "@/data/mockData";
 import { createSlug } from "@/lib/slugify";
 import demoLogo from "@/assets/site-logo.webp";
 import LogoTile from "@/components/branding/LogoTile";
+import { usePageBlocks } from "@/contexts/PageBlocksContext";
+import { DEFAULT_NAV_ITEMS } from "@/lib/pageBlocks";
 
-const navItems = [
-  { key: "home", to: "/home", icon: Home },
-  { key: "blog", to: "/blog", icon: BookOpen },
-  { key: "events", to: "/events", icon: Calendar },
-  { key: "courses", to: "/courses", icon: GraduationCap },
-  { key: "members", to: "/members", icon: Users },
-  { key: "about", to: "/about", icon: Info },
-];
+// Map nav item id → icon (lucide). Custom items fall back to a generic icon.
+const NAV_ICONS: Record<string, any> = {
+  home: Home, blog: BookOpen, events: Calendar,
+  courses: GraduationCap, members: Users, about: Info,
+};
 
 interface Suggestion {
   title: string;
@@ -42,9 +41,21 @@ const MainNav = () => {
   const { user, profile, role, signOut } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const { settings } = useSiteSettings();
+  const { getNav } = usePageBlocks();
   const sidebarRef = useRef<HTMLDivElement>(null);
   const autoHideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastScrollY = useRef(0);
+
+  // Resolve nav items from CMS, fall back to defaults.
+  const navCfg = getNav();
+  const navItems = (navCfg.items ?? DEFAULT_NAV_ITEMS)
+    .filter((it) => it.visible !== false)
+    .map((it) => ({
+      key: it.id,
+      to: it.to,
+      label: lang === "en" ? (it.label_en || it.label_bn) : (it.label_bn || it.label_en),
+      icon: NAV_ICONS[it.id] || Info,
+    }));
 
   const siteName = lang === "en" ? settings.general.site_name_en : settings.general.site_name_bn;
   const themeToggleLabel = theme === "dark" ? t("lightMode") : t("darkMode");
@@ -252,7 +263,7 @@ const MainNav = () => {
                 const active = location.pathname === item.to;
                 return (
                   <Link key={item.to} to={item.to} className={`px-4 py-2 text-sm rounded-full font-bengali transition-all duration-300 ${active ? "bg-primary text-primary-foreground shadow-md shadow-primary/20" : "text-muted-foreground hover:text-foreground hover:bg-secondary"}`}>
-                    {t(item.key)}
+                    {item.label}
                   </Link>
                 );
               })}
@@ -380,7 +391,7 @@ const MainNav = () => {
                 return (
                   <Link key={item.to} to={item.to} className={`flex items-center gap-2.5 rounded-full transition-all duration-200 ${sidebarExpanded ? "px-3 py-2.5 w-full" : "w-9 h-9 justify-center"} ${active ? "bg-primary text-primary-foreground shadow-md" : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"}`}>
                     <Icon className="w-4 h-4 shrink-0" />
-                    {sidebarExpanded && <motion.span initial={{ opacity: 0, width: 0 }} animate={{ opacity: 1, width: "auto" }} className="text-xs font-bengali whitespace-nowrap overflow-hidden">{t(item.key)}</motion.span>}
+                    {sidebarExpanded && <motion.span initial={{ opacity: 0, width: 0 }} animate={{ opacity: 1, width: "auto" }} className="text-xs font-bengali whitespace-nowrap overflow-hidden">{item.label}</motion.span>}
                   </Link>
                 );
               })}

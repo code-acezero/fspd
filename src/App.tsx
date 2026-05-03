@@ -11,6 +11,7 @@ import { SiteSettingsProvider } from "@/contexts/SiteSettingsContext";
 import { VisualEditorProvider } from "@/contexts/VisualEditorContext";
 import { PageBlocksProvider } from "@/contexts/PageBlocksContext";
 import RequireRole from "@/components/auth/RequireRole";
+import GlobalEditorMount from "@/components/editor/GlobalEditorMount";
 
 // Landing page is the LCP-critical entry — keep eager so first paint has no
 // chunk waterfall. Every other route is lazy-loaded so its JS only ships
@@ -77,6 +78,7 @@ const App = () => (
                       <Route path="*" element={<NotFound />} />
                     </Routes>
                   </Suspense>
+                  <GlobalEditorMount />
                 </BrowserRouter>
               </TooltipProvider>
               </PageBlocksProvider>
