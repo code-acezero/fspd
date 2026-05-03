@@ -130,9 +130,9 @@ const HeroEditorPanel = () => {
             </div>
           </div>
           <button
-            onClick={() => setEditMode(false)}
+            onClick={() => setActiveBlock(null)}
             className="p-1.5 rounded-full hover:bg-foreground/10"
-            title="Close editor"
+            title="Back to sections"
           >
             <X className="w-4 h-4" />
           </button>
