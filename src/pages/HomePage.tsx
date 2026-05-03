@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { createSlug } from "@/lib/slugify";
 import MainNav from "@/components/MainNav";
 import Footer from "@/components/landing/Footer";
+import SeoHead from "@/components/SeoHead";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 const BannerSlider = () => {
@@ -80,6 +81,7 @@ const HomePage = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <SeoHead />
       <MainNav />
       <BannerSlider />
       <div className="container mx-auto px-4 lg:px-8 py-6 md:py-10 space-y-6 md:space-y-12">
