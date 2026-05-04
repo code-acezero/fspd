@@ -25,13 +25,21 @@ interface Banner {
 
 const BannerSlider = ({ slides, loading }: { slides: Banner[]; loading: boolean }) => {
   const [current, setCurrent] = useState(0);
-  const { lang } = useLanguage();
+  const { lang, t } = useLanguage();
+
+  // Fallback default slides (translated) when admin hasn't configured any banners.
+  const fallbackSlides: Banner[] = [
+    { id: "fb1", tag: t("bannerTag1"), tag_en: t("bannerTag1"), title: t("bannerTitle1"), title_en: t("bannerTitle1"), subtitle: t("bannerSub1"), subtitle_en: t("bannerSub1"), image_url: "", link_url: "" },
+    { id: "fb2", tag: t("bannerTag2"), tag_en: t("bannerTag2"), title: t("bannerTitle2"), title_en: t("bannerTitle2"), subtitle: t("bannerSub2"), subtitle_en: t("bannerSub2"), image_url: "", link_url: "" },
+    { id: "fb3", tag: t("bannerTag3"), tag_en: t("bannerTag3"), title: t("bannerTitle3"), title_en: t("bannerTitle3"), subtitle: t("bannerSub3"), subtitle_en: t("bannerSub3"), image_url: "", link_url: "" },
+  ];
+  const effectiveSlides = slides.length > 0 ? slides : fallbackSlides;
 
   useEffect(() => {
-    if (slides.length < 2) return;
-    const timer = setInterval(() => setCurrent((c) => (c + 1) % slides.length), 5000);
+    if (effectiveSlides.length < 2) return;
+    const timer = setInterval(() => setCurrent((c) => (c + 1) % effectiveSlides.length), 5000);
     return () => clearInterval(timer);
-  }, [slides.length]);
+  }, [effectiveSlides.length]);
 
   if (loading) {
     return (
@@ -47,9 +55,9 @@ const BannerSlider = ({ slides, loading }: { slides: Banner[]; loading: boolean 
     );
   }
 
-  if (slides.length === 0) return null;
+  if (effectiveSlides.length === 0) return null;
 
-  const slide = slides[current];
+  const slide = effectiveSlides[current];
   const Wrapper: any = slide.link_url ? Link : "div";
   const wrapperProps = slide.link_url ? { to: slide.link_url } : {};
 
@@ -90,12 +98,12 @@ const BannerSlider = ({ slides, loading }: { slides: Banner[]; loading: boolean 
         </motion.div>
       </AnimatePresence>
       <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-background to-transparent pointer-events-none" />
-      {slides.length > 1 && (
+      {effectiveSlides.length > 1 && (
         <>
-          <button onClick={() => setCurrent((c) => (c - 1 + slides.length) % slides.length)} className="hidden lg:flex absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-background/20 backdrop-blur-md text-primary-foreground hover:bg-background/40 items-center justify-center transition-all border border-primary-foreground/10 shadow-lg z-20"><ChevronLeft className="w-5 h-5" /></button>
-          <button onClick={() => setCurrent((c) => (c + 1) % slides.length)} className="hidden lg:flex absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-background/20 backdrop-blur-md text-primary-foreground hover:bg-background/40 items-center justify-center transition-all border border-primary-foreground/10 shadow-lg z-20"><ChevronRight className="w-5 h-5" /></button>
+          <button onClick={() => setCurrent((c) => (c - 1 + effectiveSlides.length) % effectiveSlides.length)} className="hidden lg:flex absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-background/20 backdrop-blur-md text-primary-foreground hover:bg-background/40 items-center justify-center transition-all border border-primary-foreground/10 shadow-lg z-20"><ChevronLeft className="w-5 h-5" /></button>
+          <button onClick={() => setCurrent((c) => (c + 1) % effectiveSlides.length)} className="hidden lg:flex absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-background/20 backdrop-blur-md text-primary-foreground hover:bg-background/40 items-center justify-center transition-all border border-primary-foreground/10 shadow-lg z-20"><ChevronRight className="w-5 h-5" /></button>
           <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-2 z-20">
-            {slides.map((_, i) => (<button key={i} onClick={() => setCurrent(i)} className={`h-1.5 rounded-full transition-all ${i === current ? "bg-gold w-6" : "bg-primary-foreground/30 w-1.5"}`} />))}
+            {effectiveSlides.map((_, i) => (<button key={i} onClick={() => setCurrent(i)} className={`h-1.5 rounded-full transition-all ${i === current ? "bg-gold w-6" : "bg-primary-foreground/30 w-1.5"}`} />))}
           </div>
         </>
       )}
