@@ -776,7 +776,16 @@ const AdminDashboard = () => {
                       <button
                         key={p.id}
                         type="button"
-                        onClick={() => setAppearanceForm({ ...appearanceForm, palette: p.id } as any)}
+                        onClick={async () => {
+                          // Apply preset palette AND its theme tokens together
+                          // so the picked theme is the actual stored theme — no
+                          // flash of the previous palette before DB load.
+                          const nextTheme = paletteToTheme(p.id as PaletteId);
+                          setAppearanceForm({ ...appearanceForm, palette: p.id } as any);
+                          await updateSettings("appearance", { ...appearanceForm, palette: p.id });
+                          await updateSettings("theme", nextTheme);
+                          toast({ title: t("success"), description: t("themeSavedDesc") });
+                        }}
                         className={`palette-card group relative rounded-2xl border-2 p-3 text-left transition-all palette-depth ${active ? "palette-card-active border-primary shadow-lg shadow-primary/30" : "border-border hover:border-primary/50"}`}
                       >
                         <div className="palette-card-swatch h-12 w-full rounded-xl mb-2 relative overflow-hidden" style={{ background: `linear-gradient(135deg, hsl(${p.primary}), hsl(${p.accent}))` }}>
