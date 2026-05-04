@@ -833,6 +833,11 @@ const AdminDashboard = () => {
                   <iframe src="/" className="w-full h-[500px] rounded-2xl" title={t("livePreview")} />
                 </div>
               </div>
+
+              {/* Granular per-token color editor lives at the bottom of the
+                  Theme tab — presets above provide quick brand swaps,
+                  this section lets you fine-tune every individual token. */}
+              <ThemePanel />
             </div>
           )}
 
@@ -986,7 +991,6 @@ const AdminDashboard = () => {
                   {savingSettings ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} {t("save")}
                 </button>
               </div>
-              <ThemePanel />
               <HomeBannersPanel />
               <SettingsHistoryPanel />
             </div>
