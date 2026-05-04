@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 type Block =
   | { type: "heading"; text: string; text_en?: string; level?: 1 | 2 | 3 }
@@ -16,6 +17,7 @@ const slugify = (s: string) => s.toLowerCase().trim().replace(/[^\w\s-]/g, "").r
 const PageBuilderPanel = () => {
   const { toast } = useToast();
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [pages, setPages] = useState<any[]>([]);
   const [editing, setEditing] = useState<any | null>(null);
   const [saving, setSaving] = useState(false);
@@ -98,9 +100,9 @@ const PageBuilderPanel = () => {
       {/* List */}
       <div className="bg-card border border-border rounded-2xl p-5">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="font-bengali font-bold text-foreground">Custom Pages</h3>
+          <h3 className="font-bengali font-bold text-foreground">{t("customPages")}</h3>
           <button onClick={reset} className="px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-bengali flex items-center gap-2">
-            <Plus className="w-4 h-4" /> New Page
+            <Plus className="w-4 h-4" /> {t("newPage")}
           </button>
         </div>
         <div className="space-y-2">
@@ -109,20 +111,20 @@ const PageBuilderPanel = () => {
               <FileText className="w-4 h-4 text-primary shrink-0" />
               <div className="flex-1 min-w-0">
                 <p className="font-bengali text-sm font-bold text-foreground truncate">{p.title || p.title_en}</p>
-                <p className="text-xs text-muted-foreground truncate">/p/{p.slug} · {p.is_published ? "published" : "draft"}{p.show_in_nav ? " · in nav" : ""}</p>
+                <p className="text-xs text-muted-foreground truncate">/p/{p.slug} · {p.is_published ? t("publishedStatus") : t("draftStatus")}{p.show_in_nav ? ` · ${t("inNav")}` : ""}</p>
               </div>
               <Link to={`/p/${p.slug}`} target="_blank" className="p-2 hover:bg-background rounded-lg"><Eye className="w-4 h-4" /></Link>
               <button onClick={() => startEdit(p)} className="p-2 hover:bg-background rounded-lg"><Edit3 className="w-4 h-4 text-primary" /></button>
               <button onClick={() => remove(p.id)} className="p-2 hover:bg-destructive/10 rounded-lg"><Trash2 className="w-4 h-4 text-destructive" /></button>
             </div>
           ))}
-          {pages.length === 0 && <p className="text-center text-muted-foreground font-bengali py-6">No custom pages yet.</p>}
+          {pages.length === 0 && <p className="text-center text-muted-foreground font-bengali py-6">{t("noCustomPages")}</p>}
         </div>
       </div>
 
       {/* Editor */}
       <div className="bg-card border border-border rounded-2xl p-5 space-y-4">
-        <h3 className="font-bengali font-bold text-foreground">{editing ? "Edit Page" : "New Page"}</h3>
+        <h3 className="font-bengali font-bold text-foreground">{editing ? t("editPage") : t("newPage")}</h3>
         <div className="grid md:grid-cols-2 gap-3">
           <input className={inp} placeholder="Title (Bangla)" value={title} onChange={(e) => setTitle(e.target.value)} />
           <input className={inp} placeholder="Title (English)" value={titleEn} onChange={(e) => setTitleEn(e.target.value)} />
@@ -130,13 +132,13 @@ const PageBuilderPanel = () => {
           <input type="number" className={inp} placeholder="Sort order" value={sortOrder} onChange={(e) => setSortOrder(Number(e.target.value) || 0)} />
         </div>
         <div className="flex items-center gap-4">
-          <label className="flex items-center gap-2"><input type="checkbox" checked={isPublished} onChange={(e) => setIsPublished(e.target.checked)} /><span className="text-sm font-bengali">Published</span></label>
-          <label className="flex items-center gap-2"><input type="checkbox" checked={showInNav} onChange={(e) => setShowInNav(e.target.checked)} /><span className="text-sm font-bengali">Show in nav</span></label>
+          <label className="flex items-center gap-2"><input type="checkbox" checked={isPublished} onChange={(e) => setIsPublished(e.target.checked)} /><span className="text-sm font-bengali">{t("publishedStatus")}</span></label>
+          <label className="flex items-center gap-2"><input type="checkbox" checked={showInNav} onChange={(e) => setShowInNav(e.target.checked)} /><span className="text-sm font-bengali">{t("showInNav")}</span></label>
         </div>
 
         {/* Blocks */}
         <div className="space-y-3">
-          <p className="text-sm font-bengali font-semibold text-foreground">Content blocks</p>
+          <p className="text-sm font-bengali font-semibold text-foreground">{t("contentBlocks")}</p>
           {blocks.map((b, i) => (
             <div key={i} className="bg-muted/40 border border-border rounded-xl p-3 space-y-2">
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -180,9 +182,9 @@ const PageBuilderPanel = () => {
 
         <div className="flex gap-2">
           <button onClick={save} disabled={saving} className="px-5 py-2.5 rounded-xl bg-primary text-primary-foreground font-bengali text-sm flex items-center gap-2 disabled:opacity-50">
-            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} {editing ? "Update Page" : "Create Page"}
+            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} {editing ? t("updatePage") : t("createPage")}
           </button>
-          {editing && <button onClick={reset} className="px-5 py-2.5 rounded-xl bg-muted text-foreground font-bengali text-sm">Cancel</button>}
+          {editing && <button onClick={reset} className="px-5 py-2.5 rounded-xl bg-muted text-foreground font-bengali text-sm">{t("cancel")}</button>}
         </div>
       </div>
     </div>

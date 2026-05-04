@@ -16,6 +16,7 @@ import HealthCheckBanner from "@/components/admin/HealthCheckBanner";
 import SpeechesPanel from "@/components/admin/SpeechesPanel";
 import PageBuilderPanel from "@/components/admin/PageBuilderPanel";
 import SeoPanel from "@/components/admin/SeoPanel";
+import { paletteToTheme, type PaletteId } from "@/lib/palettes";
 import { ShieldAlert } from "lucide-react";
 
 type AdminTab = "dashboard" | "posts" | "events" | "courses" | "members" | "users" | "assets" | "theme" | "settings" | "moderation" | "speeches" | "pages" | "seo";
@@ -358,9 +359,9 @@ const AdminDashboard = () => {
     { icon: GraduationCap, label: t("courseManagement"), tab: "courses" as AdminTab },
     { icon: Crown, label: t("membersAdmin"), tab: "members" as AdminTab },
     { icon: Users, label: t("memberManagement"), tab: "users" as AdminTab },
-    { icon: Quote, label: "Welcome Speeches", tab: "speeches" as AdminTab },
-    { icon: FileEdit, label: "Page Builder", tab: "pages" as AdminTab },
-    { icon: Search, label: "SEO Settings", tab: "seo" as AdminTab },
+    { icon: Quote, label: t("welcomeSpeechesTab"), tab: "speeches" as AdminTab },
+    { icon: FileEdit, label: t("pageBuilderTab"), tab: "pages" as AdminTab },
+    { icon: Search, label: t("seoSettingsTab"), tab: "seo" as AdminTab },
     { icon: ImagePlus, label: t("assetManager"), tab: "assets" as AdminTab },
     { icon: Palette, label: t("themeCustomization"), tab: "theme" as AdminTab },
     { icon: Settings, label: t("siteSettingsLabel"), tab: "settings" as AdminTab },
@@ -389,7 +390,7 @@ const AdminDashboard = () => {
         </nav>
         <div className="p-3 border-t border-sidebar-border">
           <Link to="/profile" className="flex items-center gap-3 px-3 py-2.5 rounded-full text-sm text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors"><UserPlus className="w-5 h-5 shrink-0" />{sidebarOpen && <span className="font-bengali">{t("profile")}</span>}</Link>
-          <Link to="/admin/health" className="flex items-center gap-3 px-3 py-2.5 rounded-full text-sm text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors"><ShieldCheck className="w-5 h-5 shrink-0" />{sidebarOpen && <span className="font-bengali">Health</span>}</Link>
+          <Link to="/admin/health" className="flex items-center gap-3 px-3 py-2.5 rounded-full text-sm text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors"><ShieldCheck className="w-5 h-5 shrink-0" />{sidebarOpen && <span className="font-bengali">{t("healthLabel")}</span>}</Link>
           <Link to="/home" className="flex items-center gap-3 px-3 py-2.5 rounded-full text-sm text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors"><Globe className="w-5 h-5 shrink-0" />{sidebarOpen && <span className="font-bengali">{t("openSite")}</span>}</Link>
           <button onClick={signOut} className="flex items-center gap-3 px-3 py-2.5 rounded-full text-sm text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors w-full"><LogOut className="w-5 h-5 shrink-0" />{sidebarOpen && <span className="font-bengali">{t("logout")}</span>}</button>
         </div>
@@ -775,7 +776,16 @@ const AdminDashboard = () => {
                       <button
                         key={p.id}
                         type="button"
-                        onClick={() => setAppearanceForm({ ...appearanceForm, palette: p.id } as any)}
+                        onClick={async () => {
+                          // Apply preset palette AND its theme tokens together
+                          // so the picked theme is the actual stored theme — no
+                          // flash of the previous palette before DB load.
+                          const nextTheme = paletteToTheme(p.id as PaletteId);
+                          setAppearanceForm({ ...appearanceForm, palette: p.id } as any);
+                          await updateSettings("appearance", { ...appearanceForm, palette: p.id });
+                          await updateSettings("theme", nextTheme);
+                          toast({ title: t("success"), description: t("themeSavedDesc") });
+                        }}
                         className={`palette-card group relative rounded-2xl border-2 p-3 text-left transition-all palette-depth ${active ? "palette-card-active border-primary shadow-lg shadow-primary/30" : "border-border hover:border-primary/50"}`}
                       >
                         <div className="palette-card-swatch h-12 w-full rounded-xl mb-2 relative overflow-hidden" style={{ background: `linear-gradient(135deg, hsl(${p.primary}), hsl(${p.accent}))` }}>
@@ -823,6 +833,11 @@ const AdminDashboard = () => {
                   <iframe src="/" className="w-full h-[500px] rounded-2xl" title={t("livePreview")} />
                 </div>
               </div>
+
+              {/* Granular per-token color editor lives at the bottom of the
+                  Theme tab — presets above provide quick brand swaps,
+                  this section lets you fine-tune every individual token. */}
+              <ThemePanel />
             </div>
           )}
 
@@ -976,7 +991,6 @@ const AdminDashboard = () => {
                   {savingSettings ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} {t("save")}
                 </button>
               </div>
-              <ThemePanel />
               <HomeBannersPanel />
               <SettingsHistoryPanel />
             </div>

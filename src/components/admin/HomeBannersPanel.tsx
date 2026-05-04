@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Plus, Save, Loader2, Trash2, ImagePlus, Eye, EyeOff, ChevronUp, ChevronDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface Banner {
   id: string;
@@ -27,6 +28,7 @@ const inputClass = "w-full px-3 py-2 rounded-full border border-border bg-backgr
 
 const HomeBannersPanel = () => {
   const { toast } = useToast();
+  const { t } = useLanguage();
   const qc = useQueryClient();
   const [editing, setEditing] = useState<Banner | null>(null);
   const [draft, setDraft] = useState(empty);
@@ -103,27 +105,27 @@ const HomeBannersPanel = () => {
     <div className="bg-background rounded-3xl border border-border p-6 depth-card space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h3 className="font-bengali font-bold text-foreground">Home banners</h3>
-          <p className="text-xs text-muted-foreground mt-1">Rotating hero slides shown at the top of the home page.</p>
+          <h3 className="font-bengali font-bold text-foreground">{t("homeBannersTitle")}</h3>
+          <p className="text-xs text-muted-foreground mt-1 font-bengali">{t("homeBannersDesc")}</p>
         </div>
         <button
           onClick={() => { setEditing(null); setDraft(empty); }}
-          className="px-4 py-2 rounded-full bg-secondary text-secondary-foreground text-sm font-semibold flex items-center gap-2 hover:bg-secondary/80"
+          className="px-4 py-2 rounded-full bg-secondary text-secondary-foreground text-sm font-semibold font-bengali flex items-center gap-2 hover:bg-secondary/80"
         >
-          <Plus className="w-4 h-4" /> New
+          <Plus className="w-4 h-4" /> {t("newLabel")}
         </button>
       </div>
 
       {/* Editor */}
       <div className="border border-border rounded-2xl p-4 space-y-3 bg-card">
         <div className="grid md:grid-cols-2 gap-3">
-          <div><label className="text-xs text-muted-foreground">Tag (BN)</label><input value={draft.tag} onChange={(e) => setDraft({ ...draft, tag: e.target.value })} className={inputClass} /></div>
-          <div><label className="text-xs text-muted-foreground">Tag (EN)</label><input value={draft.tag_en} onChange={(e) => setDraft({ ...draft, tag_en: e.target.value })} className={inputClass} /></div>
-          <div><label className="text-xs text-muted-foreground">Title (BN)</label><input value={draft.title} onChange={(e) => setDraft({ ...draft, title: e.target.value })} className={inputClass} /></div>
-          <div><label className="text-xs text-muted-foreground">Title (EN)</label><input value={draft.title_en} onChange={(e) => setDraft({ ...draft, title_en: e.target.value })} className={inputClass} /></div>
-          <div><label className="text-xs text-muted-foreground">Subtitle (BN)</label><input value={draft.subtitle} onChange={(e) => setDraft({ ...draft, subtitle: e.target.value })} className={inputClass} /></div>
-          <div><label className="text-xs text-muted-foreground">Subtitle (EN)</label><input value={draft.subtitle_en} onChange={(e) => setDraft({ ...draft, subtitle_en: e.target.value })} className={inputClass} /></div>
-          <div className="md:col-span-2"><label className="text-xs text-muted-foreground">Link URL (optional)</label><input value={draft.link_url} onChange={(e) => setDraft({ ...draft, link_url: e.target.value })} placeholder="/events or https://..." className={inputClass} /></div>
+          <div><label className="text-xs text-muted-foreground font-bengali">{t("bannerTagBn")}</label><input value={draft.tag} onChange={(e) => setDraft({ ...draft, tag: e.target.value })} className={inputClass} /></div>
+          <div><label className="text-xs text-muted-foreground font-bengali">{t("bannerTagEn")}</label><input value={draft.tag_en} onChange={(e) => setDraft({ ...draft, tag_en: e.target.value })} className={inputClass} /></div>
+          <div><label className="text-xs text-muted-foreground font-bengali">{t("bannerTitleBn")}</label><input value={draft.title} onChange={(e) => setDraft({ ...draft, title: e.target.value })} className={inputClass} /></div>
+          <div><label className="text-xs text-muted-foreground font-bengali">{t("bannerTitleEn")}</label><input value={draft.title_en} onChange={(e) => setDraft({ ...draft, title_en: e.target.value })} className={inputClass} /></div>
+          <div><label className="text-xs text-muted-foreground font-bengali">{t("bannerSubtitleBn")}</label><input value={draft.subtitle} onChange={(e) => setDraft({ ...draft, subtitle: e.target.value })} className={inputClass} /></div>
+          <div><label className="text-xs text-muted-foreground font-bengali">{t("bannerSubtitleEn")}</label><input value={draft.subtitle_en} onChange={(e) => setDraft({ ...draft, subtitle_en: e.target.value })} className={inputClass} /></div>
+          <div className="md:col-span-2"><label className="text-xs text-muted-foreground font-bengali">{t("bannerLinkUrl")}</label><input value={draft.link_url} onChange={(e) => setDraft({ ...draft, link_url: e.target.value })} placeholder="/events or https://..." className={inputClass} /></div>
         </div>
         <div className="flex items-center gap-3 flex-wrap">
           <button
@@ -135,33 +137,33 @@ const HomeBannersPanel = () => {
               input.onchange = (e: any) => { const f = e.target.files?.[0]; if (f) upload(f); };
               input.click();
             }}
-            className="px-4 py-2 rounded-full bg-secondary text-secondary-foreground text-sm flex items-center gap-2 hover:bg-secondary/80"
+            className="px-4 py-2 rounded-full bg-secondary text-secondary-foreground text-sm font-bengali flex items-center gap-2 hover:bg-secondary/80"
           >
-            <ImagePlus className="w-4 h-4" /> Background image
+            <ImagePlus className="w-4 h-4" /> {t("backgroundImage")}
           </button>
           {draft.image_url && <img src={draft.image_url} alt="" className="h-10 rounded-lg object-cover" />}
-          <label className="flex items-center gap-2 text-xs text-foreground">
+          <label className="flex items-center gap-2 text-xs text-foreground font-bengali">
             <input type="checkbox" checked={draft.is_active} onChange={(e) => setDraft({ ...draft, is_active: e.target.checked })} className="rounded" />
-            Active
+            {t("isActive")}
           </label>
           <button
             onClick={save}
             disabled={saving || !draft.title}
-            className="ml-auto px-6 py-2 rounded-full bg-primary text-primary-foreground text-sm font-semibold flex items-center gap-2 disabled:opacity-50"
+            className="ml-auto px-6 py-2 rounded-full bg-primary text-primary-foreground text-sm font-semibold font-bengali flex items-center gap-2 disabled:opacity-50"
           >
             {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-            {editing ? "Update" : "Create"}
+            {editing ? t("updateLabel") : t("createLabel")}
           </button>
           {editing && (
-            <button onClick={() => setEditing(null)} className="px-4 py-2 rounded-full bg-muted text-foreground text-sm">Cancel</button>
+            <button onClick={() => setEditing(null)} className="px-4 py-2 rounded-full bg-muted text-foreground text-sm font-bengali">{t("cancel")}</button>
           )}
         </div>
       </div>
 
       {/* List */}
       <div className="space-y-2">
-        {isLoading && <p className="text-sm text-muted-foreground">Loading...</p>}
-        {!isLoading && banners.length === 0 && <p className="text-sm text-muted-foreground">No banners yet.</p>}
+        {isLoading && <p className="text-sm text-muted-foreground font-bengali">{t("loadingLabel")}</p>}
+        {!isLoading && banners.length === 0 && <p className="text-sm text-muted-foreground font-bengali">{t("noBannersYet")}</p>}
         {banners.map((b, i) => (
           <div key={b.id} className="flex items-center gap-3 p-3 rounded-2xl border border-border bg-card">
             {b.image_url ? <img src={b.image_url} alt="" className="w-14 h-14 rounded-xl object-cover" /> : <div className="w-14 h-14 rounded-xl bg-muted" />}
@@ -172,7 +174,7 @@ const HomeBannersPanel = () => {
             <button onClick={() => move(b, -1)} disabled={i === 0} className="p-1.5 rounded-full hover:bg-muted disabled:opacity-30"><ChevronUp className="w-4 h-4" /></button>
             <button onClick={() => move(b, 1)} disabled={i === banners.length - 1} className="p-1.5 rounded-full hover:bg-muted disabled:opacity-30"><ChevronDown className="w-4 h-4" /></button>
             <button onClick={() => toggleActive(b)} className="p-1.5 rounded-full hover:bg-muted">{b.is_active ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4 text-muted-foreground" />}</button>
-            <button onClick={() => setEditing(b)} className="px-3 py-1 rounded-full bg-secondary text-xs">Edit</button>
+            <button onClick={() => setEditing(b)} className="px-3 py-1 rounded-full bg-secondary text-xs font-bengali">{t("edit")}</button>
             <button onClick={() => remove(b.id)} className="p-1.5 rounded-full hover:bg-destructive/10 text-destructive"><Trash2 className="w-4 h-4" /></button>
           </div>
         ))}
