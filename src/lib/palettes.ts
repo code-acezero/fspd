@@ -96,6 +96,70 @@ export const PALETTES: Record<PaletteId, Palette> = {
 
 export const DEFAULT_PALETTE: PaletteId = "crimson";
 
+// Convert a palette's brand stops into a complete ThemeSetting (light + dark
+// token maps). Used by the admin Theme tab so that picking a preset palette
+// instantly populates every brand-tinted token (primary, accent, ring, brand
+// shades, success/warning, gradient ingredients) for both color modes.
+//
+// The neutral surface tokens (background, foreground, card, muted, border…)
+// stay on the monochrome base from MONO_LIGHT / MONO_DARK so layouts remain
+// readable. Only the *colored* tokens get repainted.
+import { MONO_LIGHT, MONO_DARK, type ThemeSetting } from "./themeTokens";
+
+// Lighten/darken an HSL string ("H S% L%") by a delta in lightness percent.
+const shiftL = (hsl: string, delta: number): string => {
+  const m = hsl.trim().match(/^(\d+(?:\.\d+)?)\s+(\d+(?:\.\d+)?)%\s+(\d+(?:\.\d+)?)%$/);
+  if (!m) return hsl;
+  const h = m[1], s = m[2];
+  const l = Math.max(0, Math.min(100, Number(m[3]) + delta));
+  return `${h} ${s}% ${l}%`;
+};
+
+export const paletteToTheme = (id: PaletteId): ThemeSetting => {
+  const p = PALETTES[id] ?? PALETTES[DEFAULT_PALETTE];
+  // Light mode: brand at its native lightness, ring matches primary.
+  const light = {
+    ...MONO_LIGHT,
+    primary: p.primary,
+    primary_foreground: "0 0% 98%",
+    accent: p.accent,
+    accent_foreground: "0 0% 12%",
+    ring: p.primary,
+    crimson: p.primary,
+    crimson_dark: p.primaryDark,
+    crimson_light: p.primaryLight,
+    gold: p.accent,
+    gold_light: shiftL(p.accent, 12),
+    forest: p.primaryDark,
+    forest_light: p.primaryLight,
+    success: p.primary,
+    success_foreground: "0 0% 98%",
+    warning: p.accent,
+    warning_foreground: "0 0% 12%",
+  };
+  // Dark mode: lift brand lightness so it reads on dark surfaces.
+  const dark = {
+    ...MONO_DARK,
+    primary: shiftL(p.primary, 18),
+    primary_foreground: "0 0% 8%",
+    accent: shiftL(p.accent, 8),
+    accent_foreground: "0 0% 8%",
+    ring: shiftL(p.primary, 22),
+    crimson: shiftL(p.primary, 18),
+    crimson_dark: p.primary,
+    crimson_light: shiftL(p.primaryLight, 8),
+    gold: shiftL(p.accent, 6),
+    gold_light: shiftL(p.accent, 18),
+    forest: shiftL(p.primaryDark, 18),
+    forest_light: p.primaryLight,
+    success: shiftL(p.primary, 18),
+    success_foreground: "0 0% 8%",
+    warning: shiftL(p.accent, 6),
+    warning_foreground: "0 0% 8%",
+  };
+  return { light, dark };
+};
+
 export const applyPalette = (id: PaletteId) => {
   const p = PALETTES[id] ?? PALETTES[DEFAULT_PALETTE];
   const root = document.documentElement;
