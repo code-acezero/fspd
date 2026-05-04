@@ -98,12 +98,12 @@ const BannerSlider = ({ slides, loading }: { slides: Banner[]; loading: boolean 
         </motion.div>
       </AnimatePresence>
       <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-background to-transparent pointer-events-none" />
-      {slides.length > 1 && (
+      {effectiveSlides.length > 1 && (
         <>
-          <button onClick={() => setCurrent((c) => (c - 1 + slides.length) % slides.length)} className="hidden lg:flex absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-background/20 backdrop-blur-md text-primary-foreground hover:bg-background/40 items-center justify-center transition-all border border-primary-foreground/10 shadow-lg z-20"><ChevronLeft className="w-5 h-5" /></button>
-          <button onClick={() => setCurrent((c) => (c + 1) % slides.length)} className="hidden lg:flex absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-background/20 backdrop-blur-md text-primary-foreground hover:bg-background/40 items-center justify-center transition-all border border-primary-foreground/10 shadow-lg z-20"><ChevronRight className="w-5 h-5" /></button>
+          <button onClick={() => setCurrent((c) => (c - 1 + effectiveSlides.length) % effectiveSlides.length)} className="hidden lg:flex absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-background/20 backdrop-blur-md text-primary-foreground hover:bg-background/40 items-center justify-center transition-all border border-primary-foreground/10 shadow-lg z-20"><ChevronLeft className="w-5 h-5" /></button>
+          <button onClick={() => setCurrent((c) => (c + 1) % effectiveSlides.length)} className="hidden lg:flex absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-background/20 backdrop-blur-md text-primary-foreground hover:bg-background/40 items-center justify-center transition-all border border-primary-foreground/10 shadow-lg z-20"><ChevronRight className="w-5 h-5" /></button>
           <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-2 z-20">
-            {slides.map((_, i) => (<button key={i} onClick={() => setCurrent(i)} className={`h-1.5 rounded-full transition-all ${i === current ? "bg-gold w-6" : "bg-primary-foreground/30 w-1.5"}`} />))}
+            {effectiveSlides.map((_, i) => (<button key={i} onClick={() => setCurrent(i)} className={`h-1.5 rounded-full transition-all ${i === current ? "bg-gold w-6" : "bg-primary-foreground/30 w-1.5"}`} />))}
           </div>
         </>
       )}
