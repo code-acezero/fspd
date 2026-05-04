@@ -73,9 +73,16 @@ export const MONO_LIGHT: ThemeTokens = {
   input: "0 0% 88%",
   ring: "0 0% 30%",
   gold: "0 0% 50%",
+  gold_light: "0 0% 70%",
   crimson: "0 0% 30%",
   crimson_dark: "0 0% 20%",
   crimson_light: "0 0% 60%",
+  forest: "0 0% 35%",
+  forest_light: "0 0% 50%",
+  success: "0 0% 30%",
+  success_foreground: "0 0% 98%",
+  warning: "0 0% 45%",
+  warning_foreground: "0 0% 98%",
 };
 
 export const MONO_DARK: ThemeTokens = {
