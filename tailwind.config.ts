@@ -25,6 +25,8 @@ export default {
         gold: { DEFAULT: "hsl(var(--gold))", light: "hsl(var(--gold-light))" },
         crimson: { DEFAULT: "hsl(var(--crimson))", dark: "hsl(var(--crimson-dark))", light: "hsl(var(--crimson-light))" },
         forest: { DEFAULT: "hsl(var(--forest))", light: "hsl(var(--forest-light))" },
+        success: { DEFAULT: "hsl(var(--success))", foreground: "hsl(var(--success-foreground))" },
+        warning: { DEFAULT: "hsl(var(--warning))", foreground: "hsl(var(--warning-foreground))" },
         cream: { DEFAULT: "hsl(var(--cream))", dark: "hsl(var(--cream-dark))" },
         terracotta: "hsl(var(--terracotta))",
         "deep-brown": "hsl(var(--deep-brown))",
