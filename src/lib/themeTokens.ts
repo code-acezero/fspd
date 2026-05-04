@@ -32,9 +32,16 @@ export const TOKEN_KEYS = [
   "input",
   "ring",
   "gold",
+  "gold_light",
   "crimson",
   "crimson_dark",
   "crimson_light",
+  "forest",
+  "forest_light",
+  "success",
+  "success_foreground",
+  "warning",
+  "warning_foreground",
 ] as const;
 
 export type TokenKey = (typeof TOKEN_KEYS)[number];
