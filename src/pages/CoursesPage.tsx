@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { GraduationCap, Clock, BookOpen, Users, CheckCircle, Loader2 } from "lucide-react";
+import { GraduationCap, Clock, BookOpen, Users, CheckCircle } from "lucide-react";
+import { CardGridSkeleton } from "@/components/ui/section-skeleton";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { createSlug } from "@/lib/slugify";
@@ -66,7 +67,7 @@ const CoursesPage = () => {
           <p className="font-bengali text-center text-muted-foreground max-w-3xl mx-auto mb-8 whitespace-pre-line">{introText}</p>
         )}
         {loading ? (
-          <div className="flex justify-center py-20"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
+          <CardGridSkeleton count={6} />
         ) : courses.length === 0 ? (
           <div className="text-center py-20">
             <GraduationCap className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
