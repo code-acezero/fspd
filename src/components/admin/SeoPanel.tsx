@@ -99,18 +99,18 @@ const SeoPanel = () => {
         <input className={inp} placeholder="Canonical URL (optional)" value={form.canonical} onChange={(e) => setForm({ ...form, canonical: e.target.value })} />
         <label className="flex items-center gap-2">
           <input type="checkbox" checked={form.no_index} onChange={(e) => setForm({ ...form, no_index: e.target.checked })} />
-          <span className="text-sm font-bengali">Hide from search engines (noindex)</span>
+          <span className="text-sm font-bengali">{t("hideFromSearch")}</span>
         </label>
         <div className="flex gap-2">
           <button onClick={save} disabled={saving} className="px-5 py-2.5 rounded-xl bg-primary text-primary-foreground font-bengali text-sm flex items-center gap-2 disabled:opacity-50">
-            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Save
+            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} {t("save")}
           </button>
-          {editing && <button onClick={reset} className="px-5 py-2.5 rounded-xl bg-muted text-foreground font-bengali text-sm">Cancel</button>}
+          {editing && <button onClick={reset} className="px-5 py-2.5 rounded-xl bg-muted text-foreground font-bengali text-sm">{t("cancel")}</button>}
         </div>
       </div>
 
       <div className="space-y-2">
-        <h3 className="font-bengali font-bold text-foreground">Configured pages</h3>
+        <h3 className="font-bengali font-bold text-foreground">{t("configuredPages")}</h3>
         {list.map((s) => (
           <div key={s.id} className="flex items-center gap-3 bg-card border border-border rounded-xl p-3">
             <code className="text-xs px-2 py-1 rounded bg-muted">{s.path}</code>
@@ -123,7 +123,7 @@ const SeoPanel = () => {
             <button onClick={() => remove(s.id)} className="p-2 hover:bg-destructive/10 rounded-lg"><Trash2 className="w-4 h-4 text-destructive" /></button>
           </div>
         ))}
-        {list.length === 0 && <p className="text-center text-muted-foreground font-bengali py-6">No SEO entries yet.</p>}
+        {list.length === 0 && <p className="text-center text-muted-foreground font-bengali py-6">{t("noSeoEntries")}</p>}
       </div>
     </div>
   );
