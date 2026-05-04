@@ -69,13 +69,13 @@ const SortableRow = ({ page, blockKey, draggable }: RowProps) => {
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium truncate">{BLOCK_LABELS[blockKey] ?? blockKey}</span>
-          {dirty && <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-amber-500/15 text-amber-600 font-semibold uppercase tracking-wide">Draft</span>}
+          {dirty && <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-warning/15 text-warning font-semibold uppercase tracking-wide">Draft</span>}
         </div>
         <p className="text-[10px] text-muted-foreground">{visible ? "Visible to visitors" : "Hidden"}</p>
       </div>
       <button
         onClick={() => setBlockVisible(blockKey, !visible, page)}
-        className={`p-1.5 rounded-full ${visible ? "hover:bg-destructive/15 text-muted-foreground hover:text-destructive" : "hover:bg-emerald-500/15 text-emerald-600"}`}
+        className={`p-1.5 rounded-full ${visible ? "hover:bg-destructive/15 text-muted-foreground hover:text-destructive" : "hover:bg-success/15 text-success"}`}
         title={visible ? "Hide" : "Show"}
       >
         {visible ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}

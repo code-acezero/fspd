@@ -32,9 +32,16 @@ export const TOKEN_KEYS = [
   "input",
   "ring",
   "gold",
+  "gold_light",
   "crimson",
   "crimson_dark",
   "crimson_light",
+  "forest",
+  "forest_light",
+  "success",
+  "success_foreground",
+  "warning",
+  "warning_foreground",
 ] as const;
 
 export type TokenKey = (typeof TOKEN_KEYS)[number];
@@ -66,9 +73,16 @@ export const MONO_LIGHT: ThemeTokens = {
   input: "0 0% 88%",
   ring: "0 0% 30%",
   gold: "0 0% 50%",
+  gold_light: "0 0% 70%",
   crimson: "0 0% 30%",
   crimson_dark: "0 0% 20%",
   crimson_light: "0 0% 60%",
+  forest: "0 0% 35%",
+  forest_light: "0 0% 50%",
+  success: "0 0% 30%",
+  success_foreground: "0 0% 98%",
+  warning: "0 0% 45%",
+  warning_foreground: "0 0% 98%",
 };
 
 export const MONO_DARK: ThemeTokens = {
@@ -92,9 +106,16 @@ export const MONO_DARK: ThemeTokens = {
   input: "0 0% 18%",
   ring: "0 0% 70%",
   gold: "0 0% 60%",
+  gold_light: "0 0% 45%",
   crimson: "0 0% 70%",
   crimson_dark: "0 0% 50%",
   crimson_light: "0 0% 80%",
+  forest: "0 0% 50%",
+  forest_light: "0 0% 60%",
+  success: "0 0% 70%",
+  success_foreground: "0 0% 8%",
+  warning: "0 0% 60%",
+  warning_foreground: "0 0% 8%",
 };
 
 export const DEFAULT_THEME: ThemeSetting = { light: MONO_LIGHT, dark: MONO_DARK };
