@@ -358,9 +358,9 @@ const AdminDashboard = () => {
     { icon: GraduationCap, label: t("courseManagement"), tab: "courses" as AdminTab },
     { icon: Crown, label: t("membersAdmin"), tab: "members" as AdminTab },
     { icon: Users, label: t("memberManagement"), tab: "users" as AdminTab },
-    { icon: Quote, label: "Welcome Speeches", tab: "speeches" as AdminTab },
-    { icon: FileEdit, label: "Page Builder", tab: "pages" as AdminTab },
-    { icon: Search, label: "SEO Settings", tab: "seo" as AdminTab },
+    { icon: Quote, label: t("welcomeSpeechesTab"), tab: "speeches" as AdminTab },
+    { icon: FileEdit, label: t("pageBuilderTab"), tab: "pages" as AdminTab },
+    { icon: Search, label: t("seoSettingsTab"), tab: "seo" as AdminTab },
     { icon: ImagePlus, label: t("assetManager"), tab: "assets" as AdminTab },
     { icon: Palette, label: t("themeCustomization"), tab: "theme" as AdminTab },
     { icon: Settings, label: t("siteSettingsLabel"), tab: "settings" as AdminTab },
@@ -389,7 +389,7 @@ const AdminDashboard = () => {
         </nav>
         <div className="p-3 border-t border-sidebar-border">
           <Link to="/profile" className="flex items-center gap-3 px-3 py-2.5 rounded-full text-sm text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors"><UserPlus className="w-5 h-5 shrink-0" />{sidebarOpen && <span className="font-bengali">{t("profile")}</span>}</Link>
-          <Link to="/admin/health" className="flex items-center gap-3 px-3 py-2.5 rounded-full text-sm text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors"><ShieldCheck className="w-5 h-5 shrink-0" />{sidebarOpen && <span className="font-bengali">Health</span>}</Link>
+          <Link to="/admin/health" className="flex items-center gap-3 px-3 py-2.5 rounded-full text-sm text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors"><ShieldCheck className="w-5 h-5 shrink-0" />{sidebarOpen && <span className="font-bengali">{t("healthLabel")}</span>}</Link>
           <Link to="/home" className="flex items-center gap-3 px-3 py-2.5 rounded-full text-sm text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors"><Globe className="w-5 h-5 shrink-0" />{sidebarOpen && <span className="font-bengali">{t("openSite")}</span>}</Link>
           <button onClick={signOut} className="flex items-center gap-3 px-3 py-2.5 rounded-full text-sm text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors w-full"><LogOut className="w-5 h-5 shrink-0" />{sidebarOpen && <span className="font-bengali">{t("logout")}</span>}</button>
         </div>
