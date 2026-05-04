@@ -1,0 +1,1 @@
+DELETE FROM public.home_banners WHERE title = 'ফরিদপুর সাহিত্য পরিষদ' AND title_en = 'Faridpur Literary Council' AND image_url = '';
