@@ -35,9 +35,16 @@ const LABELS: Record<TokenKey, string> = {
   input: "Input",
   ring: "Ring (focus)",
   gold: "Gold",
+  gold_light: "Gold light",
   crimson: "Crimson",
   crimson_dark: "Crimson dark",
   crimson_light: "Crimson light",
+  forest: "Forest",
+  forest_light: "Forest light",
+  success: "Success",
+  success_foreground: "Success text",
+  warning: "Warning",
+  warning_foreground: "Warning text",
 };
 
 /**
