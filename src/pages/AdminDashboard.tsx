@@ -16,6 +16,7 @@ import HealthCheckBanner from "@/components/admin/HealthCheckBanner";
 import SpeechesPanel from "@/components/admin/SpeechesPanel";
 import PageBuilderPanel from "@/components/admin/PageBuilderPanel";
 import SeoPanel from "@/components/admin/SeoPanel";
+import { paletteToTheme, type PaletteId } from "@/lib/palettes";
 import { ShieldAlert } from "lucide-react";
 
 type AdminTab = "dashboard" | "posts" | "events" | "courses" | "members" | "users" | "assets" | "theme" | "settings" | "moderation" | "speeches" | "pages" | "seo";
