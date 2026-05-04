@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
-import { Calendar, Clock, MapPin, Loader2 } from "lucide-react";
+import { Calendar, Clock, MapPin } from "lucide-react";
+import { CardGridSkeleton } from "@/components/ui/section-skeleton";
 import { Link } from "react-router-dom";
 // Mock fallback removed — only DB events.
 import MainNav from "@/components/MainNav";
@@ -53,7 +54,7 @@ const EventsPage = () => {
           <p className="font-bengali text-center text-muted-foreground max-w-3xl mx-auto mb-8 whitespace-pre-line">{introText}</p>
         )}
         {isLoading ? (
-          <div className="flex justify-center py-16"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>
+          <CardGridSkeleton count={4} className="lg:grid-cols-2" />
         ) : events.length === 0 ? (
           <div className="text-center py-16"><Calendar className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" /><p className="font-bengali text-muted-foreground">{emptyText}</p></div>
         ) : (

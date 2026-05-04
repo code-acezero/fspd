@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Search, BookOpen, Star, MessageSquare, Filter, Loader2 } from "lucide-react";
+import { Search, BookOpen, Star, MessageSquare, Filter } from "lucide-react";
+import { CardGridSkeleton } from "@/components/ui/section-skeleton";
 // Mock fallback removed — only DB posts.
 import MainNav from "@/components/MainNav";
 import Footer from "@/components/landing/Footer";
@@ -98,7 +99,7 @@ const BlogListPage = () => {
         )}
 
         {isLoading ? (
-          <div className="flex justify-center py-16"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>
+          <CardGridSkeleton count={6} />
         ) : (
           <div className="flex flex-wrap justify-center gap-6">
             {filtered.map((post, index) => (
