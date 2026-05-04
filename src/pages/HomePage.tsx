@@ -55,9 +55,9 @@ const BannerSlider = ({ slides, loading }: { slides: Banner[]; loading: boolean 
     );
   }
 
-  if (slides.length === 0) return null;
+  if (effectiveSlides.length === 0) return null;
 
-  const slide = slides[current];
+  const slide = effectiveSlides[current];
   const Wrapper: any = slide.link_url ? Link : "div";
   const wrapperProps = slide.link_url ? { to: slide.link_url } : {};
 
