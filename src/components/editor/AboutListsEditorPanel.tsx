@@ -64,11 +64,11 @@ const AboutListsEditorPanel = ({ blockKey, page = "about" }: Props) => {
 
         <div className="px-4 py-2 border-b border-border flex items-center justify-between bg-background">
           <div className="flex items-center gap-2 text-xs">
-            {visible ? <Eye className="w-3.5 h-3.5 text-emerald-500" /> : <EyeOff className="w-3.5 h-3.5 text-destructive" />}
+            {visible ? <Eye className="w-3.5 h-3.5 text-success" /> : <EyeOff className="w-3.5 h-3.5 text-destructive" />}
             <span>Block {visible ? "visible" : "hidden"}</span>
           </div>
           <button onClick={() => setBlockVisible(blockKey, !visible, page)}
-            className={`text-[11px] px-2 py-1 rounded-full font-medium ${visible ? "bg-destructive/10 text-destructive hover:bg-destructive/20" : "bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20"}`}>
+            className={`text-[11px] px-2 py-1 rounded-full font-medium ${visible ? "bg-destructive/10 text-destructive hover:bg-destructive/20" : "bg-success/10 text-success hover:bg-success/20"}`}>
             {visible ? "Hide" : "Show"}
           </button>
         </div>
@@ -142,7 +142,7 @@ const AnniversariesBody = ({ page, rawDraft, updateRawDraft }: { page: string; r
           <div key={it.id} className="border border-border rounded-xl p-2 space-y-1 bg-background/50">
             <div className="flex items-center justify-end gap-1">
               <button onClick={() => update(it.id, { visible: !it.visible })} className="p-1 rounded hover:bg-foreground/5" title={it.visible ? "Hide" : "Show"}>
-                {it.visible ? <Eye className="w-3.5 h-3.5 text-emerald-600" /> : <EyeOff className="w-3.5 h-3.5 text-muted-foreground" />}
+                {it.visible ? <Eye className="w-3.5 h-3.5 text-success" /> : <EyeOff className="w-3.5 h-3.5 text-muted-foreground" />}
               </button>
               <button disabled={idx === 0} onClick={() => move(it.id, -1)} className="p-1 rounded hover:bg-foreground/5 disabled:opacity-30"><ChevronUp className="w-3.5 h-3.5" /></button>
               <button disabled={idx === items.length - 1} onClick={() => move(it.id, 1)} className="p-1 rounded hover:bg-foreground/5 disabled:opacity-30"><ChevronDown className="w-3.5 h-3.5" /></button>
@@ -203,7 +203,7 @@ const HonouredBody = ({ page, rawDraft, updateRawDraft }: { page: string; rawDra
           <div key={g.id} className="border border-border rounded-xl p-2 space-y-1 bg-background/50">
             <div className="flex items-center justify-end gap-1">
               <button onClick={() => update(g.id, { visible: !g.visible })} className="p-1 rounded hover:bg-foreground/5">
-                {g.visible ? <Eye className="w-3.5 h-3.5 text-emerald-600" /> : <EyeOff className="w-3.5 h-3.5 text-muted-foreground" />}
+                {g.visible ? <Eye className="w-3.5 h-3.5 text-success" /> : <EyeOff className="w-3.5 h-3.5 text-muted-foreground" />}
               </button>
               <button disabled={idx === 0} onClick={() => move(g.id, -1)} className="p-1 rounded hover:bg-foreground/5 disabled:opacity-30"><ChevronUp className="w-3.5 h-3.5" /></button>
               <button disabled={idx === groups.length - 1} onClick={() => move(g.id, 1)} className="p-1 rounded hover:bg-foreground/5 disabled:opacity-30"><ChevronDown className="w-3.5 h-3.5" /></button>

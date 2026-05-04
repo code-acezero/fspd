@@ -203,12 +203,12 @@ const SectionEditorPanel = ({ blockKey, page = "landing", label }: Props) => {
 
         <div className="px-4 py-2 border-b border-border flex items-center justify-between bg-background">
           <div className="flex items-center gap-2 text-xs">
-            {visible ? <Eye className="w-3.5 h-3.5 text-emerald-500" /> : <EyeOff className="w-3.5 h-3.5 text-destructive" />}
+            {visible ? <Eye className="w-3.5 h-3.5 text-success" /> : <EyeOff className="w-3.5 h-3.5 text-destructive" />}
             <span>Section {visible ? "visible" : "hidden"}</span>
           </div>
           <button
             onClick={() => setBlockVisible(blockKey, !visible, page)}
-            className={`text-[11px] px-2 py-1 rounded-full font-medium ${visible ? "bg-destructive/10 text-destructive hover:bg-destructive/20" : "bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20"}`}
+            className={`text-[11px] px-2 py-1 rounded-full font-medium ${visible ? "bg-destructive/10 text-destructive hover:bg-destructive/20" : "bg-success/10 text-success hover:bg-success/20"}`}
           >
             {visible ? "Hide" : "Show"}
           </button>
@@ -584,7 +584,7 @@ const ItemCard = ({
       {leading}
       {leadingControl}
       <button onClick={onToggleVisible} className="p-1.5 rounded-lg hover:bg-foreground/5" title={visible ? "Hide" : "Show"}>
-        {visible ? <Eye className="w-3.5 h-3.5 text-emerald-600" /> : <EyeOff className="w-3.5 h-3.5 text-muted-foreground" />}
+        {visible ? <Eye className="w-3.5 h-3.5 text-success" /> : <EyeOff className="w-3.5 h-3.5 text-muted-foreground" />}
       </button>
       <button disabled={upDisabled} onClick={onUp} className="p-1 rounded hover:bg-foreground/5 disabled:opacity-30" title="Move up">
         <ChevronUp className="w-3.5 h-3.5" />

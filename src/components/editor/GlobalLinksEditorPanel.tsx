@@ -87,7 +87,7 @@ const GlobalLinksEditorPanel = ({ blockKey }: Props) => {
           <div key={it.id} className="border border-border rounded-xl p-2.5 space-y-1.5 bg-background/50">
             <div className="flex items-center gap-1">
               <button onClick={() => upd(it.id, { visible: !it.visible })} className="p-1 rounded hover:bg-foreground/5" title={it.visible ? "Hide" : "Show"}>
-                {it.visible ? <Eye className="w-3.5 h-3.5 text-emerald-600" /> : <EyeOff className="w-3.5 h-3.5 text-muted-foreground" />}
+                {it.visible ? <Eye className="w-3.5 h-3.5 text-success" /> : <EyeOff className="w-3.5 h-3.5 text-muted-foreground" />}
               </button>
               <button disabled={idx === 0} onClick={() => move(it.id, -1)} className="p-1 rounded hover:bg-foreground/5 disabled:opacity-30"><ChevronUp className="w-3.5 h-3.5" /></button>
               <button disabled={idx === items.length - 1} onClick={() => move(it.id, 1)} className="p-1 rounded hover:bg-foreground/5 disabled:opacity-30"><ChevronDown className="w-3.5 h-3.5" /></button>
@@ -139,7 +139,7 @@ const GlobalLinksEditorPanel = ({ blockKey }: Props) => {
             <div key={col.id} className="border border-border rounded-xl p-2.5 space-y-2 bg-background/50">
               <div className="flex items-center gap-1">
                 <button onClick={() => updCol(col.id, { visible: !col.visible })} className="p-1 rounded hover:bg-foreground/5">
-                  {col.visible ? <Eye className="w-3.5 h-3.5 text-emerald-600" /> : <EyeOff className="w-3.5 h-3.5 text-muted-foreground" />}
+                  {col.visible ? <Eye className="w-3.5 h-3.5 text-success" /> : <EyeOff className="w-3.5 h-3.5 text-muted-foreground" />}
                 </button>
                 <input className={`${inputCls} font-bengali flex-1`} placeholder="বাংলা শিরোনাম" value={col.title_bn} onChange={e => updCol(col.id, { title_bn: e.target.value })} />
                 <input className={`${inputCls} flex-1`} placeholder="English title" value={col.title_en} onChange={e => updCol(col.id, { title_en: e.target.value })} />
@@ -150,7 +150,7 @@ const GlobalLinksEditorPanel = ({ blockKey }: Props) => {
                   <div key={l.id} className="space-y-1">
                     <div className="flex items-center gap-1">
                       <button onClick={() => updLink(col.id, l.id, { visible: !l.visible })} className="p-1 rounded hover:bg-foreground/5">
-                        {l.visible ? <Eye className="w-3 h-3 text-emerald-600" /> : <EyeOff className="w-3 h-3 text-muted-foreground" />}
+                        {l.visible ? <Eye className="w-3 h-3 text-success" /> : <EyeOff className="w-3 h-3 text-muted-foreground" />}
                       </button>
                       <input className={`${inputCls}`} placeholder="/path" value={l.to} onChange={e => updLink(col.id, l.id, { to: e.target.value })} />
                       <button onClick={() => delLink(col.id, l.id)} className="p-1 rounded hover:bg-destructive/10 text-destructive"><Trash2 className="w-3 h-3" /></button>
@@ -178,7 +178,7 @@ const GlobalLinksEditorPanel = ({ blockKey }: Props) => {
           {socials.map((s) => (
             <div key={s.id} className="flex items-center gap-1 border border-border rounded-xl p-2 bg-background/50">
               <button onClick={() => updSoc(s.id, { visible: !s.visible })} className="p-1 rounded hover:bg-foreground/5">
-                {s.visible ? <Eye className="w-3.5 h-3.5 text-emerald-600" /> : <EyeOff className="w-3.5 h-3.5 text-muted-foreground" />}
+                {s.visible ? <Eye className="w-3.5 h-3.5 text-success" /> : <EyeOff className="w-3.5 h-3.5 text-muted-foreground" />}
               </button>
               <select className={`${inputCls} w-28`} value={s.platform} onChange={e => updSoc(s.id, { platform: e.target.value as SocialLink["platform"] })}>
                 <option value="facebook">Facebook</option>
@@ -221,11 +221,11 @@ const GlobalLinksEditorPanel = ({ blockKey }: Props) => {
 
         <div className="px-4 py-2 border-b border-border flex items-center justify-between bg-background">
           <div className="flex items-center gap-2 text-xs">
-            {visible ? <Eye className="w-3.5 h-3.5 text-emerald-500" /> : <EyeOff className="w-3.5 h-3.5 text-destructive" />}
+            {visible ? <Eye className="w-3.5 h-3.5 text-success" /> : <EyeOff className="w-3.5 h-3.5 text-destructive" />}
             <span>Block {visible ? "visible" : "hidden"}</span>
           </div>
           <button onClick={() => setBlockVisible(blockKey, !visible, page)}
-            className={`text-[11px] px-2 py-1 rounded-full font-medium ${visible ? "bg-destructive/10 text-destructive hover:bg-destructive/20" : "bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20"}`}>
+            className={`text-[11px] px-2 py-1 rounded-full font-medium ${visible ? "bg-destructive/10 text-destructive hover:bg-destructive/20" : "bg-success/10 text-success hover:bg-success/20"}`}>
             {visible ? "Hide" : "Show"}
           </button>
         </div>

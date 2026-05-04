@@ -156,14 +156,14 @@ const RevisionsDialog = ({ open, onClose, page, blockKey, blockLabel, currentDra
                       <div className="grid grid-cols-2 max-h-[55vh] overflow-y-auto">
                         <pre className="p-3 bg-muted/30 whitespace-pre-wrap break-words border-r border-border">
                           {diff.map((d, i) => (
-                            <div key={`l${i}`} className={d.changed ? "bg-rose-500/10 text-rose-400" : ""}>
+                            <div key={`l${i}`} className={d.changed ? "bg-destructive/10 text-destructive" : ""}>
                               {d.left || "\u00A0"}
                             </div>
                           ))}
                         </pre>
                         <pre className="p-3 bg-muted/10 whitespace-pre-wrap break-words">
                           {diff.map((d, i) => (
-                            <div key={`r${i}`} className={d.changed ? "bg-emerald-500/10 text-emerald-400" : ""}>
+                            <div key={`r${i}`} className={d.changed ? "bg-success/10 text-success" : ""}>
                               {d.right || "\u00A0"}
                             </div>
                           ))}
