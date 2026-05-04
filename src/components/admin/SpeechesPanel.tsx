@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSiteSettings } from "@/contexts/SiteSettingsContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const empty = {
   role_label: "", role_label_en: "",
@@ -15,6 +16,7 @@ const empty = {
 const SpeechesPanel = () => {
   const { toast } = useToast();
   const { user } = useAuth();
+  const { t } = useLanguage();
   const { settings, updateSettings } = useSiteSettings();
   const [list, setList] = useState<any[]>([]);
   const [editing, setEditing] = useState<any>(null);
@@ -101,25 +103,25 @@ const SpeechesPanel = () => {
     <div className="space-y-6">
       {/* Popup config */}
       <div className="bg-card border border-border rounded-2xl p-5">
-        <h3 className="font-bengali font-bold text-foreground mb-4">Welcome Popup Settings</h3>
+        <h3 className="font-bengali font-bold text-foreground mb-4">{t("welcomePopupSettings")}</h3>
         <div className="grid md:grid-cols-3 gap-4 items-end">
           <label className="flex items-center gap-2">
             <input type="checkbox" checked={enabled} onChange={(e) => setEnabled(e.target.checked)} />
-            <span className="text-sm text-foreground font-bengali">Enabled</span>
+            <span className="text-sm text-foreground font-bengali">{t("enabledLabel")}</span>
           </label>
           <div>
-            <label className="text-xs text-muted-foreground font-bengali mb-1 block">Cooldown (minutes)</label>
+            <label className="text-xs text-muted-foreground font-bengali mb-1 block">{t("cooldownMinutes")}</label>
             <input type="number" min={1} value={cooldown} onChange={(e) => setCooldown(Number(e.target.value) || 15)} className={inp} />
           </div>
           <button onClick={savePopupConfig} className="px-5 py-2.5 rounded-xl bg-primary text-primary-foreground font-bengali text-sm flex items-center gap-2 justify-center">
-            <Save className="w-4 h-4" /> Save
+            <Save className="w-4 h-4" /> {t("save")}
           </button>
         </div>
       </div>
 
       {/* Editor */}
       <div className="bg-card border border-border rounded-2xl p-5 space-y-3">
-        <h3 className="font-bengali font-bold text-foreground">{editing ? "Edit Speech" : "New Speech"}</h3>
+        <h3 className="font-bengali font-bold text-foreground">{editing ? t("editSpeech") : t("newSpeech")}</h3>
         <div className="grid md:grid-cols-2 gap-3">
           <input className={inp} placeholder="Role (Bangla) e.g. সভাপতি" value={form.role_label} onChange={(e) => setForm({ ...form, role_label: e.target.value })} />
           <input className={inp} placeholder="Role (English)" value={form.role_label_en} onChange={(e) => setForm({ ...form, role_label_en: e.target.value })} />
@@ -131,20 +133,20 @@ const SpeechesPanel = () => {
         <div className="flex items-center gap-3">
           <input ref={fileRef} type="file" accept="image/*" hidden onChange={(e) => e.target.files?.[0] && upload(e.target.files[0])} />
           <button onClick={() => fileRef.current?.click()} className="px-4 py-2 rounded-xl bg-muted border border-border text-sm font-bengali flex items-center gap-2">
-            {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <ImagePlus className="w-4 h-4" />} Upload Photo
+            {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <ImagePlus className="w-4 h-4" />} {t("uploadPhoto")}
           </button>
           {form.photo_url && <img src={form.photo_url} alt="" className="w-12 h-12 rounded-full object-cover ring-2 ring-primary/30" />}
-          <input type="number" className={`${inp} max-w-[140px]`} placeholder="Sort order" value={form.sort_order} onChange={(e) => setForm({ ...form, sort_order: Number(e.target.value) || 0 })} />
+          <input type="number" className={`${inp} max-w-[140px]`} placeholder={t("sortOrder")} value={form.sort_order} onChange={(e) => setForm({ ...form, sort_order: Number(e.target.value) || 0 })} />
           <label className="flex items-center gap-2">
             <input type="checkbox" checked={form.is_active} onChange={(e) => setForm({ ...form, is_active: e.target.checked })} />
-            <span className="text-xs font-bengali">Active</span>
+            <span className="text-xs font-bengali">{t("isActive")}</span>
           </label>
         </div>
         <div className="flex gap-2">
           <button onClick={save} disabled={saving} className="px-5 py-2.5 rounded-xl bg-primary text-primary-foreground font-bengali text-sm flex items-center gap-2 disabled:opacity-50">
-            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} {editing ? "Update" : "Create"}
+            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} {editing ? t("updateLabel") : t("createLabel")}
           </button>
-          {editing && <button onClick={reset} className="px-5 py-2.5 rounded-xl bg-muted text-foreground font-bengali text-sm">Cancel</button>}
+          {editing && <button onClick={reset} className="px-5 py-2.5 rounded-xl bg-muted text-foreground font-bengali text-sm">{t("cancel")}</button>}
         </div>
       </div>
 
@@ -163,7 +165,7 @@ const SpeechesPanel = () => {
             <button onClick={() => remove(s.id)} className="p-2 hover:bg-destructive/10 rounded-lg"><Trash2 className="w-4 h-4 text-destructive" /></button>
           </div>
         ))}
-        {list.length === 0 && <p className="text-center text-muted-foreground font-bengali py-8">No speeches yet. Add one above.</p>}
+        {list.length === 0 && <p className="text-center text-muted-foreground font-bengali py-8">{t("noSpeechesYet")}</p>}
       </div>
     </div>
   );
