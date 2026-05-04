@@ -90,6 +90,10 @@
     --crimson-light: 0 0% 80%;
     --forest: 0 0% 50%;
     --forest-light: 0 0% 60%;
+    --success: 0 0% 70%;
+    --success-foreground: 0 0% 8%;
+    --warning: 0 0% 60%;
+    --warning-foreground: 0 0% 8%;
     --cream: 0 0% 14%;
     --cream-dark: 0 0% 10%;
     --terracotta: 0 0% 50%;
