@@ -3,6 +3,7 @@ import { Loader2, Save, Trash2, Edit3, Plus, Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const STATIC_PATHS = ["/", "/home", "/blog", "/events", "/courses", "/members", "/about", "/login"];
 
@@ -14,6 +15,7 @@ const empty = {
 const SeoPanel = () => {
   const { toast } = useToast();
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [list, setList] = useState<any[]>([]);
   const [customPages, setCustomPages] = useState<any[]>([]);
   const [editing, setEditing] = useState<any | null>(null);
@@ -69,19 +71,19 @@ const SeoPanel = () => {
   return (
     <div className="space-y-6">
       <div className="bg-card border border-border rounded-2xl p-5">
-        <h3 className="font-bengali font-bold text-foreground mb-3 flex items-center gap-2"><Search className="w-4 h-4" /> Pages without SEO</h3>
+        <h3 className="font-bengali font-bold text-foreground mb-3 flex items-center gap-2"><Search className="w-4 h-4" /> {t("pagesWithoutSeo")}</h3>
         <div className="flex flex-wrap gap-2">
           {missingPaths.map((p) => (
             <button key={p} onClick={() => startNew(p)} className="px-3 py-1.5 rounded-full bg-muted border border-border text-xs font-mono hover:bg-primary/10 hover:border-primary/40 flex items-center gap-1">
               <Plus className="w-3 h-3" /> {p}
             </button>
           ))}
-          {missingPaths.length === 0 && <span className="text-xs text-muted-foreground font-bengali">All known pages have SEO entries.</span>}
+          {missingPaths.length === 0 && <span className="text-xs text-muted-foreground font-bengali">{t("allPagesHaveSeo")}</span>}
         </div>
       </div>
 
       <div className="bg-card border border-border rounded-2xl p-5 space-y-3">
-        <h3 className="font-bengali font-bold text-foreground">{editing ? "Edit SEO" : "New SEO Entry"}</h3>
+        <h3 className="font-bengali font-bold text-foreground">{editing ? t("editSeoEntry") : t("newSeoEntry")}</h3>
         <input className={inp} placeholder="Path e.g. /about or /p/my-page" value={form.path} onChange={(e) => setForm({ ...form, path: e.target.value })} disabled={!!editing} />
         <div className="grid md:grid-cols-2 gap-3">
           <input className={inp} placeholder="Title (Bangla)" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
