@@ -12,12 +12,54 @@ const ServicesSection = () => {
   const y = useTransform(scrollYProgress, [0, 1], [40, -40]);
 
   const services = [
-    { key: "svc_lit", icon: BookOpen, title: t("svcLitPub") || "সাহিত্য ও প্রকাশনা", titleEn: "Literary Publications", desc: t("svcLitPubDesc") || "নিয়মিত সাহিত্য পত্রিকা, স্মারকগ্রন্থ ও গ্রন্থ প্রকাশনা।" },
-    { key: "svc_cultural", icon: Mic2, title: t("svcCultural") || "সাংস্কৃতিক অনুষ্ঠান", titleEn: "Cultural Events", desc: t("svcCulturalDesc") || "বার্ষিক সাহিত্য উৎসব, কবিতা পাঠের আসর ও নাট্যোৎসব।" },
-    { key: "svc_edu", icon: GraduationCap, title: t("svcEducation") || "শিক্ষা ও প্রশিক্ষণ", titleEn: "Educational Programs", desc: t("svcEducationDesc") || "সৃজনশীল লেখালেখি ও ভাষা শিক্ষা কর্মশালা।" },
-    { key: "svc_arts", icon: Palette, title: t("svcArts") || "চারুকলা ও ঐতিহ্য", titleEn: "Arts & Crafts", desc: t("svcArtsDesc") || "নকশিকাঁথা, লোকশিল্প ও আলপনা প্রদর্শনী।" },
-    { key: "svc_comm", icon: Globe, title: t("svcCommunity") || "সামাজিক কার্যক্রম", titleEn: "Community Development", desc: t("svcCommunityDesc") || "গুণীজন সংবর্ধনা ও নতুন প্রতিভার পৃষ্ঠপোষকতা।" },
-    { key: "svc_heritage", icon: Heart, title: t("svcHeritage") || "ঐতিহ্য সংরক্ষণ", titleEn: "Heritage Preservation", desc: t("svcHeritageDesc") || "ফরিদপুরের ইতিহাস, মুক্তিযুদ্ধ ও লোকসাহিত্য সংরক্ষণ।" },
+    {
+      key: "svc_lit",
+      icon: BookOpen,
+      title: t("svcLitPub") || "সাহিত্য ও প্রকাশনা",
+      titleEn: "Literary Publications",
+      desc: t("svcLitPubDesc") || "নিয়মিত সাহিত্য পত্রিকা, স্মারকগ্রন্থ ও গ্রন্থ প্রকাশনা।",
+      descEn: "Publishing poetry, stories, novels, essays, and organizing reading circles.",
+    },
+    {
+      key: "svc_cultural",
+      icon: Mic2,
+      title: t("svcCultural") || "সাংস্কৃতিক অনুষ্ঠান",
+      titleEn: "Cultural Events",
+      desc: t("svcCulturalDesc") || "বার্ষিক সাহিত্য উৎসব, কবিতা পাঠের আসর ও নাট্যোৎসব।",
+      descEn: "Annual literary festivals, poetry recitation evenings, and drama performances.",
+    },
+    {
+      key: "svc_edu",
+      icon: GraduationCap,
+      title: t("svcEducation") || "শিক্ষা ও প্রশিক্ষণ",
+      titleEn: "Educational Programs",
+      desc: t("svcEducationDesc") || "সৃজনশীল লেখালেখি ও ভাষা শিক্ষা কর্মশালা।",
+      descEn: "Workshops on creative writing, literary skills, and language education.",
+    },
+    {
+      key: "svc_arts",
+      icon: Palette,
+      title: t("svcArts") || "চারুকলা ও ঐতিহ্য",
+      titleEn: "Arts & Crafts",
+      desc: t("svcArtsDesc") || "নকশিকাঁথা, লোকশিল্প ও আলপনা প্রদর্শনী।",
+      descEn: "Exhibitions and workshops celebrating Nakshi Kantha, folk art, and alpona.",
+    },
+    {
+      key: "svc_comm",
+      icon: Globe,
+      title: t("svcCommunity") || "সামাজিক কার্যক্রম",
+      titleEn: "Community Development",
+      desc: t("svcCommunityDesc") || "গুণীজন সংবর্ধনা ও নতুন প্রতিভার পৃষ্ঠপোষকতা।",
+      descEn: "Honoring distinguished cultural figures and nurturing promising new talents.",
+    },
+    {
+      key: "svc_heritage",
+      icon: Heart,
+      title: t("svcHeritage") || "ঐতিহ্য সংরক্ষণ",
+      titleEn: "Heritage Preservation",
+      desc: t("svcHeritageDesc") || "ফরিদপুরের ইতিহাস, মুক্তিযুদ্ধ ও লোকসাহিত্য সংরক্ষণ।",
+      descEn: "Preserving and archiving Faridpur's history, liberation war lore, and folklore.",
+    },
   ];
 
   return (
@@ -88,7 +130,7 @@ const ServicesSection = () => {
                   sectionKey="services"
                   elementKey={`${service.key}_desc`}
                   defaultBn={service.desc}
-                  defaultEn={service.desc}
+                  defaultEn={service.descEn}
                   multiline
                   as="p"
                   className="font-bengali text-sm text-muted-foreground leading-relaxed block"

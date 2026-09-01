@@ -14,10 +14,38 @@ const AboutSection = () => {
   const rotateCard = useTransform(scrollYProgress, [0, 0.5, 1], [5, 0, -3]);
 
   const stats = [
-    { key: "stat_pub", icon: BookOpen, defaultVal: "৫০০+", defaultLabelBn: t("publications") || "প্রকাশনা", defaultLabelEn: "Publications" },
-    { key: "stat_members", icon: Users, defaultVal: "২,৫০০+", defaultLabelBn: t("activeMembers") || "সক্রিয় সদস্য", defaultLabelEn: "Active Members" },
-    { key: "stat_events", icon: Calendar, defaultVal: "১৫০+", defaultLabelBn: t("annualEvents") || "বার্ষিক অনুষ্ঠান", defaultLabelEn: "Annual Events" },
-    { key: "stat_legacy", icon: Award, defaultVal: "৫০+", defaultLabelBn: t("yearsLegacy") || "বছরের ঐতিহ্য", defaultLabelEn: "Years Legacy" },
+    {
+      key: "stat_pub",
+      icon: BookOpen,
+      defaultValBn: "৫০০+",
+      defaultValEn: "500+",
+      defaultLabelBn: t("publications") || "প্রকাশনা",
+      defaultLabelEn: "Publications",
+    },
+    {
+      key: "stat_members",
+      icon: Users,
+      defaultValBn: "২,৫০০+",
+      defaultValEn: "2,500+",
+      defaultLabelBn: t("activeMembers") || "সক্রিয় সদস্য",
+      defaultLabelEn: "Active Members",
+    },
+    {
+      key: "stat_events",
+      icon: Calendar,
+      defaultValBn: "১৫০+",
+      defaultValEn: "150+",
+      defaultLabelBn: t("annualEvents") || "বার্ষিক অনুষ্ঠান",
+      defaultLabelEn: "Annual Events",
+    },
+    {
+      key: "stat_legacy",
+      icon: Award,
+      defaultValBn: "৫০+",
+      defaultValEn: "50+",
+      defaultLabelBn: t("yearsLegacy") || "বছরের ঐতিহ্য",
+      defaultLabelEn: "Years Legacy",
+    },
   ];
 
   return (
@@ -89,8 +117,8 @@ const AboutSection = () => {
                   pageKey="landing"
                   sectionKey="about"
                   elementKey={`${stat.key}_val`}
-                  defaultBn={stat.defaultVal}
-                  defaultEn={stat.defaultVal}
+                  defaultBn={stat.defaultValBn}
+                  defaultEn={stat.defaultValEn}
                   as="p"
                   className="font-bengali text-3xl lg:text-4xl font-bold text-foreground mb-1"
                 />

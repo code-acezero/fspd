@@ -259,7 +259,7 @@ const HeroSection = () => {
         ))}
 
         {/* Top bar with quick links */}
-        <div className="absolute top-0 left-0 right-0 z-20 px-6 lg:px-12 py-6">
+        <div className="absolute top-0 left-0 right-0 z-20 px-6 sm:px-10 lg:px-16 py-6 sm:py-8">
           <div className="max-w-7xl mx-auto flex items-center justify-between">
             <div className="flex items-center gap-3">
               <LogoTile size="md" glow="off" dilateRadius={3} />
@@ -283,7 +283,7 @@ const HeroSection = () => {
 
         {/* Main content with pure scroll-driven fade out */}
         <motion.div
-          className="relative z-10 text-center px-4 max-w-5xl mx-auto pt-20"
+          className="relative z-10 text-center px-4 max-w-5xl mx-auto pt-32 sm:pt-36 md:pt-40 lg:pt-44 pb-12"
           style={{ y: textY, opacity: contentOpacity }}
         >
           {/* Top Tagline */}
