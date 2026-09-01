@@ -6,7 +6,7 @@ import {
   Link2, Folder, Trash2, RefreshCw, HardDrive, Filter, ChevronDown, Sparkles,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { uploadSiteImage, ALLOWED_IMAGE_TYPES } from "@/lib/storage";
+import { uploadSiteImage, ALLOWED_IMAGE_TYPES, isVideoMedia } from "@/lib/storage";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -31,8 +31,8 @@ export interface FolderMeta {
 }
 
 export const DATABASE_FOLDERS: FolderMeta[] = [
-  { key: "all", nameBn: "সকল ডাটাবেস ফোল্ডার", nameEn: "All Database Folders", icon: "🌟", descriptionBn: "সকল ফোল্ডারের সম্মিলিত ছবি", descriptionEn: "Combined images from all folders" },
   { key: "hero", nameBn: "হিরো ব্যানার ও ব্যাকগ্রাউন্ড", nameEn: "Hero Banners", icon: "🌄", descriptionBn: "পোর্টালের প্রধান হিরো ব্যানার ও ব্যাকগ্রাউন্ড ছবি", descriptionEn: "Main landing hero banners and backdrops" },
+  { key: "all", nameBn: "সকল ডাটাবেস ফোল্ডার", nameEn: "All Database Folders", icon: "🌟", descriptionBn: "সকল ফোল্ডারের সম্মিলিত ছবি", descriptionEn: "Combined images from all folders" },
   { key: "site", nameBn: "সাইট ব্র্যান্ডিং ও লোগো", nameEn: "Site Branding & Logos", icon: "🎨", descriptionBn: "লোগো, সিল, ফ্যাভিকন ও প্রাতিষ্ঠানিক এসেট", descriptionEn: "Logos, seals, favicons, and branding assets" },
   { key: "members", nameBn: "কার্যনির্বাহী ও সদস্যবৃন্দ", nameEn: "Members & Team", icon: "👥", descriptionBn: "সভাপতি, সাধারণ সম্পাদক ও সদস্যবৃন্দের ছবি", descriptionEn: "Executive board and member photos" },
   { key: "events", nameBn: "সাহিত্য সভা ও উৎসব", nameEn: "Events & Festivals", icon: "🎉", descriptionBn: "অনুষ্ঠান, সেমিনার ও উৎসবের ব্যানার ও ছবি", descriptionEn: "Events, seminars, and festival banners" },
@@ -45,8 +45,8 @@ export const DATABASE_FOLDERS: FolderMeta[] = [
 export const HERO_BANNER_PRESETS = [
   {
     id: "default_heritage",
-    titleBn: "ঐতিহ্যবাহী ফরিদপুর সকাল ও নদী",
-    titleEn: "Faridpur Riverine Morning Heritage",
+    titleBn: "ঐতিহ্যবাহী ফরিদপুর সকাল ও নদী (মূল ব্যানার)",
+    titleEn: "Faridpur Riverine Morning Heritage (Original Banner)",
     url: "/src/assets/hero-banner.jpg",
     previewUrl: "/src/assets/hero-banner.jpg",
     category: "Classic Heritage",
@@ -153,66 +153,141 @@ export const ImageSelectModal: React.FC<ImageSelectModalProps> = ({
     setLoadingAssets(true);
     setAssets([]);
     try {
-      if (folderPath === "all") {
-        const foldersToQuery = ["hero", "site", "members", "events", "posts", "slider", "courses", "editor"];
-        const promises = foldersToQuery.map(async (f) => {
-          const { data } = await supabase.storage.from("content-images").list(f, {
-            limit: 30,
-            sortBy: { column: "created_at", order: "desc" },
+      const combinedAssets: StorageAsset[] = [];
+      const seenUrls = new Set<string>();
+
+      // 1. Include default & curated hero presets whenever browsing hero or all folders
+      if (folderPath === "hero" || folderPath === "all") {
+        HERO_BANNER_PRESETS.forEach((preset) => {
+          if (!seenUrls.has(preset.url)) {
+            seenUrls.add(preset.url);
+            combinedAssets.push({
+              id: preset.id,
+              name: lang === "bn" ? preset.titleBn : preset.titleEn,
+              url: preset.url,
+              path: preset.url,
+              folder: "hero",
+            });
+          }
+        });
+      }
+
+      // 2. Fetch from site_assets table (which contains all active/past hero banners and database assets)
+      try {
+        let query = supabase.from("site_assets").select("*").order("created_at", { ascending: false });
+        if (folderPath !== "all") {
+          query = query.eq("slot", folderPath);
+        }
+        const { data: dbAssets } = await query;
+        (dbAssets || []).forEach((row: any) => {
+          if (row.image_url && !seenUrls.has(row.image_url)) {
+            seenUrls.add(row.image_url);
+            combinedAssets.push({
+              id: row.id,
+              name: row.name || (lang === "bn" ? "হিরো ব্যানার" : "Hero Banner"),
+              url: row.image_url,
+              path: row.image_url,
+              folder: row.slot || folderPath,
+              created_at: row.created_at,
+            });
+          }
+        });
+      } catch (err) {
+        console.warn("Could not query site_assets:", err);
+      }
+
+      // 3. Fetch from page_content table for custom page assets
+      try {
+        if (folderPath === "hero" || folderPath === "all") {
+          const { data: pageData } = await supabase
+            .from("page_content" as any)
+            .select("*")
+            .eq("page_key", "landing")
+            .eq("section_key", "hero")
+            .eq("element_key", "bg_image")
+            .maybeSingle();
+
+          if ((pageData as any)?.media_url && !seenUrls.has((pageData as any).media_url)) {
+            seenUrls.add((pageData as any).media_url);
+            combinedAssets.push({
+              id: (pageData as any).id || "page_hero_current",
+              name: lang === "bn" ? "বর্তমান সক্রিয় হিরো ব্যানার" : "Current Active Hero Banner",
+              url: (pageData as any).media_url,
+              path: (pageData as any).media_url,
+              folder: "hero",
+            });
+          }
+        }
+      } catch (err) {
+        console.warn("Could not query page_content:", err);
+      }
+
+      // 4. Fetch from Supabase Storage buckets
+      try {
+        if (folderPath === "all") {
+          const foldersToQuery = ["hero", "site", "members", "events", "posts", "slider", "courses", "editor"];
+          const promises = foldersToQuery.map(async (f) => {
+            const { data } = await supabase.storage.from("content-images").list(f, {
+              limit: 30,
+              sortBy: { column: "created_at", order: "desc" },
+            });
+            const files = (data || []).filter((item) => item.id !== null);
+            return files.map((item) => {
+              const { data: urlData } = supabase.storage
+                .from("content-images")
+                .getPublicUrl(`${f}/${item.name}`);
+              return {
+                name: item.name,
+                id: item.id,
+                url: urlData.publicUrl,
+                path: `${f}/${item.name}`,
+                folder: f,
+                size: (item as any).metadata?.size,
+                created_at: (item as any).created_at,
+              };
+            });
           });
+          const nested = await Promise.all(promises);
+          nested.flat().forEach((asset) => {
+            if (!seenUrls.has(asset.url)) {
+              seenUrls.add(asset.url);
+              combinedAssets.push(asset);
+            }
+          });
+        } else {
+          const { data } = await supabase.storage
+            .from("content-images")
+            .list(folderPath, {
+              limit: 100,
+              sortBy: { column: "created_at", order: "desc" },
+            });
+
           const files = (data || []).filter((item) => item.id !== null);
-          return files.map((item) => {
+          files.forEach((item) => {
             const { data: urlData } = supabase.storage
               .from("content-images")
-              .getPublicUrl(`${f}/${item.name}`);
-            return {
-              name: item.name,
-              id: item.id,
-              url: urlData.publicUrl,
-              path: `${f}/${item.name}`,
-              folder: f,
-              size: (item as any).metadata?.size,
-              created_at: (item as any).created_at,
-            };
+              .getPublicUrl(`${folderPath}/${item.name}`);
+            if (!seenUrls.has(urlData.publicUrl)) {
+              seenUrls.add(urlData.publicUrl);
+              combinedAssets.push({
+                name: item.name,
+                id: item.id,
+                url: urlData.publicUrl,
+                path: `${folderPath}/${item.name}`,
+                folder: folderPath,
+                size: (item as any).metadata?.size,
+                created_at: (item as any).created_at,
+              });
+            }
           });
-        });
-        const nested = await Promise.all(promises);
-        const combined = nested.flat().sort((a, b) => {
-          const tA = a.created_at ? new Date(a.created_at).getTime() : 0;
-          const tB = b.created_at ? new Date(b.created_at).getTime() : 0;
-          return tB - tA;
-        });
-        setAssets(combined);
-      } else {
-        const { data, error } = await supabase.storage
-          .from("content-images")
-          .list(folderPath, {
-            limit: 100,
-            sortBy: { column: "created_at", order: "desc" },
-          });
-
-        if (error) throw error;
-
-        const files = (data || []).filter((item) => item.id !== null);
-        const assetsWithUrls: StorageAsset[] = files.map((item) => {
-          const { data: urlData } = supabase.storage
-            .from("content-images")
-            .getPublicUrl(`${folderPath}/${item.name}`);
-          return {
-            name: item.name,
-            id: item.id,
-            url: urlData.publicUrl,
-            path: `${folderPath}/${item.name}`,
-            folder: folderPath,
-            size: (item as any).metadata?.size,
-            created_at: (item as any).created_at,
-          };
-        });
-
-        setAssets(assetsWithUrls);
+        }
+      } catch (err) {
+        console.warn("Storage list query error:", err);
       }
+
+      setAssets(combinedAssets);
     } catch (e) {
-      console.error("Failed to list storage assets:", e);
+      console.error("Failed to load assets:", e);
       toast({
         title: "Failed to load library",
         description: "Could not fetch images from storage.",
@@ -244,7 +319,7 @@ export const ImageSelectModal: React.FC<ImageSelectModalProps> = ({
 
     toast({
       title: lang === "bn" ? "ব্যানার সফলভাবে আপলোড ও পরিবর্তন হয়েছে" : "Banner Uploaded & Applied",
-      description: lang === "bn" ? "নতুন ছবিটি সক্রিয় করা হয়েছে" : "New image is now active.",
+      description: lang === "bn" ? "নতুন মিডিয়াটি সক্রিয় করা হয়েছে" : "New media is now active.",
     });
 
     onSelect(result.url);
@@ -255,23 +330,24 @@ export const ImageSelectModal: React.FC<ImageSelectModalProps> = ({
     if (
       !window.confirm(
         lang === "bn"
-          ? `"${asset.name}" ছবিটি স্টোরেজ থেকে চিরতরে মুছে ফেলবেন? এটি পুনরুদ্ধার করা যাবে না।`
-          : `Permanently delete "${asset.name}" from storage? This cannot be undone.`
+          ? `"${asset.name}" ছবিটি তালিকা থেকে মুছে ফেলবেন? এটি পুনরুদ্ধার করা যাবে না।`
+          : `Permanently delete "${asset.name}"? This cannot be undone.`
       )
     )
       return;
 
     setDeletingId(asset.id);
     try {
-      const { error } = await supabase.storage
-        .from("content-images")
-        .remove([asset.path]);
-
-      if (error) throw error;
+      if (asset.path.includes("/")) {
+        await supabase.storage.from("content-images").remove([asset.path]);
+      }
+      if (asset.id && !asset.id.startsWith("default_") && !asset.id.startsWith("padma_") && !asset.id.startsWith("literary_") && !asset.id.startsWith("bengali_")) {
+        await supabase.from("site_assets").delete().eq("id", asset.id);
+      }
 
       setAssets((prev) => prev.filter((a) => a.id !== asset.id));
       toast({
-        title: lang === "bn" ? "ছবি চিরতরে মুছে ফেলা হয়েছে" : "Image Permanently Deleted",
+        title: lang === "bn" ? "ছবি মুছে ফেলা হয়েছে" : "Image Deleted",
         description: asset.name,
       });
     } catch (e: any) {
@@ -360,7 +436,7 @@ export const ImageSelectModal: React.FC<ImageSelectModalProps> = ({
         {/* Tab Content */}
         <div className="flex-1 overflow-y-auto px-6 py-4 space-y-5">
 
-          {/* ── Upload Tab (With Drag & Drop + Hero Banner Presets + Previous Banners Section) ── */}
+          {/* ── Upload Tab ── */}
           {tab === "upload" && (
             <div className="space-y-5">
               {/* Drag & Drop Upload Zone */}
@@ -393,7 +469,7 @@ export const ImageSelectModal: React.FC<ImageSelectModalProps> = ({
                   <>
                     <Loader2 className="w-9 h-9 text-primary animate-spin" />
                     <p className="font-bengali text-sm text-foreground">
-                      {lang === "bn" ? "ছবি আপলোড হচ্ছে..." : "Uploading to Supabase Storage..."}
+                      {lang === "bn" ? "মিডিয়া আপলোড হচ্ছে..." : "Uploading media to storage..."}
                     </p>
                   </>
                 ) : (
@@ -404,11 +480,11 @@ export const ImageSelectModal: React.FC<ImageSelectModalProps> = ({
                     <div className="text-center space-y-0.5">
                       <p className="font-bengali text-sm font-semibold text-foreground">
                         {lang === "bn"
-                          ? "নতুন ব্যানার বা ছবি আপলোড করতে ক্লিক করুন"
-                          : "Click to select or drag & drop image"}
+                          ? "নতুন ব্যানার, ছবি বা ভিডিও আপলোড করতে ক্লিক করুন"
+                          : "Click to select or drag & drop image or video"}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        JPG · PNG · WEBP · SVG · GIF · AVIF (Max 20MB)
+                        JPG · PNG · WEBP · MP4 · WEBM · MOV · SVG · GIF (Max 100MB)
                       </p>
                       <p className="text-[10px] text-muted-foreground font-mono">
                         ফোল্ডার: <span className="text-foreground font-semibold">{FOLDER_MAP[folder] || folder}</span>
@@ -418,7 +494,7 @@ export const ImageSelectModal: React.FC<ImageSelectModalProps> = ({
                 )}
               </div>
 
-              {/* ── Curated Hero Banner Presets (If Hero Banner) ── */}
+              {/* ── Curated Hero Banner Presets ── */}
               {folder === "hero" && (
                 <div className="space-y-3 pt-1">
                   <div className="flex items-center gap-2 border-b border-border/80 pb-2">
@@ -496,8 +572,8 @@ export const ImageSelectModal: React.FC<ImageSelectModalProps> = ({
                     <HardDrive className="w-3.5 h-3.5 text-primary" />
                     <h4 className="font-bengali font-bold text-xs text-foreground">
                       {lang === "bn"
-                        ? `পূর্বের আপলোডকৃত ব্যানারসমূহ (${assets.length})`
-                        : `Previous Banners in Folder (${assets.length})`}
+                        ? `ডাটাবেস ও পূর্বের ব্যানারসমূহ (${assets.length})`
+                        : `Database & Previous Banners (${assets.length})`}
                     </h4>
                   </div>
                   <button
@@ -514,12 +590,13 @@ export const ImageSelectModal: React.FC<ImageSelectModalProps> = ({
                 {loadingAssets ? (
                   <div className="flex items-center justify-center py-8 text-muted-foreground gap-2">
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    <span className="text-xs font-bengali">{lang === "bn" ? "পূর্বের ব্যানার লোড হচ্ছে..." : "Loading previous banners..."}</span>
+                    <span className="text-xs font-bengali">{lang === "bn" ? "ব্যানার লোড হচ্ছে..." : "Loading banners..."}</span>
                   </div>
                 ) : assets.length > 0 ? (
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                     {assets.map((asset) => {
                       const isActive = currentUrl && (currentUrl === asset.url || currentUrl.includes(asset.name));
+                      const isVideo = isVideoMedia(asset.url);
                       return (
                         <div
                           key={asset.id || asset.name}
@@ -530,11 +607,20 @@ export const ImageSelectModal: React.FC<ImageSelectModalProps> = ({
                           }`}
                         >
                           <div className="relative aspect-video w-full overflow-hidden bg-muted">
-                            <img
-                              src={asset.url}
-                              alt={asset.name}
-                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                            />
+                            {isVideo ? (
+                              <video
+                                src={asset.url}
+                                muted
+                                playsInline
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <img
+                                src={asset.url}
+                                alt={asset.name}
+                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                              />
+                            )}
                             {isActive && (
                               <span className="absolute top-1.5 left-1.5 px-2 py-0.5 rounded-full bg-primary text-primary-foreground text-[9px] font-bold font-mono shadow-xs flex items-center gap-1">
                                 <Check className="w-2.5 h-2.5" /> ACTIVE
@@ -698,6 +784,7 @@ export const ImageSelectModal: React.FC<ImageSelectModalProps> = ({
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                   {assets.map((asset) => {
                     const isActive = currentUrl && (currentUrl === asset.url || currentUrl.includes(asset.name));
+                    const isVideo = isVideoMedia(asset.url);
                     return (
                       <div
                         key={asset.id || asset.name}
@@ -707,13 +794,22 @@ export const ImageSelectModal: React.FC<ImageSelectModalProps> = ({
                             : "border-border hover:border-primary/50"
                         }`}
                       >
-                        {/* Thumbnail Image */}
+                        {/* Thumbnail Image / Video */}
                         <div className="relative aspect-video w-full overflow-hidden bg-muted">
-                          <img
-                            src={asset.url}
-                            alt={asset.name}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                          />
+                          {isVideo ? (
+                            <video
+                              src={asset.url}
+                              muted
+                              playsInline
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <img
+                              src={asset.url}
+                              alt={asset.name}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            />
+                          )}
                           {isActive && (
                             <span className="absolute top-1.5 left-1.5 px-2 py-0.5 rounded-full bg-primary text-primary-foreground text-[9px] font-bold font-mono shadow-xs flex items-center gap-1">
                               <Check className="w-2.5 h-2.5" /> ACTIVE
@@ -816,12 +912,23 @@ export const ImageSelectModal: React.FC<ImageSelectModalProps> = ({
               />
               {customUrl && (
                 <div className="aspect-video max-h-48 rounded-xl overflow-hidden border border-border bg-muted">
-                  <img
-                    src={customUrl}
-                    alt="Preview"
-                    className="w-full h-full object-cover"
-                    onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
-                  />
+                  {isVideoMedia(customUrl) ? (
+                    <video
+                      src={customUrl}
+                      autoPlay
+                      loop
+                      muted
+                      playsInline
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <img
+                      src={customUrl}
+                      alt="Preview"
+                      className="w-full h-full object-cover"
+                      onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                    />
+                  )}
                 </div>
               )}
               <button

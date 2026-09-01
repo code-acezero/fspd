@@ -1,10 +1,8 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { FileEdit } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useSiteSettings } from "@/contexts/SiteSettingsContext";
 import { pickLocale } from "@/lib/i18nField";
-import siteLogo from "@/assets/site-logo.png";
 import CorrectionRequestModal from "@/components/common/CorrectionRequestModal";
 
 export interface MemberCardData {
@@ -18,6 +16,7 @@ export interface MemberCardData {
   avatar_url?: string | null;
   gradient_class?: string | null;
   role?: string | null;
+  gender?: "male" | "female" | string | null;
 }
 
 // Strip control chars / collapse whitespace, then truncate.
@@ -32,6 +31,64 @@ const truncate = (raw: string, max: number): string => {
   const lastSpace = slice.lastIndexOf(" ");
   return (lastSpace > max * 0.6 ? slice.slice(0, lastSpace) : slice).trimEnd() + "…";
 };
+
+/**
+ * Detects member gender based on explicit property or common Bengali/English names & honorifics.
+ */
+export const detectGender = (member?: MemberCardData): "female" | "male" => {
+  if (!member) return "male";
+  if (member.gender) {
+    const g = String(member.gender).toLowerCase().trim();
+    if (g === "female" || g === "f" || g === "woman" || g === "নারী" || g === "মহিলা") return "female";
+    if (g === "male" || g === "m" || g === "man" || g === "পুরুষ") return "male";
+  }
+
+  const text = `${member.name || ""} ${member.name_en || ""} ${member.title || ""} ${member.title_en || ""} ${member.role || ""}`.toLowerCase();
+
+  const femaleMarkers = [
+    "mrs", "ms", "miss", "begum", "khatun", "sultana", "akter", "akteri", "akhter", "parvin", "parveen",
+    "nasreen", "nasrin", "fatema", "rokeya", "jahanara", "raziah", "razia", "shirin", "tahmina", "salma",
+    "রেহানা", "বেগম", "খাতুন", "সুলতানা", "আক্তার", "পারভীন", "নাসরীন", "ফাতেমা", "রোকেয়া", "জাহানারা", "রাবেয়া", "সেলিনা", "রোকসানা", "শিরীন", "তাহমিনা", "সালমা", "নিলুফার", "মিসেস", "মহিলা"
+  ];
+
+  for (const marker of femaleMarkers) {
+    if (text.includes(marker)) return "female";
+  }
+
+  return "male";
+};
+
+// ── Male Person Silhouette SVG ──
+export const MaleSilhouette = ({ className = "w-full h-full" }: { className?: string }) => (
+  <svg
+    viewBox="0 0 100 100"
+    fill="currentColor"
+    className={className}
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    {/* Head */}
+    <circle cx="50" cy="32" r="19" />
+    {/* Shoulders & Bust */}
+    <path d="M50 56c-19.5 0-35 12.5-38 31a3 3 0 003 3.5h70a3 3 0 003-3.5c-3-18.5-18.5-31-38-31z" />
+  </svg>
+);
+
+// ── Female Person Silhouette SVG ──
+export const FemaleSilhouette = ({ className = "w-full h-full" }: { className?: string }) => (
+  <svg
+    viewBox="0 0 100 100"
+    fill="currentColor"
+    className={className}
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    {/* Hair Contour */}
+    <path d="M50 10C35 10 27 22 27 38c0 9 4 17 8 22 1-5 4-10 7-13-1-3-2-6-2-10 0-8 4.5-15 10-15s10 7 10 15c0 4-1 7-2 10 3 3 6 8 7 13 4-5 8-13 8-22 0-16-8-28-23-28z" opacity="0.6" />
+    {/* Head */}
+    <circle cx="50" cy="33" r="17" />
+    {/* Graceful Neck & Shoulders Bust */}
+    <path d="M50 57c-17 0-31 11.5-34 29a3 3 0 003 3.5h62a3 3 0 003-3.5c-3-17.5-17-29-34-29z" />
+  </svg>
+);
 
 interface MemberCardProps {
   member: MemberCardData;
@@ -49,11 +106,10 @@ export const MemberCard = ({
   active = false,
 }: MemberCardProps) => {
   const { lang } = useLanguage();
-  const { settings } = useSiteSettings();
   const [correctionModalOpen, setCorrectionModalOpen] = useState(false);
 
-  const logoSrc = settings.general.logo_url || siteLogo;
-  const displayName = pickLocale(lang, member.name, member.name_en) || "সদস্য";
+  const gender = detectGender(member);
+  const displayName = pickLocale(lang, member.name, member.name_en) || (lang === "en" ? "Member" : "সদস্য");
   const altName =
     lang === "en"
       ? pickLocale("bn", member.name, member.name_en)
@@ -71,7 +127,7 @@ export const MemberCard = ({
             : "scale-95 opacity-75 hover:opacity-100"
         }`}
       >
-        {/* Full-Bleed Profile Image or Foreshadowed Logo Background */}
+        {/* Full-Bleed Profile Image or Foreshadowed Gender Person Silhouette Background */}
         {member.avatar_url ? (
           <img
             src={member.avatar_url}
@@ -79,15 +135,17 @@ export const MemberCard = ({
             className="absolute inset-0 w-full h-full object-cover object-top transition-transform duration-700 group-hover:scale-105"
           />
         ) : (
-          <div className="absolute inset-0 w-full h-full bg-gradient-to-b from-primary/30 via-card/95 to-card flex items-center justify-center overflow-hidden">
+          <div className="absolute inset-0 w-full h-full bg-gradient-to-b from-primary/25 via-card/95 to-card flex items-center justify-center overflow-hidden">
             {/* Ambient Radial Spotlight */}
             <div className="w-48 h-48 rounded-full bg-primary/35 blur-3xl absolute" />
-            {/* Foreshadowed Organization Logo Seal Watermark */}
-            <img
-              src={logoSrc}
-              alt="Parishad Seal"
-              className="w-44 h-44 object-contain opacity-55 contrast-125 brightness-110 drop-shadow-[0_4px_20px_rgba(0,0,0,0.7)] select-none pointer-events-none transform -translate-y-4 transition-all duration-700 group-hover:scale-110 group-hover:opacity-75"
-            />
+            {/* Foreshadowed Person Gender Silhouette Icon */}
+            <div className="w-40 h-40 flex items-center justify-center text-primary/50 opacity-60 drop-shadow-[0_4px_24px_rgba(0,0,0,0.6)] select-none pointer-events-none transform -translate-y-3 transition-all duration-700 group-hover:scale-110 group-hover:opacity-85">
+              {gender === "female" ? (
+                <FemaleSilhouette className="w-full h-full" />
+              ) : (
+                <MaleSilhouette className="w-full h-full" />
+              )}
+            </div>
           </div>
         )}
 
@@ -171,11 +229,13 @@ export const MemberCard = ({
             {member.avatar_url ? (
               <img src={member.avatar_url} alt={displayName} className="w-full h-full object-cover" />
             ) : (
-              <img
-                src={logoSrc}
-                alt="Seal"
-                className="w-14 h-14 object-contain opacity-60 contrast-125 brightness-110 filter drop-shadow-md"
-              />
+              <div className="w-12 h-12 flex items-center justify-center text-primary/70 opacity-80">
+                {gender === "female" ? (
+                  <FemaleSilhouette className="w-full h-full" />
+                ) : (
+                  <MaleSilhouette className="w-full h-full" />
+                )}
+              </div>
             )}
           </div>
           <h3 className="font-bengali text-sm font-bold text-foreground truncate">{displayName}</h3>
@@ -224,7 +284,7 @@ export const MemberCard = ({
         whileHover={{ y: -6, scale: 1.02 }}
         className="edge-shimmer-card relative w-[250px] sm:w-[280px] md:w-[300px] h-[380px] sm:h-[420px] rounded-3xl overflow-hidden text-center group shadow-2xl transition-all duration-300"
       >
-        {/* Full-Bleed Profile Image or Foreshadowed Logo Background */}
+        {/* Full-Bleed Profile Image or Foreshadowed Gender Person Silhouette Background */}
         {member.avatar_url ? (
           <img
             src={member.avatar_url}
@@ -232,13 +292,15 @@ export const MemberCard = ({
             className="absolute inset-0 w-full h-full object-cover object-top transition-transform duration-700 group-hover:scale-105"
           />
         ) : (
-          <div className="absolute inset-0 w-full h-full bg-gradient-to-b from-primary/30 via-card/95 to-card flex items-center justify-center overflow-hidden">
+          <div className="absolute inset-0 w-full h-full bg-gradient-to-b from-primary/25 via-card/95 to-card flex items-center justify-center overflow-hidden">
             <div className="w-56 h-56 rounded-full bg-primary/35 blur-3xl absolute" />
-            <img
-              src={logoSrc}
-              alt="Parishad Seal"
-              className="w-52 h-52 object-contain opacity-55 contrast-125 brightness-110 drop-shadow-[0_4px_24px_rgba(0,0,0,0.7)] select-none pointer-events-none transform -translate-y-4 transition-all duration-700 group-hover:scale-110 group-hover:opacity-75"
-            />
+            <div className="w-48 h-48 flex items-center justify-center text-primary/50 opacity-60 drop-shadow-[0_4px_28px_rgba(0,0,0,0.6)] select-none pointer-events-none transform -translate-y-3 transition-all duration-700 group-hover:scale-110 group-hover:opacity-85">
+              {gender === "female" ? (
+                <FemaleSilhouette className="w-full h-full" />
+              ) : (
+                <MaleSilhouette className="w-full h-full" />
+              )}
+            </div>
           </div>
         )}
 
