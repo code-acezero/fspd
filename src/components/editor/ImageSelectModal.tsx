@@ -1,9 +1,9 @@
-import { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { motion } from "framer-motion";
 import {
   UploadCloud, Image as ImageIcon, X, Check, Loader2,
-  Link2, Folder, Trash2, RefreshCw, HardDrive,
+  Link2, Folder, Trash2, RefreshCw, HardDrive, Filter, ChevronDown, Sparkles,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { uploadSiteImage, ALLOWED_IMAGE_TYPES } from "@/lib/storage";
@@ -11,14 +11,71 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 
-interface StorageAsset {
+export interface StorageAsset {
   name: string;
   id: string | null;
   url: string;
   path: string;
+  folder?: string;
   size?: number;
   created_at?: string;
 }
+
+export interface FolderMeta {
+  key: string;
+  nameBn: string;
+  nameEn: string;
+  icon: string;
+  descriptionBn: string;
+  descriptionEn: string;
+}
+
+export const DATABASE_FOLDERS: FolderMeta[] = [
+  { key: "all", nameBn: "সকল ডাটাবেস ফোল্ডার", nameEn: "All Database Folders", icon: "🌟", descriptionBn: "সকল ফোল্ডারের সম্মিলিত ছবি", descriptionEn: "Combined images from all folders" },
+  { key: "hero", nameBn: "হিরো ব্যানার ও ব্যাকগ্রাউন্ড", nameEn: "Hero Banners", icon: "🌄", descriptionBn: "পোর্টালের প্রধান হিরো ব্যানার ও ব্যাকগ্রাউন্ড ছবি", descriptionEn: "Main landing hero banners and backdrops" },
+  { key: "site", nameBn: "সাইট ব্র্যান্ডিং ও লোগো", nameEn: "Site Branding & Logos", icon: "🎨", descriptionBn: "লোগো, সিল, ফ্যাভিকন ও প্রাতিষ্ঠানিক এসেট", descriptionEn: "Logos, seals, favicons, and branding assets" },
+  { key: "members", nameBn: "কার্যনির্বাহী ও সদস্যবৃন্দ", nameEn: "Members & Team", icon: "👥", descriptionBn: "সভাপতি, সাধারণ সম্পাদক ও সদস্যবৃন্দের ছবি", descriptionEn: "Executive board and member photos" },
+  { key: "events", nameBn: "সাহিত্য সভা ও উৎসব", nameEn: "Events & Festivals", icon: "🎉", descriptionBn: "অনুষ্ঠান, সেমিনার ও উৎসবের ব্যানার ও ছবি", descriptionEn: "Events, seminars, and festival banners" },
+  { key: "posts", nameBn: "সাহিত্য সাময়িকী ও নিবন্ধ", nameEn: "Articles & Posts", icon: "📰", descriptionBn: "ব্লগ পোস্ট, কবিতা ও সাময়িকীর কভার ছবি", descriptionEn: "Blog articles, poetry, and magazine covers" },
+  { key: "slider", nameBn: "হোম স্লাইডার গ্যালারি", nameEn: "Home Sliders", icon: "🖼️", descriptionBn: "হোম পেজের প্রধান ক্যারোসেল স্লাইডার", descriptionEn: "Home page interactive sliders" },
+  { key: "courses", nameBn: "কর্মশালা ও কোর্স মিডিয়া", nameEn: "Courses & Workshops", icon: "📚", descriptionBn: "সাহিত্য কর্মশালা ও প্রশিক্ষণ কার্যক্রম", descriptionEn: "Workshops, training sessions, and courses" },
+  { key: "editor", nameBn: "ভিজ্যুয়াল এডিটর মিডিয়া", nameEn: "Visual Editor Media", icon: "✏️", descriptionBn: "অন-পেজ এডিটর দিয়ে যুক্ত করা মিডিয়া", descriptionEn: "Media uploaded via visual block editor" },
+];
+
+export const HERO_BANNER_PRESETS = [
+  {
+    id: "default_heritage",
+    titleBn: "ঐতিহ্যবাহী ফরিদপুর সকাল ও নদী",
+    titleEn: "Faridpur Riverine Morning Heritage",
+    url: "/src/assets/hero-banner.jpg",
+    previewUrl: "/src/assets/hero-banner.jpg",
+    category: "Classic Heritage",
+  },
+  {
+    id: "padma_sunrise",
+    titleBn: "পদ্মার দিগন্ত ও সূর্যোদয়",
+    titleEn: "Padma River Sunrise Horizon",
+    url: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1920&q=80",
+    previewUrl: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=600&q=80",
+    category: "Riverine Scenery",
+  },
+  {
+    id: "literary_vintage",
+    titleBn: "ঐতিহাসিক সাহিত্য পাণ্ডুলিপি ও জ্ঞানপীঠ",
+    titleEn: "Historic Literature & Ancient Manuscripts",
+    url: "https://images.unsplash.com/photo-1457369804613-52c61a468e7d?auto=format&fit=crop&w=1920&q=80",
+    previewUrl: "https://images.unsplash.com/photo-1457369804613-52c61a468e7d?auto=format&fit=crop&w=600&q=80",
+    category: "Literary Motif",
+  },
+  {
+    id: "bengali_culture",
+    titleBn: "বাঙালির শিল্প ও পল্লী সংস্কৃতি",
+    titleEn: "Bengali Folk Art & Rural Culture",
+    url: "https://images.unsplash.com/photo-1518495973542-4542c06a5843?auto=format&fit=crop&w=1920&q=80",
+    previewUrl: "https://images.unsplash.com/photo-1518495973542-4542c06a5843?auto=format&fit=crop&w=600&q=80",
+    category: "Folk Culture",
+  },
+];
 
 interface ImageSelectModalProps {
   open: boolean;
@@ -40,16 +97,14 @@ const FOLDER_MAP: Record<string, string> = {
   course: "courses",
 };
 
-const ALL_FOLDERS = ["editor", "site", "hero", "slider", "members", "events", "posts", "courses"];
-
-export const ImageSelectModal = ({
+export const ImageSelectModal: React.FC<ImageSelectModalProps> = ({
   open,
   onClose,
   onSelect,
   currentUrl = "",
   title = "Select or Upload Image",
   folder = "editor",
-}: ImageSelectModalProps) => {
+}) => {
   const { user } = useAuth();
   const { toast } = useToast();
   const { lang } = useLanguage();
@@ -62,8 +117,27 @@ export const ImageSelectModal = ({
   const [loadingAssets, setLoadingAssets] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [activeFolder, setActiveFolder] = useState(FOLDER_MAP[folder] || "editor");
+  const [folderDropdownOpen, setFolderDropdownOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const folderDropdownRef = useRef<HTMLDivElement>(null);
 
+  // Close dropdown on click outside
+  useEffect(() => {
+    const handleOutsideClick = (event: MouseEvent) => {
+      if (
+        folderDropdownRef.current &&
+        !folderDropdownRef.current.contains(event.target as Node)
+      ) {
+        setFolderDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleOutsideClick);
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideClick);
+    };
+  }, []);
+
+  // Lock body scroll & fetch on open
   useEffect(() => {
     if (open) {
       fetchStorageAssets(activeFolder);
@@ -79,31 +153,64 @@ export const ImageSelectModal = ({
     setLoadingAssets(true);
     setAssets([]);
     try {
-      const { data, error } = await supabase.storage
-        .from("content-images")
-        .list(folderPath, {
-          limit: 100,
-          sortBy: { column: "created_at", order: "desc" },
+      if (folderPath === "all") {
+        const foldersToQuery = ["hero", "site", "members", "events", "posts", "slider", "courses", "editor"];
+        const promises = foldersToQuery.map(async (f) => {
+          const { data } = await supabase.storage.from("content-images").list(f, {
+            limit: 30,
+            sortBy: { column: "created_at", order: "desc" },
+          });
+          const files = (data || []).filter((item) => item.id !== null);
+          return files.map((item) => {
+            const { data: urlData } = supabase.storage
+              .from("content-images")
+              .getPublicUrl(`${f}/${item.name}`);
+            return {
+              name: item.name,
+              id: item.id,
+              url: urlData.publicUrl,
+              path: `${f}/${item.name}`,
+              folder: f,
+              size: (item as any).metadata?.size,
+              created_at: (item as any).created_at,
+            };
+          });
+        });
+        const nested = await Promise.all(promises);
+        const combined = nested.flat().sort((a, b) => {
+          const tA = a.created_at ? new Date(a.created_at).getTime() : 0;
+          const tB = b.created_at ? new Date(b.created_at).getTime() : 0;
+          return tB - tA;
+        });
+        setAssets(combined);
+      } else {
+        const { data, error } = await supabase.storage
+          .from("content-images")
+          .list(folderPath, {
+            limit: 100,
+            sortBy: { column: "created_at", order: "desc" },
+          });
+
+        if (error) throw error;
+
+        const files = (data || []).filter((item) => item.id !== null);
+        const assetsWithUrls: StorageAsset[] = files.map((item) => {
+          const { data: urlData } = supabase.storage
+            .from("content-images")
+            .getPublicUrl(`${folderPath}/${item.name}`);
+          return {
+            name: item.name,
+            id: item.id,
+            url: urlData.publicUrl,
+            path: `${folderPath}/${item.name}`,
+            folder: folderPath,
+            size: (item as any).metadata?.size,
+            created_at: (item as any).created_at,
+          };
         });
 
-      if (error) throw error;
-
-      const files = (data || []).filter((item) => item.id !== null);
-      const assetsWithUrls: StorageAsset[] = files.map((item) => {
-        const { data: urlData } = supabase.storage
-          .from("content-images")
-          .getPublicUrl(`${folderPath}/${item.name}`);
-        return {
-          name: item.name,
-          id: item.id,
-          url: urlData.publicUrl,
-          path: `${folderPath}/${item.name}`,
-          size: (item as any).metadata?.size,
-          created_at: (item as any).created_at,
-        };
-      });
-
-      setAssets(assetsWithUrls);
+        setAssets(assetsWithUrls);
+      }
     } catch (e) {
       console.error("Failed to list storage assets:", e);
       toast({
@@ -185,6 +292,15 @@ export const ImageSelectModal = ({
     return `${(bytes / (1024 * 1024)).toFixed(1)}MB`;
   };
 
+  const currentFolderMeta = DATABASE_FOLDERS.find((f) => f.key === activeFolder) || {
+    key: activeFolder,
+    nameBn: activeFolder,
+    nameEn: activeFolder,
+    icon: "📁",
+    descriptionBn: "",
+    descriptionEn: "",
+  };
+
   if (!open) return null;
 
   return createPortal(
@@ -221,8 +337,8 @@ export const ImageSelectModal = ({
         <div className="px-6 pt-4 shrink-0">
           <div className="flex rounded-2xl bg-muted p-1 gap-1">
             {([
-              { key: "upload", icon: UploadCloud, label: lang === "bn" ? "নতুন আপলোড ও পূর্ববর্তী ব্যানার" : "Upload & Switch" },
-              { key: "library", icon: HardDrive, label: lang === "bn" ? "সকল ফোল্ডার গ্যালারি" : "All Folders" },
+              { key: "upload", icon: UploadCloud, label: lang === "bn" ? "নতুন আপলোড ও ব্যানার" : "Upload & Banner" },
+              { key: "library", icon: HardDrive, label: lang === "bn" ? "ডাটাবেস ফোল্ডার গ্যালারি" : "Database Folders" },
               { key: "url", icon: Link2, label: lang === "bn" ? "সরাসরি URL" : "Direct URL" },
             ] as const).map(({ key: tabKey, icon: Icon, label }) => (
               <button
@@ -244,9 +360,10 @@ export const ImageSelectModal = ({
         {/* Tab Content */}
         <div className="flex-1 overflow-y-auto px-6 py-4 space-y-5">
 
-          {/* ── Upload Tab (With Drag & Drop + Previous Banners Section) ── */}
+          {/* ── Upload Tab (With Drag & Drop + Hero Banner Presets + Previous Banners Section) ── */}
           {tab === "upload" && (
             <div className="space-y-5">
+              {/* Drag & Drop Upload Zone */}
               <input
                 ref={fileInputRef}
                 type="file"
@@ -266,7 +383,7 @@ export const ImageSelectModal = ({
                   setDragOver(false);
                   if (e.dataTransfer.files?.[0]) handleFileUpload(e.dataTransfer.files[0]);
                 }}
-                className={`flex flex-col items-center justify-center gap-3 py-10 px-6 rounded-2xl border-2 border-dashed cursor-pointer transition-all ${
+                className={`flex flex-col items-center justify-center gap-3 py-9 px-6 rounded-2xl border-2 border-dashed cursor-pointer transition-all ${
                   dragOver
                     ? "border-primary bg-primary/5"
                     : "border-border hover:border-primary/50 hover:bg-muted/40"
@@ -300,6 +417,77 @@ export const ImageSelectModal = ({
                   </>
                 )}
               </div>
+
+              {/* ── Curated Hero Banner Presets (If Hero Banner) ── */}
+              {folder === "hero" && (
+                <div className="space-y-3 pt-1">
+                  <div className="flex items-center gap-2 border-b border-border/80 pb-2">
+                    <Sparkles className="w-3.5 h-3.5 text-primary" />
+                    <h4 className="font-bengali font-bold text-xs text-foreground">
+                      {lang === "bn"
+                        ? "কিউরেটেড হিরো ব্যানার কালেকশন (Hero Banner Presets)"
+                        : "Curated Hero Banner Presets"}
+                    </h4>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    {HERO_BANNER_PRESETS.map((preset) => {
+                      const isPresetActive = currentUrl === preset.url;
+                      return (
+                        <div
+                          key={preset.id}
+                          onClick={() => {
+                            onSelect(preset.url);
+                            toast({
+                              title: lang === "bn" ? "হিরো ব্যানার পরিবর্তন সম্পন্ন" : "Hero Banner Switched",
+                              description: lang === "bn" ? preset.titleBn : preset.titleEn,
+                            });
+                            onClose();
+                          }}
+                          className={`group relative rounded-2xl overflow-hidden border cursor-pointer transition-all flex flex-col bg-card/60 ${
+                            isPresetActive
+                              ? "border-primary ring-2 ring-primary/40 shadow-md"
+                              : "border-border hover:border-primary/60 hover:shadow-md"
+                          }`}
+                        >
+                          <div className="relative aspect-video w-full overflow-hidden bg-muted">
+                            <img
+                              src={preset.previewUrl}
+                              alt={preset.titleEn}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            />
+                            {isPresetActive && (
+                              <span className="absolute top-1.5 left-1.5 px-2 py-0.5 rounded-full bg-primary text-primary-foreground text-[9px] font-bold font-mono shadow-xs flex items-center gap-1">
+                                <Check className="w-2.5 h-2.5" /> ACTIVE
+                              </span>
+                            )}
+                            <span className="absolute bottom-1.5 right-1.5 bg-black/75 text-white text-[9px] px-1.5 py-0.5 rounded font-bengali font-medium">
+                              {preset.category}
+                            </span>
+                          </div>
+
+                          <div className="p-2 space-y-1 bg-card">
+                            <h5 className="font-bengali font-bold text-xs text-foreground truncate">
+                              {lang === "bn" ? preset.titleBn : preset.titleEn}
+                            </h5>
+                            <button
+                              type="button"
+                              className={`w-full py-1 px-2 rounded-xl text-[10px] font-bengali font-bold flex items-center justify-center gap-1 transition-all ${
+                                isPresetActive
+                                  ? "bg-primary/20 text-primary border border-primary/30"
+                                  : "bg-primary text-primary-foreground hover:bg-primary/90"
+                              }`}
+                            >
+                              <Check className="w-3 h-3" />
+                              <span>{isPresetActive ? (lang === "bn" ? "সক্রিয় ব্যানার" : "Active") : (lang === "bn" ? "এই ব্যানারটি ব্যবহার করুন" : "Apply Banner")}</span>
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
 
               {/* ── Previous Banners & Assets in this folder ── */}
               <div className="space-y-3 pt-1">
@@ -418,35 +606,83 @@ export const ImageSelectModal = ({
             </div>
           )}
 
-          {/* ── Library Tab ── */}
+          {/* ── Library Tab (With Single-Button Filter Dropdown & Database Folders) ── */}
           {tab === "library" && (
-            <div className="space-y-3">
-              {/* Folder selector */}
-              <div className="flex items-center gap-2 flex-wrap">
-                <Folder className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-                <div className="flex gap-1.5 flex-wrap">
-                  {ALL_FOLDERS.map((f) => (
-                    <button
-                      key={f}
-                      type="button"
-                      onClick={() => setActiveFolder(f)}
-                      className={`px-2.5 py-1 rounded-full text-[11px] font-mono font-semibold transition-colors ${
-                        activeFolder === f
-                          ? "bg-primary text-primary-foreground"
-                          : "bg-muted text-muted-foreground hover:text-foreground"
+            <div className="space-y-4">
+              {/* Single-Button Filter Dropdown Header */}
+              <div className="flex items-center justify-between gap-3 flex-wrap border-b border-border/80 pb-3">
+                <div className="relative z-30" ref={folderDropdownRef}>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setFolderDropdownOpen((prev) => !prev);
+                    }}
+                    className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-secondary/80 hover:bg-secondary border border-border text-xs font-bengali font-semibold transition-all shadow-2xs cursor-pointer active:scale-98"
+                  >
+                    <Filter className="w-3.5 h-3.5 text-primary shrink-0" />
+                    <span className="flex items-center gap-1.5">
+                      <span>{currentFolderMeta.icon}</span>
+                      <span className="text-foreground">{lang === "bn" ? currentFolderMeta.nameBn : currentFolderMeta.nameEn}</span>
+                      <span className="text-[10px] font-mono text-muted-foreground">({currentFolderMeta.key})</span>
+                    </span>
+                    <span className="px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20 text-[10px] font-mono font-bold ml-1">
+                      {assets.length}
+                    </span>
+                    <ChevronDown
+                      className={`w-3.5 h-3.5 text-muted-foreground transition-transform duration-200 ml-0.5 ${
+                        folderDropdownOpen ? "rotate-180" : ""
                       }`}
-                    >
-                      {f}
-                    </button>
-                  ))}
+                    />
+                  </button>
+
+                  {/* Popover Dropdown Menu */}
+                  {folderDropdownOpen && (
+                    <div className="absolute left-0 top-full mt-1.5 z-50 w-72 max-w-[calc(100vw-3rem)] rounded-2xl bg-card border border-border shadow-2xl p-1.5 space-y-0.5 animate-in fade-in zoom-in-95 backdrop-blur-xl">
+                      <div className="px-2.5 py-1.5 text-[10px] font-bold font-bengali uppercase text-muted-foreground tracking-wider border-b border-border/60 mb-1 flex items-center justify-between">
+                        <span>{lang === "bn" ? "ডাটাবেস ফোল্ডারসমূহ" : "Database Folders"}</span>
+                        <Folder className="w-3 h-3 text-primary" />
+                      </div>
+                      <div className="max-h-64 overflow-y-auto space-y-0.5">
+                        {DATABASE_FOLDERS.map((f) => (
+                          <button
+                            key={f.key}
+                            type="button"
+                            onClick={() => {
+                              setActiveFolder(f.key);
+                              setFolderDropdownOpen(false);
+                            }}
+                            className={`w-full px-2.5 py-2 rounded-xl text-left text-xs font-bengali flex items-center justify-between transition-colors ${
+                              activeFolder === f.key
+                                ? "bg-primary text-primary-foreground font-bold shadow-xs"
+                                : "hover:bg-muted text-foreground"
+                            }`}
+                          >
+                            <div className="flex items-center gap-2 min-w-0">
+                              <span className="text-sm shrink-0">{f.icon}</span>
+                              <div className="min-w-0">
+                                <span className="block truncate">{lang === "bn" ? f.nameBn : f.nameEn}</span>
+                                <span className={`text-[10px] font-mono block truncate ${activeFolder === f.key ? "text-primary-foreground/80" : "text-muted-foreground"}`}>
+                                  {f.key}
+                                </span>
+                              </div>
+                            </div>
+                            {activeFolder === f.key && <Check className="w-3.5 h-3.5 shrink-0" />}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
+
                 <button
                   type="button"
                   onClick={() => fetchStorageAssets(activeFolder)}
-                  className="ml-auto p-1.5 rounded-full hover:bg-muted text-muted-foreground transition-colors"
+                  className="p-2 rounded-xl bg-secondary hover:bg-secondary/80 border border-border text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1.5 text-xs font-bengali font-semibold active:scale-95"
                   title="Refresh"
                 >
                   <RefreshCw className="w-3.5 h-3.5" />
+                  <span>{lang === "bn" ? "রিফ্রেশ" : "Refresh"}</span>
                 </button>
               </div>
 
@@ -455,70 +691,107 @@ export const ImageSelectModal = ({
                 <div className="flex items-center justify-center py-16 text-muted-foreground gap-2">
                   <Loader2 className="w-5 h-5 animate-spin" />
                   <span className="text-sm font-bengali">
-                    {lang === "bn" ? "লোড হচ্ছে..." : "Loading..."}
+                    {lang === "bn" ? "ডাটাবেস ছবি লোড হচ্ছে..." : "Loading database images..."}
                   </span>
                 </div>
               ) : assets.length > 0 ? (
-                <div className="grid grid-cols-3 sm:grid-cols-4 gap-2.5">
-                  {assets.map((asset) => (
-                    <div
-                      key={asset.id || asset.name}
-                      className="group relative aspect-video rounded-xl overflow-hidden border border-border bg-muted cursor-pointer hover:ring-2 hover:ring-primary transition-all"
-                    >
-                      {/* Image */}
-                      <img
-                        src={asset.url}
-                        alt={asset.name}
-                        className="w-full h-full object-cover"
-                        onClick={() => { onSelect(asset.url); onClose(); }}
-                      />
-
-                      {/* Hover overlay */}
-                      <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-1.5 p-1">
-                        <button
-                          type="button"
-                          onClick={() => { onSelect(asset.url); onClose(); }}
-                          className="px-2.5 py-1 rounded-full bg-primary text-primary-foreground text-[10px] font-bold font-bengali hover:scale-105 transition-transform flex items-center gap-1"
-                        >
-                          <Check className="w-2.5 h-2.5" />
-                          {lang === "bn" ? "নির্বাচন" : "Select"}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={(e) => { e.stopPropagation(); handleDeleteAsset(asset); }}
-                          disabled={deletingId === asset.id}
-                          className="px-2.5 py-1 rounded-full bg-destructive text-white text-[10px] font-bold hover:scale-105 transition-transform flex items-center gap-1 disabled:opacity-50"
-                        >
-                          {deletingId === asset.id ? (
-                            <Loader2 className="w-2.5 h-2.5 animate-spin" />
-                          ) : (
-                            <Trash2 className="w-2.5 h-2.5" />
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                  {assets.map((asset) => {
+                    const isActive = currentUrl && (currentUrl === asset.url || currentUrl.includes(asset.name));
+                    return (
+                      <div
+                        key={asset.id || asset.name}
+                        className={`group relative rounded-2xl overflow-hidden border transition-all flex flex-col bg-card/60 ${
+                          isActive
+                            ? "border-primary ring-2 ring-primary/40 shadow-md"
+                            : "border-border hover:border-primary/50"
+                        }`}
+                      >
+                        {/* Thumbnail Image */}
+                        <div className="relative aspect-video w-full overflow-hidden bg-muted">
+                          <img
+                            src={asset.url}
+                            alt={asset.name}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          />
+                          {isActive && (
+                            <span className="absolute top-1.5 left-1.5 px-2 py-0.5 rounded-full bg-primary text-primary-foreground text-[9px] font-bold font-mono shadow-xs flex items-center gap-1">
+                              <Check className="w-2.5 h-2.5" /> ACTIVE
+                            </span>
                           )}
-                          {lang === "bn" ? "মুছুন" : "Delete"}
-                        </button>
-                      </div>
-
-                      {/* Size badge */}
-                      {asset.size && (
-                        <div className="absolute bottom-1 left-1 bg-black/60 text-white text-[9px] px-1.5 py-0.5 rounded font-mono leading-none">
-                          {formatSize(asset.size)}
+                          {asset.folder && (
+                            <span className="absolute top-1.5 right-1.5 bg-black/70 text-white text-[9px] px-1.5 py-0.5 rounded font-mono">
+                              {asset.folder}
+                            </span>
+                          )}
+                          {asset.size && (
+                            <span className="absolute bottom-1 right-1 bg-black/70 text-white text-[9px] px-1.5 py-0.5 rounded font-mono">
+                              {formatSize(asset.size)}
+                            </span>
+                          )}
                         </div>
-                      )}
-                    </div>
-                  ))}
+
+                        {/* Card Footer Actions */}
+                        <div className="p-2 space-y-1.5 flex-1 flex flex-col justify-between bg-card">
+                          <p className="text-[10px] font-mono text-muted-foreground truncate" title={asset.name}>
+                            {asset.name}
+                          </p>
+
+                          <div className="flex items-center gap-1.5">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                onSelect(asset.url);
+                                toast({
+                                  title: lang === "bn" ? "ছবি নির্বাচন সম্পন্ন" : "Image Selected",
+                                  description: lang === "bn" ? "ছবিটি সক্রিয় করা হয়েছে" : "Selected image is now active.",
+                                });
+                                onClose();
+                              }}
+                              className={`flex-1 py-1.5 px-2 rounded-xl text-[11px] font-bengali font-bold flex items-center justify-center gap-1 transition-all active:scale-95 ${
+                                isActive
+                                  ? "bg-primary/20 text-primary border border-primary/30"
+                                  : "bg-primary text-primary-foreground hover:bg-primary/90 shadow-xs"
+                              }`}
+                            >
+                              <Check className="w-3 h-3" />
+                              <span>{isActive ? (lang === "bn" ? "বর্তমান" : "Current") : (lang === "bn" ? "নির্বাচন" : "Select")}</span>
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteAsset(asset);
+                              }}
+                              disabled={deletingId === asset.id}
+                              className="p-1.5 rounded-xl bg-destructive/10 hover:bg-destructive text-destructive hover:text-white transition-colors disabled:opacity-50"
+                              title={lang === "bn" ? "চিরতরে মুছুন" : "Permanently Delete"}
+                            >
+                              {deletingId === asset.id ? (
+                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                              ) : (
+                                <Trash2 className="w-3.5 h-3.5" />
+                              )}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               ) : (
-                <div className="text-center py-12 space-y-2">
+                <div className="text-center py-12 space-y-2 bg-muted/20 rounded-2xl border border-dashed border-border p-6">
                   <ImageIcon className="w-10 h-10 text-muted-foreground/30 mx-auto" />
                   <p className="text-sm text-muted-foreground font-bengali">
                     {lang === "bn"
-                      ? `"${activeFolder}" ফোল্ডারে কোন ছবি পাওয়া যায়নি।`
-                      : `No images found in "${activeFolder}" folder.`}
+                      ? `"${currentFolderMeta.nameBn}" ফোল্ডারে কোন ছবি পাওয়া যায়নি।`
+                      : `No images found in "${currentFolderMeta.nameEn}" folder.`}
                   </p>
                   <button
                     type="button"
                     onClick={() => setTab("upload")}
-                    className="text-xs text-primary hover:underline font-bengali"
+                    className="text-xs text-primary hover:underline font-bengali font-bold"
                   >
                     {lang === "bn" ? "নতুন ছবি আপলোড করুন →" : "Upload a new image →"}
                   </button>

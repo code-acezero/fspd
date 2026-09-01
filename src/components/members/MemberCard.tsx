@@ -79,14 +79,14 @@ export const MemberCard = ({
             className="absolute inset-0 w-full h-full object-cover object-top transition-transform duration-700 group-hover:scale-105"
           />
         ) : (
-          <div className="absolute inset-0 w-full h-full bg-gradient-to-b from-primary/20 via-card/90 to-card flex items-center justify-center overflow-hidden">
+          <div className="absolute inset-0 w-full h-full bg-gradient-to-b from-primary/30 via-card/95 to-card flex items-center justify-center overflow-hidden">
             {/* Ambient Radial Spotlight */}
-            <div className="w-48 h-48 rounded-full bg-primary/20 blur-3xl absolute" />
+            <div className="w-48 h-48 rounded-full bg-primary/35 blur-3xl absolute" />
             {/* Foreshadowed Organization Logo Seal Watermark */}
             <img
               src={logoSrc}
               alt="Parishad Seal"
-              className="w-40 h-40 object-contain opacity-[0.18] mix-blend-luminosity grayscale contrast-125 filter drop-shadow-2xl select-none pointer-events-none transform -translate-y-4 transition-transform duration-700 group-hover:scale-110"
+              className="w-44 h-44 object-contain opacity-55 contrast-125 brightness-110 drop-shadow-[0_4px_20px_rgba(0,0,0,0.7)] select-none pointer-events-none transform -translate-y-4 transition-all duration-700 group-hover:scale-110 group-hover:opacity-75"
             />
           </div>
         )}
@@ -174,7 +174,7 @@ export const MemberCard = ({
               <img
                 src={logoSrc}
                 alt="Seal"
-                className="w-12 h-12 object-contain opacity-25 grayscale filter"
+                className="w-14 h-14 object-contain opacity-60 contrast-125 brightness-110 filter drop-shadow-md"
               />
             )}
           </div>
@@ -232,12 +232,12 @@ export const MemberCard = ({
             className="absolute inset-0 w-full h-full object-cover object-top transition-transform duration-700 group-hover:scale-105"
           />
         ) : (
-          <div className="absolute inset-0 w-full h-full bg-gradient-to-b from-primary/20 via-card/90 to-card flex items-center justify-center overflow-hidden">
-            <div className="w-56 h-56 rounded-full bg-primary/20 blur-3xl absolute" />
+          <div className="absolute inset-0 w-full h-full bg-gradient-to-b from-primary/30 via-card/95 to-card flex items-center justify-center overflow-hidden">
+            <div className="w-56 h-56 rounded-full bg-primary/35 blur-3xl absolute" />
             <img
               src={logoSrc}
               alt="Parishad Seal"
-              className="w-48 h-48 object-contain opacity-[0.18] mix-blend-luminosity grayscale contrast-125 filter drop-shadow-2xl select-none pointer-events-none transform -translate-y-4 transition-transform duration-700 group-hover:scale-110"
+              className="w-52 h-52 object-contain opacity-55 contrast-125 brightness-110 drop-shadow-[0_4px_24px_rgba(0,0,0,0.7)] select-none pointer-events-none transform -translate-y-4 transition-all duration-700 group-hover:scale-110 group-hover:opacity-75"
             />
           </div>
         )}
