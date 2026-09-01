@@ -195,24 +195,7 @@ const HeroSection = () => {
           <div className="absolute inset-0 bg-black/35" />
           <div className="absolute inset-0 bg-gradient-to-tr from-primary/10 via-transparent to-accent/8" />
 
-          {/* Subtle Carousel Indicator Dots at Bottom Right if Carousel is Active */}
-          {!editMode && isCarousel && carouselImages.length > 1 && !isVideoMedia(activeHeroImage) && (
-            <div className="absolute bottom-6 right-6 sm:right-10 z-20 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/60 backdrop-blur-md border border-white/15 shadow-xl">
-              {carouselImages.map((_, idx) => (
-                <button
-                  key={idx}
-                  type="button"
-                  onClick={() => setCurrentSlide(idx)}
-                  className={`h-1.5 rounded-full transition-all ${
-                    idx === currentSlide % carouselImages.length
-                      ? "w-6 bg-primary shadow-xs"
-                      : "w-1.5 bg-white/40 hover:bg-white/70"
-                  }`}
-                  title={`Slide ${idx + 1}`}
-                />
-              ))}
-            </div>
-          )}
+
         </motion.div>
 
         {/* Dynamic Scroll Darken Blend Veil (Clean at scroll 0, darkens smoothly on scroll) */}
