@@ -1,6 +1,7 @@
 import { useState, useEffect, ImgHTMLAttributes } from "react";
 import { useSiteSettings } from "@/contexts/SiteSettingsContext";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { PALETTES } from "@/lib/palettes";
 
 type Size = "sm" | "md" | "lg" | "xl";
 type Glow = "off" | "subtle" | "normal" | "bold";
@@ -141,6 +142,9 @@ function generateCrispLogo(imgSrc: string): Promise<string> {
 const LogoTile = ({
   size = "md",
   bare = false,
+  glow,
+  contained,
+  dilateRadius,
   className = "",
   ...imgProps
 }: LogoTileProps) => {
