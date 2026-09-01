@@ -7,7 +7,7 @@ import {
   ImageIcon, Trash2, Layers, Check, Wand2,
   FolderTree, ExternalLink, ChevronRight, ChevronDown,
   Globe, Search, ArrowLeft, Image as ImageLucide,
-  UploadCloud
+  UploadCloud, Save, Loader2
 } from "lucide-react";
 import { useVisualEditor } from "@/contexts/VisualEditorContext";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -70,7 +70,7 @@ export const VisualEditorDrawer = () => {
 };
 
 const DrawerMaster = () => {
-  const { selectedElement, setSelectedElement, setIsDrawerOpen } = useVisualEditor();
+  const { selectedElement, setSelectedElement, setIsDrawerOpen, dirtyCount, saveChanges, isSaving } = useVisualEditor();
   const [activeTab, setActiveTab] = useState<"inspector" | "directory" | "media">(
     selectedElement ? "inspector" : "directory"
   );
@@ -148,6 +148,45 @@ const DrawerMaster = () => {
         ) : (
           <PagesDirectory onSelectElement={() => setActiveTab("inspector")} />
         )}
+      </div>
+
+      {/* ── Sticky Persistent Bottom Action Bar with Save Button ── */}
+      <div className="p-3 sm:p-4 border-t border-white/10 bg-slate-950/98 backdrop-blur-2xl flex items-center justify-between gap-2 shrink-0">
+        <div className="flex items-center gap-2">
+          {dirtyCount > 0 ? (
+            <span className="px-2.5 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-400 text-[10px] font-mono font-bold flex items-center gap-1.5 animate-pulse">
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+              {dirtyCount} unsaved
+            </span>
+          ) : (
+            <span className="text-[10px] text-muted-foreground font-bengali flex items-center gap-1.5">
+              <Check className="w-3 h-3 text-primary" />
+              সব সংরক্ষিত (Saved)
+            </span>
+          )}
+        </div>
+
+        <div className="flex items-center gap-2">
+          {dirtyCount > 0 && (
+            <button
+              type="button"
+              onClick={() => saveChanges()}
+              disabled={isSaving}
+              className="px-4 py-2 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-bengali font-bold text-xs shadow-lg shadow-primary/25 flex items-center gap-1.5 active:scale-95 transition-all disabled:opacity-50"
+            >
+              {isSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+              <span>সেভ করুন ({dirtyCount})</span>
+            </button>
+          )}
+
+          <button
+            type="button"
+            onClick={() => setIsDrawerOpen(false)}
+            className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-foreground font-bengali font-semibold text-xs border border-white/10 transition-all"
+          >
+            সম্পন্ন (Done)
+          </button>
+        </div>
       </div>
     </div>
   );

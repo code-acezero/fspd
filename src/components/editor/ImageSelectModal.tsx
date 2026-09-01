@@ -116,7 +116,8 @@ export const ImageSelectModal: React.FC<ImageSelectModalProps> = ({
   const [assets, setAssets] = useState<StorageAsset[]>([]);
   const [loadingAssets, setLoadingAssets] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [activeFolder, setActiveFolder] = useState(FOLDER_MAP[folder] || "editor");
+  const initialFolder = FOLDER_MAP[folder] || folder || "hero";
+  const [activeFolder, setActiveFolder] = useState(initialFolder);
   const [folderDropdownOpen, setFolderDropdownOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const folderDropdownRef = useRef<HTMLDivElement>(null);
@@ -140,14 +141,17 @@ export const ImageSelectModal: React.FC<ImageSelectModalProps> = ({
   // Lock body scroll & fetch on open
   useEffect(() => {
     if (open) {
-      fetchStorageAssets(activeFolder);
+      const targetFolder = FOLDER_MAP[folder] || folder || "hero";
+      setActiveFolder(targetFolder);
+      setCustomUrl(currentUrl);
+      fetchStorageAssets(targetFolder);
       const originalOverflow = document.body.style.overflow;
       document.body.style.overflow = "hidden";
       return () => {
         document.body.style.overflow = originalOverflow;
       };
     }
-  }, [open, activeFolder]);
+  }, [open, folder, currentUrl]);
 
   const fetchStorageAssets = async (folderPath: string) => {
     setLoadingAssets(true);

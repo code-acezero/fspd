@@ -1,4 +1,4 @@
-﻿import { useLanguage } from "@/contexts/LanguageContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { useSiteSettings } from "@/contexts/SiteSettingsContext";
 import { Facebook, Youtube, Mail, Phone, MapPin, Heart, Send } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -229,9 +229,10 @@ const Footer = () => {
             </div>
 
             {/* Right Column: Attribution */}
-            <div className="text-center sm:text-right flex items-center justify-center sm:justify-end gap-1 text-xs">
+            <div className="text-center sm:text-right flex items-center justify-center sm:justify-end gap-1 text-xs text-muted-foreground">
               <span>{t("madeInBangladesh") || "বাংলাদেশে নির্মিত"}</span>
               <Heart className="w-3 h-3 text-primary inline" />
+              <span className="font-mono font-semibold text-[11px] text-foreground/80 ml-0.5">code:4ce0</span>
             </div>
           </div>
         </div>
@@ -327,6 +328,7 @@ const Footer = () => {
           <div className="flex items-center gap-1 text-[10px] text-muted-foreground/80">
             <span>{t("madeInBangladesh") || "বাংলাদেশে নির্মিত"}</span>
             <Heart className="w-3 h-3 text-primary inline" />
+            <span className="font-mono font-semibold text-[10px] text-foreground/80 ml-0.5">code:4ce0</span>
           </div>
         </div>
       </div>
