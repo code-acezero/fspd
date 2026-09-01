@@ -3243,19 +3243,19 @@ const AdminDashboard = () => {
                             {/* Favicon Preview */}
                             <div className="w-6 h-6 shrink-0 relative flex items-center justify-center">
                               {generalForm.favicon_bg === "white_circle" ? (
-                                <div className="w-6 h-6 rounded-full bg-white shadow-sm flex items-center justify-center p-0.5 border border-zinc-300">
-                                  <img src={generalForm.logo_url || "/site-logo.png"} alt="Favicon" className="w-full h-full object-contain" />
+                                <div className="w-6 h-6 rounded-full bg-white shadow-sm flex items-center justify-center p-0.5 border border-zinc-300 overflow-hidden">
+                                  <img src={generalForm.logo_url || "/site-logo.png"} alt="Favicon" className="max-w-full max-h-full object-contain" />
                                 </div>
                               ) : generalForm.favicon_bg === "white_solid" ? (
-                                <div className="w-6 h-6 rounded-md bg-white shadow-sm flex items-center justify-center p-0.5 border border-zinc-300">
-                                  <img src={generalForm.logo_url || "/site-logo.png"} alt="Favicon" className="w-full h-full object-contain" />
+                                <div className="w-6 h-6 rounded-md bg-white shadow-sm flex items-center justify-center p-0.5 border border-zinc-300 overflow-hidden">
+                                  <img src={generalForm.logo_url || "/site-logo.png"} alt="Favicon" className="max-w-full max-h-full object-contain" />
                                 </div>
                               ) : generalForm.favicon_bg === "gradient_primary" ? (
-                                <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-500 shadow-sm flex items-center justify-center p-0.5 border border-white/40">
-                                  <img src={generalForm.logo_url || "/site-logo.png"} alt="Favicon" className="w-full h-full object-contain" />
+                                <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-500 shadow-sm flex items-center justify-center p-0.5 border border-white/40 overflow-hidden">
+                                  <img src={generalForm.logo_url || "/site-logo.png"} alt="Favicon" className="max-w-full max-h-full object-contain" />
                                 </div>
                               ) : (
-                                <img src={generalForm.logo_url || "/site-logo.png"} alt="Favicon" className="w-full h-full object-contain" />
+                                <img src={generalForm.logo_url || "/site-logo.png"} alt="Favicon" className="max-w-full max-h-full object-contain" />
                               )}
                             </div>
                             <span className="text-xs text-zinc-100 font-bengali font-semibold truncate flex-1">
@@ -3275,19 +3275,19 @@ const AdminDashboard = () => {
                             {/* Favicon Preview */}
                             <div className="w-6 h-6 shrink-0 relative flex items-center justify-center">
                               {generalForm.favicon_bg === "white_circle" ? (
-                                <div className="w-6 h-6 rounded-full bg-white shadow-sm flex items-center justify-center p-0.5 border border-zinc-300">
-                                  <img src={generalForm.logo_url || "/site-logo.png"} alt="Favicon" className="w-full h-full object-contain" />
+                                <div className="w-6 h-6 rounded-full bg-white shadow-sm flex items-center justify-center p-0.5 border border-zinc-300 overflow-hidden">
+                                  <img src={generalForm.logo_url || "/site-logo.png"} alt="Favicon" className="max-w-full max-h-full object-contain" />
                                 </div>
                               ) : generalForm.favicon_bg === "white_solid" ? (
-                                <div className="w-6 h-6 rounded-md bg-white shadow-sm flex items-center justify-center p-0.5 border border-zinc-300">
-                                  <img src={generalForm.logo_url || "/site-logo.png"} alt="Favicon" className="w-full h-full object-contain" />
+                                <div className="w-6 h-6 rounded-md bg-white shadow-sm flex items-center justify-center p-0.5 border border-zinc-300 overflow-hidden">
+                                  <img src={generalForm.logo_url || "/site-logo.png"} alt="Favicon" className="max-w-full max-h-full object-contain" />
                                 </div>
                               ) : generalForm.favicon_bg === "gradient_primary" ? (
-                                <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-500 shadow-sm flex items-center justify-center p-0.5 border border-white/40">
-                                  <img src={generalForm.logo_url || "/site-logo.png"} alt="Favicon" className="w-full h-full object-contain" />
+                                <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-500 shadow-sm flex items-center justify-center p-0.5 border border-white/40 overflow-hidden">
+                                  <img src={generalForm.logo_url || "/site-logo.png"} alt="Favicon" className="max-w-full max-h-full object-contain" />
                                 </div>
                               ) : (
-                                <img src={generalForm.logo_url || "/site-logo.png"} alt="Favicon" className="w-full h-full object-contain" />
+                                <img src={generalForm.logo_url || "/site-logo.png"} alt="Favicon" className="max-w-full max-h-full object-contain" />
                               )}
                             </div>
                             <span className="text-xs text-zinc-900 font-bengali font-semibold truncate flex-1">

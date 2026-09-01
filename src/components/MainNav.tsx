@@ -83,7 +83,29 @@ const MainNav = () => {
         const ctx = canvas.getContext("2d");
         if (!ctx) throw new Error("no ctx");
         ctx.clearRect(0, 0, size, size);
-        ctx.drawImage(img, 0, 0, size, size);
+
+        // Aspect ratio preserved fit (contain mode)
+        const natW = img.naturalWidth || 1;
+        const natH = img.naturalHeight || 1;
+        const aspect = natW / natH;
+        let drawW = size;
+        let drawH = size;
+        let drawX = 0;
+        let drawY = 0;
+
+        if (aspect < 1) {
+          drawH = size;
+          drawW = size * aspect;
+          drawX = (size - drawW) / 2;
+          drawY = 0;
+        } else {
+          drawW = size;
+          drawH = size / aspect;
+          drawX = 0;
+          drawY = (size - drawH) / 2;
+        }
+
+        ctx.drawImage(img, drawX, drawY, drawW, drawH);
         
         // Re-tint with active palette color if theme adaptive is enabled
         if (isThemeAdaptive) {

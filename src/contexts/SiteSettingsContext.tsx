@@ -104,6 +104,36 @@ export const applyBrowserFavicon = (
       const pal = PALETTES[paletteId] || PALETTES["royal"];
       const primaryHsl = pal.primary;
 
+      // Calculate aspect-ratio preserved dimensions (contain mode)
+      const calculateFit = (targetPad: number) => {
+        const availW = size - targetPad * 2;
+        const availH = size - targetPad * 2;
+        const natW = img.naturalWidth || 1;
+        const natH = img.naturalHeight || 1;
+        const aspect = natW / natH;
+
+        let drawW = availW;
+        let drawH = availH;
+        let drawX = targetPad;
+        let drawY = targetPad;
+
+        if (aspect < 1) {
+          // Taller than wide: fit to height, center horizontally
+          drawH = availH;
+          drawW = availH * aspect;
+          drawX = targetPad + (availW - drawW) / 2;
+          drawY = targetPad;
+        } else {
+          // Wider than tall: fit to width, center vertically
+          drawW = availW;
+          drawH = availW / aspect;
+          drawX = targetPad;
+          drawY = targetPad + (availH - drawH) / 2;
+        }
+
+        return { drawX, drawY, drawW, drawH };
+      };
+
       if (bgStyle === "white_circle") {
         ctx.beginPath();
         ctx.arc(size / 2, size / 2, size / 2 - 2, 0, Math.PI * 2);
@@ -113,8 +143,8 @@ export const applyBrowserFavicon = (
         ctx.strokeStyle = themeAdaptive ? `hsl(${primaryHsl})` : "rgba(0, 0, 0, 0.12)";
         ctx.stroke();
 
-        const pad = 14;
-        ctx.drawImage(img, pad, pad, size - pad * 2, size - pad * 2);
+        const { drawX, drawY, drawW, drawH } = calculateFit(14);
+        ctx.drawImage(img, drawX, drawY, drawW, drawH);
       } else if (bgStyle === "white_solid") {
         const r = 24;
         ctx.beginPath();
@@ -125,8 +155,8 @@ export const applyBrowserFavicon = (
         ctx.strokeStyle = themeAdaptive ? `hsl(${primaryHsl})` : "rgba(0, 0, 0, 0.12)";
         ctx.stroke();
 
-        const pad = 16;
-        ctx.drawImage(img, pad, pad, size - pad * 2, size - pad * 2);
+        const { drawX, drawY, drawW, drawH } = calculateFit(16);
+        ctx.drawImage(img, drawX, drawY, drawW, drawH);
       } else if (bgStyle === "gradient_primary") {
         ctx.beginPath();
         ctx.arc(size / 2, size / 2, size / 2 - 2, 0, Math.PI * 2);
@@ -144,11 +174,12 @@ export const applyBrowserFavicon = (
         ctx.strokeStyle = "rgba(255, 255, 255, 0.4)";
         ctx.stroke();
 
-        const pad = 16;
-        ctx.drawImage(img, pad, pad, size - pad * 2, size - pad * 2);
+        const { drawX, drawY, drawW, drawH } = calculateFit(16);
+        ctx.drawImage(img, drawX, drawY, drawW, drawH);
       } else {
         // Transparent
-        ctx.drawImage(img, 0, 0, size, size);
+        const { drawX, drawY, drawW, drawH } = calculateFit(4);
+        ctx.drawImage(img, drawX, drawY, drawW, drawH);
       }
 
       const dataUrl = canvas.toDataURL("image/png");
