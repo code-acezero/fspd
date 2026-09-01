@@ -47,8 +47,8 @@ export const HERO_BANNER_PRESETS = [
     id: "default_heritage",
     titleBn: "ঐতিহ্যবাহী ফরিদপুর সকাল ও নদী (মূল ব্যানার)",
     titleEn: "Faridpur Riverine Morning Heritage (Original Banner)",
-    url: "/src/assets/hero-banner.jpg",
-    previewUrl: "/src/assets/hero-banner.jpg",
+    url: "https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&w=1920&q=80",
+    previewUrl: "https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&w=600&q=80",
     category: "Classic Heritage",
   },
   {

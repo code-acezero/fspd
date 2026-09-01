@@ -1,8 +1,7 @@
 import { useRef, useEffect, useState } from "react";
-import { motion, useScroll, useTransform } from "framer-motion";
+import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
 import { ChevronDown, Home } from "lucide-react";
 import { Link } from "react-router-dom";
-import heroBanner from "@/assets/hero-banner.jpg";
 import alponaMotif from "@/assets/alpona-motif.png";
 import LogoTile from "@/components/branding/LogoTile";
 import HeritageRibbon from "@/components/branding/HeritageRibbon";
@@ -19,34 +18,56 @@ const HeroSection = () => {
   const { lang, t } = useLanguage();
   const { settings } = useSiteSettings();
   const { getContent, editMode } = useVisualEditor();
-  const [heroImage, setHeroImage] = useState<string>(heroBanner);
+  const [heroImage, setHeroImage] = useState<string>("");
 
   useEffect(() => {
     (async () => {
       // 1. Try page_content first
-      const { data: pageData } = await supabase
-        .from("page_content" as any)
-        .select("media_url")
-        .eq("page_key", "landing")
-        .eq("section_key", "hero")
-        .eq("element_key", "bg_image")
-        .maybeSingle();
+      try {
+        const { data: pageData } = await supabase
+          .from("page_content" as any)
+          .select("media_url")
+          .eq("page_key", "landing")
+          .eq("section_key", "hero")
+          .eq("element_key", "bg_image")
+          .maybeSingle();
 
-      if ((pageData as any)?.media_url) {
-        setHeroImage((pageData as any).media_url);
-        return;
-      }
+        if ((pageData as any)?.media_url) {
+          setHeroImage((pageData as any).media_url);
+          return;
+        }
+      } catch (_) {}
 
-      // 2. Try site_assets slot="hero"
-      const { data } = await supabase
-        .from("site_assets")
-        .select("image_url")
-        .eq("slot", "hero")
-        .eq("is_active", true)
-        .order("sort_order", { ascending: true })
-        .limit(1)
-        .maybeSingle();
-      if (data?.image_url) setHeroImage(data.image_url);
+      // 2. Try site_settings visual_editor_page_content
+      try {
+        const { data: settingsData } = await supabase
+          .from("site_settings")
+          .select("value")
+          .eq("key", "visual_editor_page_content")
+          .maybeSingle();
+
+        const item = (settingsData?.value as any)?.["landing:hero:bg_image"];
+        if (item?.media_url) {
+          setHeroImage(item.media_url);
+          return;
+        }
+      } catch (_) {}
+
+      // 3. Try site_assets slot="hero"
+      try {
+        const { data } = await supabase
+          .from("site_assets")
+          .select("image_url")
+          .eq("slot", "hero")
+          .eq("is_active", true)
+          .order("sort_order", { ascending: true })
+          .limit(1)
+          .maybeSingle();
+        if (data?.image_url) {
+          setHeroImage(data.image_url);
+          return;
+        }
+      } catch (_) {}
     })();
 
     const handleHeroUpdated = (e: any) => {
@@ -91,14 +112,19 @@ const HeroSection = () => {
               playsInline
               className="w-full h-[125%] object-cover object-center"
             />
-          ) : (
-            <img
+          ) : activeHeroImage ? (
+            <motion.img
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.8, ease: "easeOut" }}
               src={activeHeroImage}
               alt="Bengali cultural heritage landscape"
               className="w-full h-[125%] object-cover object-center"
               width={1920}
               height={960}
             />
+          ) : (
+            <div className="w-full h-full bg-slate-950/60 backdrop-blur-md" />
           )}
           <div className="absolute inset-0 bg-black/35" />
           <div className="absolute inset-0 bg-gradient-to-tr from-primary/10 via-transparent to-accent/8" />
