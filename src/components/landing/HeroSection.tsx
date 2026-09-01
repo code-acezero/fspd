@@ -192,7 +192,8 @@ const HeroSection = () => {
           {/* Established 1975 Vintage Heritage Folded Ribbon Banner */}
           <div className="flex justify-center mb-6">
             <HeritageRibbon
-              text="প্রতিষ্ঠিত  ১৯৭৫"
+              textBn="প্রতিষ্ঠিত  ১৯৭৫"
+              textEn="ESTD  1975"
               className="w-[300px] sm:w-[350px] md:w-[390px] h-[66px] sm:h-[76px] md:h-[84px]"
             />
           </div>

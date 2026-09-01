@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { motion } from "framer-motion";
 import {
   UploadCloud, Image as ImageIcon, X, Check, Loader2,
@@ -66,6 +67,11 @@ export const ImageSelectModal = ({
   useEffect(() => {
     if (open) {
       fetchStorageAssets(activeFolder);
+      const originalOverflow = document.body.style.overflow;
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.body.style.overflow = originalOverflow;
+      };
     }
   }, [open, activeFolder]);
 
@@ -181,13 +187,19 @@ export const ImageSelectModal = ({
 
   if (!open) return null;
 
-  return (
-    <div className="fixed inset-0 z-[9999] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+  return createPortal(
+    <div
+      className="fixed inset-0 z-[999999] bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
       <motion.div
         initial={{ scale: 0.95, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.95, opacity: 0 }}
-        className="bg-card border border-border rounded-3xl w-full max-w-2xl shadow-2xl flex flex-col depth-card max-h-[90vh]"
+        onClick={(e) => e.stopPropagation()}
+        className="bg-card border border-border rounded-3xl w-full max-w-2xl shadow-2xl flex flex-col depth-card max-h-[90vh] my-auto relative z-10"
       >
         {/* Header */}
         <div className="flex items-center justify-between border-b border-border px-6 py-4 shrink-0">
@@ -552,7 +564,8 @@ export const ImageSelectModal = ({
           )}
         </div>
       </motion.div>
-    </div>
+    </div>,
+    document.body
   );
 };
 

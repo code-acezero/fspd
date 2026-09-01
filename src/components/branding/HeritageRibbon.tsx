@@ -1,24 +1,42 @@
 import { type ReactNode, useId } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface HeritageRibbonProps {
   children?: ReactNode;
   text?: string;
+  textBn?: string;
+  textEn?: string;
   className?: string;
 }
 
-export const HeritageRibbon = ({ children, text, className = "" }: HeritageRibbonProps) => {
+export const HeritageRibbon = ({ children, text, textBn, textEn, className = "" }: HeritageRibbonProps) => {
+  const { lang } = useLanguage();
   const uniqueId = useId().replace(/:/g, "_");
   const textPathId = `ribbon-arc-${uniqueId}`;
   const frontGradId = `front-grad-${uniqueId}`;
   const wingGradId = `wing-grad-${uniqueId}`;
   const shadowGradId = `shadow-grad-${uniqueId}`;
 
-  const displayText =
-    typeof text === "string"
-      ? text
-      : typeof children === "string"
-      ? children
-      : "প্রতিষ্ঠিত  ১৯৭৫";
+  let displayText = "";
+  if (textBn || textEn) {
+    displayText = lang === "en" ? (textEn || "ESTD  1975") : (textBn || "প্রতিষ্ঠিত  ১৯৭৫");
+  } else if (typeof text === "string") {
+    if (lang === "en" && (text.includes("প্রতিষ্ঠিত") || text.includes("১৯৭৫"))) {
+      displayText = "ESTD  1975";
+    } else {
+      displayText = text;
+    }
+  } else if (typeof children === "string") {
+    if (lang === "en" && (children.includes("প্রতিষ্ঠিত") || children.includes("১৯৭৫"))) {
+      displayText = "ESTD  1975";
+    } else {
+      displayText = children;
+    }
+  } else {
+    displayText = lang === "en" ? "ESTD  1975" : "প্রতিষ্ঠিত  ১৯৭৫";
+  }
+
+  const isEnglish = lang === "en";
 
   return (
     <div className={`relative inline-flex items-center justify-center select-none ${className}`}>
@@ -123,8 +141,8 @@ export const HeritageRibbon = ({ children, text, className = "" }: HeritageRibbo
 
         {/* 5. Center High-Contrast Typography with Generous Vertical Breathing Room */}
         <text
-          className="font-bengali font-extrabold fill-white text-[19px] sm:text-[21px]"
-          letterSpacing="0.32em"
+          className={`${isEnglish ? "font-serif font-bold text-[17px] sm:text-[19px]" : "font-bengali font-extrabold text-[19px] sm:text-[21px]"} fill-white`}
+          letterSpacing={isEnglish ? "0.22em" : "0.32em"}
           style={{ textShadow: "0 2px 6px rgba(0,0,0,0.5)" }}
         >
           <textPath href={`#${textPathId}`} startOffset="50%" textAnchor="middle">
