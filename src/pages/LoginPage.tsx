@@ -9,7 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import PasswordStrength from "@/components/PasswordStrength";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
-import demoLogo from "@/assets/demo-logo.png";
+import demoLogo from "@/assets/site-logo.png";
 
 type AuthView = "login" | "signup" | "otp";
 

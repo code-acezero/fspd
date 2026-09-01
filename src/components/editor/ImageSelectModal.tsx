@@ -91,9 +91,13 @@ const FOLDER_MAP: Record<string, string> = {
   slider: "slider",
   site: "site",
   member: "members",
+  members: "members",
   event: "events",
+  events: "events",
   post: "posts",
-  editor: "editor",
+  posts: "posts",
+  editor: "hero",
+  courses: "courses",
   course: "courses",
 };
 
@@ -103,7 +107,7 @@ export const ImageSelectModal: React.FC<ImageSelectModalProps> = ({
   onSelect,
   currentUrl = "",
   title = "Select or Upload Image",
-  folder = "editor",
+  folder = "hero",
 }) => {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -116,7 +120,7 @@ export const ImageSelectModal: React.FC<ImageSelectModalProps> = ({
   const [assets, setAssets] = useState<StorageAsset[]>([]);
   const [loadingAssets, setLoadingAssets] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const initialFolder = FOLDER_MAP[folder] || folder || "hero";
+  const initialFolder = (folder && FOLDER_MAP[folder]) ? FOLDER_MAP[folder] : "hero";
   const [activeFolder, setActiveFolder] = useState(initialFolder);
   const [folderDropdownOpen, setFolderDropdownOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -141,7 +145,7 @@ export const ImageSelectModal: React.FC<ImageSelectModalProps> = ({
   // Lock body scroll & fetch on open
   useEffect(() => {
     if (open) {
-      const targetFolder = FOLDER_MAP[folder] || folder || "hero";
+      const targetFolder = (folder && FOLDER_MAP[folder]) ? FOLDER_MAP[folder] : "hero";
       setActiveFolder(targetFolder);
       setCustomUrl(currentUrl);
       fetchStorageAssets(targetFolder);

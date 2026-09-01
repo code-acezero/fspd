@@ -656,6 +656,19 @@ const ElementInspector = ({ onBackToDirectory }: { onBackToDirectory: () => void
       <ImageSelectModal
         open={imgModalOpen}
         onClose={() => setImgModalOpen(false)}
+        folder={
+          sectionKey === "hero" || elementKey === "bg_image"
+            ? "hero"
+            : sectionKey === "members"
+            ? "member"
+            : sectionKey === "events"
+            ? "event"
+            : sectionKey === "courses"
+            ? "course"
+            : sectionKey === "blog" || sectionKey === "posts"
+            ? "post"
+            : "hero"
+        }
         currentUrl={content.mediaUrl}
         onSelect={(url) => {
           updateContent(pageKey, sectionKey, elementKey, { media_url: url });
@@ -699,6 +712,7 @@ const MediaManager = () => {
       <ImageSelectModal
         open={modalOpen}
         onClose={() => setModalOpen(false)}
+        folder="hero"
         onSelect={(url) => {
           navigator.clipboard.writeText(url);
           setModalOpen(false);
