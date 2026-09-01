@@ -78,7 +78,7 @@ export const EditorToolbar = () => {
             exit={{ y: 100, opacity: 0 }}
             className={`fixed bottom-20 md:bottom-6 left-3 right-3 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 z-[200] sm:w-auto bg-slate-950/95 text-white backdrop-blur-xl border border-white/15 rounded-full px-2 sm:px-4 py-1.5 sm:py-2.5 flex items-center justify-between sm:justify-start gap-1 sm:gap-2 shadow-2xl ring-1 ring-black/40 ${
               isDrawerOpen ? "hidden md:flex" : "flex"
-            }`}
+            } ${previewDevice !== "desktop" ? "!hidden" : ""}`}
           >
             {/* Left cluster: Editor badge & Pages button */}
             <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">

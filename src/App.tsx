@@ -30,23 +30,9 @@ import AdminDashboard from "./pages/AdminDashboard";
 import ProfilePage from "./pages/ProfilePage";
 import SearchPage from "./pages/SearchPage";
 import NotFound from "./pages/NotFound";
+import DeviceSimulator from "./components/editor/DeviceSimulator";
 
 const queryClient = new QueryClient();
-
-const EditorLayoutWrapper = ({ children }: { children: React.ReactNode }) => {
-  const { editMode, previewDevice } = useVisualEditor();
-  if (!editMode || previewDevice === "desktop") {
-    return <>{children}</>;
-  }
-  const maxWidthClass = previewDevice === "tablet" ? "max-w-[768px]" : "max-w-[400px]";
-  return (
-    <div className="min-h-screen bg-slate-950/80 py-8 px-4 transition-all duration-300">
-      <div className={`mx-auto bg-background shadow-2xl border border-white/20 rounded-3xl overflow-hidden transition-all duration-300 ${maxWidthClass}`}>
-        {children}
-      </div>
-    </div>
-  );
-};
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -60,7 +46,7 @@ const App = () => (
                 <Sonner />
                 <BrowserRouter>
                   <FestivalBanner />
-                  <EditorLayoutWrapper>
+                  <DeviceSimulator>
                     <Routes>
                       <Route path="/" element={<LandingPage />} />
                       <Route path="/home" element={<HomePage />} />
@@ -81,7 +67,7 @@ const App = () => (
                       <Route path="/search" element={<SearchPage />} />
                       <Route path="*" element={<NotFound />} />
                     </Routes>
-                  </EditorLayoutWrapper>
+                  </DeviceSimulator>
                   <EditorToolbar />
                   <MobileTabBar />
                 </BrowserRouter>
