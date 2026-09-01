@@ -19,6 +19,9 @@ const HeroSection = () => {
   const { settings } = useSiteSettings();
   const { getContent, editMode } = useVisualEditor();
   const [heroImage, setHeroImage] = useState<string>("");
+  const [isCarousel, setIsCarousel] = useState<boolean>(false);
+  const [carouselImages, setCarouselImages] = useState<string[]>([]);
+  const [currentSlide, setCurrentSlide] = useState<number>(0);
 
   useEffect(() => {
     (async () => {
@@ -26,7 +29,7 @@ const HeroSection = () => {
       try {
         const { data: pageData } = await supabase
           .from("page_content" as any)
-          .select("media_url")
+          .select("media_url, metadata")
           .eq("page_key", "landing")
           .eq("section_key", "hero")
           .eq("element_key", "bg_image")
@@ -34,6 +37,14 @@ const HeroSection = () => {
 
         if ((pageData as any)?.media_url) {
           setHeroImage((pageData as any).media_url);
+          if (
+            (pageData as any)?.metadata?.is_carousel &&
+            Array.isArray((pageData as any)?.metadata?.carousel_images) &&
+            (pageData as any).metadata.carousel_images.length > 0
+          ) {
+            setIsCarousel(true);
+            setCarouselImages((pageData as any).metadata.carousel_images);
+          }
           return;
         }
       } catch (_) {}
@@ -49,6 +60,14 @@ const HeroSection = () => {
         const item = (settingsData?.value as any)?.["landing:hero:bg_image"];
         if (item?.media_url) {
           setHeroImage(item.media_url);
+          if (
+            item?.metadata?.is_carousel &&
+            Array.isArray(item?.metadata?.carousel_images) &&
+            item.metadata.carousel_images.length > 0
+          ) {
+            setIsCarousel(true);
+            setCarouselImages(item.metadata.carousel_images);
+          }
           return;
         }
       } catch (_) {}
@@ -73,12 +92,37 @@ const HeroSection = () => {
     const handleHeroUpdated = (e: any) => {
       if (e?.detail) setHeroImage(e.detail);
     };
+    const handleCarouselUpdated = (e: any) => {
+      if (e?.detail) {
+        const { isCarousel: activeCarousel, carouselImages: images, primaryUrl } = e.detail;
+        const validCarousel =
+          !!activeCarousel && !isVideoMedia(primaryUrl) && Array.isArray(images) && images.length > 0;
+        setIsCarousel(validCarousel);
+        if (Array.isArray(images)) setCarouselImages(images);
+        if (primaryUrl) setHeroImage(primaryUrl);
+        setCurrentSlide(0);
+      }
+    };
+
     window.addEventListener("fspd:hero_image_updated", handleHeroUpdated);
-    return () => window.removeEventListener("fspd:hero_image_updated", handleHeroUpdated);
+    window.addEventListener("fspd:hero_carousel_updated", handleCarouselUpdated);
+    return () => {
+      window.removeEventListener("fspd:hero_image_updated", handleHeroUpdated);
+      window.removeEventListener("fspd:hero_carousel_updated", handleCarouselUpdated);
+    };
   }, []);
 
   const heroImageResolution = getContent("landing", "hero", "bg_image", { media: heroImage });
   const activeHeroImage = heroImageResolution.mediaUrl || heroImage;
+
+  // Carousel Slide Rotation Interval (6 seconds)
+  useEffect(() => {
+    if (!isCarousel || carouselImages.length <= 1 || isVideoMedia(activeHeroImage)) return;
+    const timer = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % carouselImages.length);
+    }, 6000);
+    return () => clearInterval(timer);
+  }, [isCarousel, carouselImages, activeHeroImage]);
 
   const { scrollY } = useScroll();
   const bgY = useTransform(scrollY, [0, 700], [0, 140], { clamp: true });
@@ -87,10 +131,15 @@ const HeroSection = () => {
   const heroBlendDarken = useTransform(scrollY, [0, 550], [0, 1], { clamp: true });
   const chevronOpacity = useTransform(scrollY, [0, 150], [1, 0], { clamp: true });
 
+  const activeCarouselUrl =
+    isCarousel && carouselImages.length > 0
+      ? carouselImages[currentSlide % carouselImages.length]
+      : activeHeroImage;
+
   return (
     <EditableSection pageKey="landing" sectionKey="hero" sectionTitle="হিরো ব্যানার (Hero Banner)">
       <div className="relative min-h-screen flex items-center justify-center overflow-hidden palette-depth">
-        {/* Parallax Background Image / Video */}
+        {/* Parallax Background Image / Video / Carousel */}
         <motion.div className="absolute inset-0" style={{ y: bgY, transformOrigin: "center top" }}>
           {editMode ? (
             <EditableImage
@@ -112,6 +161,23 @@ const HeroSection = () => {
               playsInline
               className="w-full h-[125%] object-cover object-center"
             />
+          ) : isCarousel && carouselImages.length > 0 ? (
+            <div className="w-full h-full relative overflow-hidden">
+              <AnimatePresence mode="popLayout">
+                <motion.img
+                  key={activeCarouselUrl}
+                  initial={{ opacity: 0, scale: 1.03 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 1.6, ease: "easeInOut" }}
+                  src={activeCarouselUrl}
+                  alt="Bengali cultural heritage landscape"
+                  className="w-full h-[125%] object-cover object-center absolute inset-0"
+                  width={1920}
+                  height={960}
+                />
+              </AnimatePresence>
+            </div>
           ) : activeHeroImage ? (
             <motion.img
               initial={{ opacity: 0 }}
@@ -128,6 +194,25 @@ const HeroSection = () => {
           )}
           <div className="absolute inset-0 bg-black/35" />
           <div className="absolute inset-0 bg-gradient-to-tr from-primary/10 via-transparent to-accent/8" />
+
+          {/* Subtle Carousel Indicator Dots at Bottom Right if Carousel is Active */}
+          {!editMode && isCarousel && carouselImages.length > 1 && !isVideoMedia(activeHeroImage) && (
+            <div className="absolute bottom-6 right-6 sm:right-10 z-20 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/60 backdrop-blur-md border border-white/15 shadow-xl">
+              {carouselImages.map((_, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => setCurrentSlide(idx)}
+                  className={`h-1.5 rounded-full transition-all ${
+                    idx === currentSlide % carouselImages.length
+                      ? "w-6 bg-primary shadow-xs"
+                      : "w-1.5 bg-white/40 hover:bg-white/70"
+                  }`}
+                  title={`Slide ${idx + 1}`}
+                />
+              ))}
+            </div>
+          )}
         </motion.div>
 
         {/* Dynamic Scroll Darken Blend Veil (Clean at scroll 0, darkens smoothly on scroll) */}

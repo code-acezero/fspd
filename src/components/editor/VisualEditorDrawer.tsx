@@ -695,12 +695,28 @@ const ElementInspector = ({ onBackToDirectory }: { onBackToDirectory: () => void
             ? "post"
             : "hero"
         }
-        currentUrl={content.mediaUrl}
-        onSelect={async (url) => {
-          updateContent(pageKey, sectionKey, elementKey, { media_url: url });
+        isCarouselInitial={!!(content as any)?.metadata?.is_carousel}
+        carouselImagesInitial={(content as any)?.metadata?.carousel_images || []}
+        onSelect={async (url, options) => {
+          const isVideoSelected = isVideoMedia(url);
+          const isCarousel = isVideoSelected ? false : (options?.isCarousel ?? false);
+          const carouselImages = isVideoSelected ? [] : (options?.carouselImages ?? (isCarousel ? [url] : []));
+
+          updateContent(pageKey, sectionKey, elementKey, {
+            media_url: url,
+            metadata: {
+              is_carousel: isCarousel,
+              carousel_images: carouselImages,
+            },
+          });
           setImgModalOpen(false);
 
           if (sectionKey === "hero" || elementKey === "bg_image") {
+            window.dispatchEvent(
+              new CustomEvent("fspd:hero_carousel_updated", {
+                detail: { isCarousel, carouselImages, primaryUrl: url },
+              })
+            );
             window.dispatchEvent(new CustomEvent("fspd:hero_image_updated", { detail: url }));
           }
 
@@ -722,6 +738,11 @@ const ElementInspector = ({ onBackToDirectory }: { onBackToDirectory: () => void
               element_key: elementKey,
               media_url: url,
               is_visible: true,
+              metadata: {
+                is_carousel: isCarousel,
+                carousel_images: carouselImages,
+                carousel_interval: 6000,
+              },
               updated_at: new Date().toISOString(),
             };
 
@@ -748,7 +769,7 @@ const ElementInspector = ({ onBackToDirectory }: { onBackToDirectory: () => void
                 slot: "hero",
                 image_url: url,
                 is_active: true,
-                name: "Hero Banner",
+                name: isCarousel ? `Hero Carousel (${carouselImages.length} images)` : "Hero Banner",
                 sort_order: 0,
               });
             } catch (assetErr) {
@@ -757,7 +778,14 @@ const ElementInspector = ({ onBackToDirectory }: { onBackToDirectory: () => void
           }
 
           toast({
-            title: currentLang === "en" ? "Image replaced successfully" : "ছবি সফলভাবে প্রতিস্থাপিত হয়েছে",
+            title:
+              currentLang === "en"
+                ? isCarousel
+                  ? "Carousel slideshow updated"
+                  : "Image replaced successfully"
+                : isCarousel
+                ? "ক্যারোসেল স্লাইডশো সফলভাবে আপডেট করা হয়েছে"
+                : "ছবি সফলভাবে প্রতিস্থাপিত হয়েছে",
           });
         }}
       />

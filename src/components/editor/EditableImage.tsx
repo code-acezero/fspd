@@ -79,12 +79,32 @@ export const EditableImage = ({
     return <img src={activeSrc} alt={alt} className={className} {...imgProps} />;
   }
 
-  const handleSelect = async (url: string) => {
+  const isVideo = isVideoMedia(activeSrc);
+
+  const handleSelect = async (
+    url: string,
+    options?: { isCarousel?: boolean; carouselImages?: string[] }
+  ) => {
+    const isVideoSelected = isVideoMedia(url);
+    const isCarousel = isVideoSelected ? false : (options?.isCarousel ?? false);
+    const carouselImages = isVideoSelected ? [] : (options?.carouselImages ?? (isCarousel ? [url] : []));
+
     // 1. Update in-memory visual editor draft state
-    updateContent(pageKey, sectionKey, elementKey, { media_url: url });
+    updateContent(pageKey, sectionKey, elementKey, {
+      media_url: url,
+      metadata: {
+        is_carousel: isCarousel,
+        carousel_images: carouselImages,
+      },
+    });
 
     // 2. Broadcast immediately so hero section updates live in real-time
     if (folder === "hero" || sectionKey === "hero" || elementKey === "bg_image") {
+      window.dispatchEvent(
+        new CustomEvent("fspd:hero_carousel_updated", {
+          detail: { isCarousel, carouselImages, primaryUrl: url },
+        })
+      );
       window.dispatchEvent(new CustomEvent("fspd:hero_image_updated", { detail: url }));
     }
 
@@ -107,6 +127,11 @@ export const EditableImage = ({
         element_key: elementKey,
         media_url: url,
         is_visible: true,
+        metadata: {
+          is_carousel: isCarousel,
+          carousel_images: carouselImages,
+          carousel_interval: 6000,
+        },
         updated_at: new Date().toISOString(),
       };
 
@@ -140,7 +165,7 @@ export const EditableImage = ({
           slot: "hero",
           image_url: url,
           is_active: true,
-          name: "Hero Banner",
+          name: isCarousel ? `Hero Carousel (${carouselImages.length} images)` : "Hero Banner",
           sort_order: 0,
         });
       } catch (assetErr) {
@@ -157,14 +182,16 @@ export const EditableImage = ({
           element_key: elementKey,
           media_url: url,
           is_visible: true,
+          metadata: {
+            is_carousel: isCarousel,
+            carousel_images: carouselImages,
+          },
           updated_at: new Date().toISOString(),
         },
         { onConflict: "page_key,section_key,element_key" }
       );
     } catch (_) {}
   };
-
-  const isVideo = isVideoMedia(activeSrc);
 
   return (
     <div
@@ -235,6 +262,8 @@ export const EditableImage = ({
             : `ছবি বা ভিডিও পরিবর্তন — ${sectionKey} / ${elementKey}`
         }
         folder={folder}
+        isCarouselInitial={!!(content as any)?.metadata?.is_carousel}
+        carouselImagesInitial={(content as any)?.metadata?.carousel_images || []}
       />
     </div>
   );

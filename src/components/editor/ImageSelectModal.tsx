@@ -80,10 +80,15 @@ export const HERO_BANNER_PRESETS = [
 interface ImageSelectModalProps {
   open: boolean;
   onClose: () => void;
-  onSelect: (imageUrl: string) => void;
+  onSelect: (
+    imageUrl: string,
+    options?: { isCarousel?: boolean; carouselImages?: string[] }
+  ) => void;
   currentUrl?: string;
   title?: string;
   folder?: "hero" | "slider" | "site" | "member" | "event" | "post" | "editor" | "course";
+  isCarouselInitial?: boolean;
+  carouselImagesInitial?: string[];
 }
 
 const FOLDER_MAP: Record<string, string> = {
@@ -108,6 +113,8 @@ export const ImageSelectModal: React.FC<ImageSelectModalProps> = ({
   currentUrl = "",
   title = "Select or Upload Image",
   folder = "hero",
+  isCarouselInitial = false,
+  carouselImagesInitial = [],
 }) => {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -125,6 +132,12 @@ export const ImageSelectModal: React.FC<ImageSelectModalProps> = ({
   const [folderDropdownOpen, setFolderDropdownOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const folderDropdownRef = useRef<HTMLDivElement>(null);
+
+  // ── Hero Image Carousel Multi-Select State ──
+  const [isCarouselMode, setIsCarouselMode] = useState<boolean>(isCarouselInitial);
+  const [selectedCarouselUrls, setSelectedCarouselUrls] = useState<string[]>(
+    carouselImagesInitial.length > 0 ? carouselImagesInitial : (currentUrl && !isVideoMedia(currentUrl) ? [currentUrl] : [])
+  );
 
   // Close dropdown on click outside
   useEffect(() => {
@@ -148,6 +161,12 @@ export const ImageSelectModal: React.FC<ImageSelectModalProps> = ({
       const targetFolder = (folder && FOLDER_MAP[folder]) ? FOLDER_MAP[folder] : "hero";
       setActiveFolder(targetFolder);
       setCustomUrl(currentUrl);
+      setIsCarouselMode(isCarouselInitial);
+      setSelectedCarouselUrls(
+        carouselImagesInitial.length > 0
+          ? carouselImagesInitial
+          : (currentUrl && !isVideoMedia(currentUrl) ? [currentUrl] : [])
+      );
       fetchStorageAssets(targetFolder);
       const originalOverflow = document.body.style.overflow;
       document.body.style.overflow = "hidden";
@@ -155,7 +174,86 @@ export const ImageSelectModal: React.FC<ImageSelectModalProps> = ({
         document.body.style.overflow = originalOverflow;
       };
     }
-  }, [open, folder, currentUrl]);
+  }, [open]);
+
+  // Collect all eligible non-video image URLs for carousel
+  const getAllEligibleImages = (): string[] => {
+    const urls: string[] = [];
+    if (folder === "hero") {
+      HERO_BANNER_PRESETS.forEach((p) => {
+        if (!urls.includes(p.url)) urls.push(p.url);
+      });
+    }
+    assets.forEach((a) => {
+      if (!isVideoMedia(a.url) && !urls.includes(a.url)) {
+        urls.push(a.url);
+      }
+    });
+    return urls;
+  };
+
+  const toggleCarouselImage = (url: string) => {
+    if (isVideoMedia(url)) {
+      toast({
+        title: lang === "bn" ? "ভিডিও ক্যারোসেলে রাখা যাবে না" : "Videos cannot be in carousel",
+        description:
+          lang === "bn"
+            ? "ভিডিও নির্বাচন করলে ক্যারোসেল বন্ধ হয়ে সাধারণ ভিডিও ব্যাকগ্রাউন্ড চালু হবে।"
+            : "Selecting a video turns off carousel mode and plays the single video.",
+      });
+      setIsCarouselMode(false);
+      setSelectedCarouselUrls([]);
+      onSelect(url, { isCarousel: false, carouselImages: [] });
+      onClose();
+      return;
+    }
+
+    setSelectedCarouselUrls((prev) => {
+      if (prev.includes(url)) {
+        return prev.filter((u) => u !== url);
+      } else {
+        return [...prev, url];
+      }
+    });
+  };
+
+  const handleSelectAllCarousel = () => {
+    const all = getAllEligibleImages();
+    setSelectedCarouselUrls(all);
+    toast({
+      title: lang === "bn" ? "সকল ছবি নির্বাচিত" : "All Images Selected",
+      description: lang === "bn" ? `${all.length}টি ছবি ক্যারোসেলে যুক্ত হয়েছে` : `${all.length} images added to carousel.`,
+    });
+  };
+
+  const handleClearCarousel = () => {
+    setSelectedCarouselUrls([]);
+  };
+
+  const handleApplyCarousel = () => {
+    if (selectedCarouselUrls.length === 0) {
+      toast({
+        title: lang === "bn" ? "কমপক্ষে একটি ছবি নির্বাচন করুন" : "Select at least one image",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    onSelect(selectedCarouselUrls[0], {
+      isCarousel: true,
+      carouselImages: selectedCarouselUrls,
+    });
+
+    toast({
+      title: lang === "bn" ? "হিরো ক্যারোসেল সক্রিয় করা হয়েছে" : "Hero Image Carousel Activated",
+      description:
+        lang === "bn"
+          ? `${selectedCarouselUrls.length}টি ছবি স্লাইডশোতে ফেড ইন/আউট হবে`
+          : `${selectedCarouselUrls.length} images will smoothly fade in and out.`,
+    });
+
+    onClose();
+  };
 
   const fetchStorageAssets = async (folderPath: string) => {
     setLoadingAssets(true);
@@ -505,6 +603,98 @@ export const ImageSelectModal: React.FC<ImageSelectModalProps> = ({
                 )}
               </div>
 
+              {/* ── Carousel Toggle & Action Bar for Hero Banners ── */}
+              {folder === "hero" && (
+                <div className="p-4 rounded-2xl bg-gradient-to-br from-primary/10 via-secondary/40 to-accent/10 border border-border/80 space-y-3 shadow-sm">
+                  <div className="flex items-center justify-between gap-3 flex-wrap">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="w-8 h-8 rounded-xl bg-primary/20 text-primary flex items-center justify-center text-sm shrink-0">
+                        🎠
+                      </div>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <h4 className="font-bengali font-bold text-xs text-foreground">
+                            {lang === "bn" ? "হিরো ইমেজ ক্যারোসেল (Image Carousel)" : "Hero Image Carousel"}
+                          </h4>
+                          <span
+                            className={`px-2 py-0.2 rounded-full text-[9px] font-bold font-mono ${
+                              isCarouselMode
+                                ? "bg-primary text-primary-foreground"
+                                : "bg-muted text-muted-foreground"
+                            }`}
+                          >
+                            {isCarouselMode ? (lang === "bn" ? "সক্রিয়" : "ON") : (lang === "bn" ? "বন্ধ" : "OFF")}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-muted-foreground font-bengali mt-0.5">
+                          {lang === "bn"
+                            ? "চালু করলে একাধিক ছবি নির্বাচন করতে পারবেন যা ব্যাকগ্রাউন্ডে স্বয়ংক্রিয়ভাবে ফেড ইন/আউট হবে।"
+                            : "Enable to select multiple images that smoothly fade in and out in the hero banner."}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Switch Toggle */}
+                    <div className="flex items-center gap-2 shrink-0">
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={isCarouselMode}
+                          onChange={(e) => {
+                            const checked = e.target.checked;
+                            setIsCarouselMode(checked);
+                            if (checked && selectedCarouselUrls.length === 0) {
+                              const nonVideo = getAllEligibleImages();
+                              setSelectedCarouselUrls(
+                                nonVideo.length > 0 ? nonVideo : currentUrl ? [currentUrl] : []
+                              );
+                            }
+                          }}
+                          className="sr-only peer"
+                        />
+                        <div className="w-10 h-5 bg-muted peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary shadow-inner" />
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* Carousel Multi-Selection Toolbar when active */}
+                  {isCarouselMode && (
+                    <div className="pt-2 border-t border-border/60 flex items-center justify-between gap-2 flex-wrap">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <button
+                          type="button"
+                          onClick={handleSelectAllCarousel}
+                          className="px-3 py-1.5 rounded-xl bg-secondary hover:bg-secondary/80 border border-border text-xs font-bengali font-bold text-foreground transition-all shadow-2xs"
+                        >
+                          {lang === "bn" ? "✓ সব ছবি নির্বাচন করুন (Select All)" : "✓ Select All Images"}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleClearCarousel}
+                          className="px-3 py-1.5 rounded-xl bg-secondary/50 hover:bg-secondary border border-border text-xs font-bengali text-muted-foreground hover:text-foreground transition-all"
+                        >
+                          {lang === "bn" ? "সব বাতিল (Clear)" : "Clear Selection"}
+                        </button>
+                        <span className="text-xs font-mono font-bold text-primary px-2 py-1 rounded-lg bg-primary/10">
+                          {selectedCarouselUrls.length} {lang === "bn" ? "টি নির্বাচিত" : "selected"}
+                        </span>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={handleApplyCarousel}
+                        className="px-4 py-1.5 rounded-xl bg-primary text-primary-foreground text-xs font-bengali font-bold hover:bg-primary/90 shadow-md flex items-center gap-1.5 active:scale-95 transition-all ml-auto"
+                      >
+                        <Check className="w-3.5 h-3.5" />
+                        <span>
+                          {lang === "bn" ? "ক্যারোসেল স্লাইডশো প্রয়োগ করুন" : "Apply Carousel Slideshow"}
+                        </span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* ── Curated Hero Banner Presets ── */}
               {folder === "hero" && (
                 <div className="space-y-3 pt-1">
@@ -520,19 +710,32 @@ export const ImageSelectModal: React.FC<ImageSelectModalProps> = ({
                   <div className="grid grid-cols-2 gap-3">
                     {HERO_BANNER_PRESETS.map((preset) => {
                       const isPresetActive = currentUrl === preset.url;
+                      const isSelectedInCarousel =
+                        isCarouselMode && selectedCarouselUrls.includes(preset.url);
+                      const carouselIndex = isCarouselMode
+                        ? selectedCarouselUrls.indexOf(preset.url)
+                        : -1;
+
                       return (
                         <div
                           key={preset.id}
                           onClick={() => {
-                            onSelect(preset.url);
-                            toast({
-                              title: lang === "bn" ? "হিরো ব্যানার পরিবর্তন সম্পন্ন" : "Hero Banner Switched",
-                              description: lang === "bn" ? preset.titleBn : preset.titleEn,
-                            });
-                            onClose();
+                            if (isCarouselMode) {
+                              toggleCarouselImage(preset.url);
+                            } else {
+                              onSelect(preset.url);
+                              toast({
+                                title:
+                                  lang === "bn" ? "হিরো ব্যানার পরিবর্তন সম্পন্ন" : "Hero Banner Switched",
+                                description: lang === "bn" ? preset.titleBn : preset.titleEn,
+                              });
+                              onClose();
+                            }
                           }}
                           className={`group relative rounded-2xl overflow-hidden border cursor-pointer transition-all flex flex-col bg-card/60 ${
-                            isPresetActive
+                            isSelectedInCarousel
+                              ? "border-primary ring-2 ring-primary/60 shadow-lg bg-primary/5"
+                              : isPresetActive && !isCarouselMode
                               ? "border-primary ring-2 ring-primary/40 shadow-md"
                               : "border-border hover:border-primary/60 hover:shadow-md"
                           }`}
@@ -543,11 +746,27 @@ export const ImageSelectModal: React.FC<ImageSelectModalProps> = ({
                               alt={preset.titleEn}
                               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                             />
-                            {isPresetActive && (
+                            {isCarouselMode ? (
+                              <span
+                                className={`absolute top-1.5 left-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold font-mono shadow-md flex items-center gap-1 transition-all ${
+                                  isSelectedInCarousel
+                                    ? "bg-primary text-primary-foreground ring-2 ring-white scale-105"
+                                    : "bg-black/70 text-white/70 border border-white/30"
+                                }`}
+                              >
+                                {isSelectedInCarousel ? (
+                                  <>
+                                    <Check className="w-2.5 h-2.5" /> #{carouselIndex + 1}
+                                  </>
+                                ) : (
+                                  lang === "bn" ? "+ যোগ করুন" : "+ Add"
+                                )}
+                              </span>
+                            ) : isPresetActive ? (
                               <span className="absolute top-1.5 left-1.5 px-2 py-0.5 rounded-full bg-primary text-primary-foreground text-[9px] font-bold font-mono shadow-xs flex items-center gap-1">
                                 <Check className="w-2.5 h-2.5" /> ACTIVE
                               </span>
-                            )}
+                            ) : null}
                             <span className="absolute bottom-1.5 right-1.5 bg-black/75 text-white text-[9px] px-1.5 py-0.5 rounded font-bengali font-medium">
                               {preset.category}
                             </span>
@@ -560,13 +779,33 @@ export const ImageSelectModal: React.FC<ImageSelectModalProps> = ({
                             <button
                               type="button"
                               className={`w-full py-1 px-2 rounded-xl text-[10px] font-bengali font-bold flex items-center justify-center gap-1 transition-all ${
-                                isPresetActive
+                                isCarouselMode
+                                  ? isSelectedInCarousel
+                                    ? "bg-primary text-primary-foreground shadow-xs"
+                                    : "bg-secondary text-foreground hover:bg-primary/20 border border-border"
+                                  : isPresetActive
                                   ? "bg-primary/20 text-primary border border-primary/30"
                                   : "bg-primary text-primary-foreground hover:bg-primary/90"
                               }`}
                             >
                               <Check className="w-3 h-3" />
-                              <span>{isPresetActive ? (lang === "bn" ? "সক্রিয় ব্যানার" : "Active") : (lang === "bn" ? "এই ব্যানারটি ব্যবহার করুন" : "Apply Banner")}</span>
+                              <span>
+                                {isCarouselMode
+                                  ? isSelectedInCarousel
+                                    ? lang === "bn"
+                                      ? "✓ ক্যারোসেলে আছে"
+                                      : "✓ In Carousel"
+                                    : lang === "bn"
+                                    ? "+ ক্যারোসেলে যোগ করুন"
+                                    : "+ Add to Carousel"
+                                  : isPresetActive
+                                  ? lang === "bn"
+                                    ? "সক্রিয় ব্যানার"
+                                    : "Active"
+                                  : lang === "bn"
+                                  ? "এই ব্যানারটি ব্যবহার করুন"
+                                  : "Apply Banner"}
+                              </span>
                             </button>
                           </div>
                         </div>
@@ -601,18 +840,35 @@ export const ImageSelectModal: React.FC<ImageSelectModalProps> = ({
                 {loadingAssets ? (
                   <div className="flex items-center justify-center py-8 text-muted-foreground gap-2">
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    <span className="text-xs font-bengali">{lang === "bn" ? "ব্যানার লোড হচ্ছে..." : "Loading banners..."}</span>
+                    <span className="text-xs font-bengali">
+                      {lang === "bn" ? "ব্যানার লোড হচ্ছে..." : "Loading banners..."}
+                    </span>
                   </div>
                 ) : assets.length > 0 ? (
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                     {assets.map((asset) => {
-                      const isActive = currentUrl && (currentUrl === asset.url || currentUrl.includes(asset.name));
+                      const isActive =
+                        currentUrl &&
+                        (currentUrl === asset.url || currentUrl.includes(asset.name));
                       const isVideo = isVideoMedia(asset.url);
+                      const isSelectedInCarousel =
+                        isCarouselMode && selectedCarouselUrls.includes(asset.url);
+                      const carouselIndex = isCarouselMode
+                        ? selectedCarouselUrls.indexOf(asset.url)
+                        : -1;
+
                       return (
                         <div
                           key={asset.id || asset.name}
+                          onClick={() => {
+                            if (isCarouselMode && !isVideo) {
+                              toggleCarouselImage(asset.url);
+                            }
+                          }}
                           className={`group relative rounded-2xl overflow-hidden border transition-all flex flex-col bg-card/60 ${
-                            isActive
+                            isSelectedInCarousel
+                              ? "border-primary ring-2 ring-primary/60 shadow-lg bg-primary/5 cursor-pointer"
+                              : isActive && !isCarouselMode
                               ? "border-primary ring-2 ring-primary/40 shadow-md"
                               : "border-border hover:border-primary/50"
                           }`}
@@ -632,11 +888,27 @@ export const ImageSelectModal: React.FC<ImageSelectModalProps> = ({
                                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                               />
                             )}
-                            {isActive && (
+                            {isCarouselMode && !isVideo ? (
+                              <span
+                                className={`absolute top-1.5 left-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold font-mono shadow-md flex items-center gap-1 transition-all ${
+                                  isSelectedInCarousel
+                                    ? "bg-primary text-primary-foreground ring-2 ring-white scale-105"
+                                    : "bg-black/70 text-white/70 border border-white/30"
+                                }`}
+                              >
+                                {isSelectedInCarousel ? (
+                                  <>
+                                    <Check className="w-2.5 h-2.5" /> #{carouselIndex + 1}
+                                  </>
+                                ) : (
+                                  lang === "bn" ? "+ যোগ করুন" : "+ Add"
+                                )}
+                              </span>
+                            ) : isActive ? (
                               <span className="absolute top-1.5 left-1.5 px-2 py-0.5 rounded-full bg-primary text-primary-foreground text-[9px] font-bold font-mono shadow-xs flex items-center gap-1">
                                 <Check className="w-2.5 h-2.5" /> ACTIVE
                               </span>
-                            )}
+                            ) : null}
                             {asset.size && (
                               <span className="absolute bottom-1 right-1 bg-black/70 text-white text-[9px] px-1.5 py-0.5 rounded font-mono">
                                 {formatSize(asset.size)}
@@ -645,29 +917,61 @@ export const ImageSelectModal: React.FC<ImageSelectModalProps> = ({
                           </div>
 
                           <div className="p-2 space-y-1.5 flex-1 flex flex-col justify-between bg-card">
-                            <p className="text-[10px] font-mono text-muted-foreground truncate" title={asset.name}>
+                            <p
+                              className="text-[10px] font-mono text-muted-foreground truncate"
+                              title={asset.name}
+                            >
                               {asset.name}
                             </p>
 
                             <div className="flex items-center gap-1.5">
                               <button
                                 type="button"
-                                onClick={() => {
-                                  onSelect(asset.url);
-                                  toast({
-                                    title: lang === "bn" ? "ব্যানার পরিবর্তন সম্পন্ন" : "Banner Switched",
-                                    description: lang === "bn" ? "নির্বাচিত ব্যানার সক্রিয় করা হয়েছে" : "Selected banner is now active.",
-                                  });
-                                  onClose();
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  if (isCarouselMode) {
+                                    toggleCarouselImage(asset.url);
+                                  } else {
+                                    onSelect(asset.url);
+                                    toast({
+                                      title:
+                                        lang === "bn" ? "ব্যানার পরিবর্তন সম্পন্ন" : "Banner Switched",
+                                      description:
+                                        lang === "bn"
+                                          ? "নির্বাচিত ব্যানার সক্রিয় করা হয়েছে"
+                                          : "Selected banner is now active.",
+                                    });
+                                    onClose();
+                                  }
                                 }}
                                 className={`flex-1 py-1.5 px-2 rounded-xl text-[11px] font-bengali font-bold flex items-center justify-center gap-1 transition-all active:scale-95 ${
-                                  isActive
+                                  isCarouselMode
+                                    ? isSelectedInCarousel
+                                      ? "bg-primary text-primary-foreground shadow-xs"
+                                      : "bg-secondary text-foreground hover:bg-primary/20 border border-border"
+                                    : isActive
                                     ? "bg-primary/20 text-primary border border-primary/30"
                                     : "bg-primary text-primary-foreground hover:bg-primary/90 shadow-xs"
                                 }`}
                               >
                                 <Check className="w-3 h-3" />
-                                <span>{isActive ? (lang === "bn" ? "বর্তমান" : "Current") : (lang === "bn" ? "সুইচ করুন" : "Switch")}</span>
+                                <span>
+                                  {isCarouselMode
+                                    ? isSelectedInCarousel
+                                      ? lang === "bn"
+                                        ? "✓ ক্যারোসেলে আছে"
+                                        : "✓ In Carousel"
+                                      : lang === "bn"
+                                      ? "+ যোগ করুন"
+                                      : "+ Add"
+                                    : isActive
+                                    ? lang === "bn"
+                                      ? "বর্তমান"
+                                      : "Current"
+                                    : lang === "bn"
+                                    ? "সুইচ করুন"
+                                    : "Switch"}
+                                </span>
                               </button>
 
                               <button
@@ -821,11 +1125,27 @@ export const ImageSelectModal: React.FC<ImageSelectModalProps> = ({
                               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                             />
                           )}
-                          {isActive && (
+                          {isCarouselMode && !isVideo ? (
+                            <span
+                              className={`absolute top-1.5 left-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold font-mono shadow-md flex items-center gap-1 transition-all ${
+                                isCarouselMode && selectedCarouselUrls.includes(asset.url)
+                                  ? "bg-primary text-primary-foreground ring-2 ring-white scale-105"
+                                  : "bg-black/70 text-white/70 border border-white/30"
+                              }`}
+                            >
+                              {selectedCarouselUrls.includes(asset.url) ? (
+                                <>
+                                  <Check className="w-2.5 h-2.5" /> #{selectedCarouselUrls.indexOf(asset.url) + 1}
+                                </>
+                              ) : (
+                                lang === "bn" ? "+ যোগ করুন" : "+ Add"
+                              )}
+                            </span>
+                          ) : isActive ? (
                             <span className="absolute top-1.5 left-1.5 px-2 py-0.5 rounded-full bg-primary text-primary-foreground text-[9px] font-bold font-mono shadow-xs flex items-center gap-1">
                               <Check className="w-2.5 h-2.5" /> ACTIVE
                             </span>
-                          )}
+                          ) : null}
                           {asset.folder && (
                             <span className="absolute top-1.5 right-1.5 bg-black/70 text-white text-[9px] px-1.5 py-0.5 rounded font-mono">
                               {asset.folder}
@@ -847,22 +1167,39 @@ export const ImageSelectModal: React.FC<ImageSelectModalProps> = ({
                           <div className="flex items-center gap-1.5">
                             <button
                               type="button"
-                              onClick={() => {
-                                onSelect(asset.url);
-                                toast({
-                                  title: lang === "bn" ? "ছবি নির্বাচন সম্পন্ন" : "Image Selected",
-                                  description: lang === "bn" ? "ছবিটি সক্রিয় করা হয়েছে" : "Selected image is now active.",
-                                });
-                                onClose();
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (isCarouselMode) {
+                                  toggleCarouselImage(asset.url);
+                                } else {
+                                  onSelect(asset.url);
+                                  toast({
+                                    title: lang === "bn" ? "ছবি নির্বাচন সম্পন্ন" : "Image Selected",
+                                    description: lang === "bn" ? "ছবিটি সক্রিয় করা হয়েছে" : "Selected image is now active.",
+                                  });
+                                  onClose();
+                                }
                               }}
                               className={`flex-1 py-1.5 px-2 rounded-xl text-[11px] font-bengali font-bold flex items-center justify-center gap-1 transition-all active:scale-95 ${
-                                isActive
+                                isCarouselMode
+                                  ? selectedCarouselUrls.includes(asset.url)
+                                    ? "bg-primary text-primary-foreground shadow-xs"
+                                    : "bg-secondary text-foreground hover:bg-primary/20 border border-border"
+                                  : isActive
                                   ? "bg-primary/20 text-primary border border-primary/30"
                                   : "bg-primary text-primary-foreground hover:bg-primary/90 shadow-xs"
                               }`}
                             >
                               <Check className="w-3 h-3" />
-                              <span>{isActive ? (lang === "bn" ? "বর্তমান" : "Current") : (lang === "bn" ? "নির্বাচন" : "Select")}</span>
+                              <span>
+                                {isCarouselMode
+                                  ? selectedCarouselUrls.includes(asset.url)
+                                    ? (lang === "bn" ? "✓ ক্যারোসেলে আছে" : "✓ In Carousel")
+                                    : (lang === "bn" ? "+ যোগ করুন" : "+ Add")
+                                  : isActive
+                                  ? (lang === "bn" ? "বর্তমান" : "Current")
+                                  : (lang === "bn" ? "নির্বাচন" : "Select")}
+                              </span>
                             </button>
 
                             <button
