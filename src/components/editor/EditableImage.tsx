@@ -1,6 +1,7 @@
 import { useState, useEffect, ImgHTMLAttributes } from "react";
 import { ImagePlus, SlidersHorizontal } from "lucide-react";
 import { useVisualEditor } from "@/contexts/VisualEditorContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { isVideoMedia } from "@/lib/storage";
 import ImageSelectModal from "@/components/editor/ImageSelectModal";
@@ -19,7 +20,7 @@ export const EditableImage = ({
   sectionKey,
   elementKey,
   defaultSrc,
-  folder = "editor",
+  folder = "hero",
   containerClassName = "",
   className = "",
   alt = "",
@@ -34,7 +35,11 @@ export const EditableImage = ({
     setIsDrawerOpen,
     registerImageElement,
     unregisterImageElement,
+    activeLanguage,
   } = useVisualEditor();
+
+  const { lang } = useLanguage();
+  const currentLang = editMode ? activeLanguage : lang;
 
   const key = `${pageKey}:${sectionKey}:${elementKey}`;
   const isSelected = selectedElement === key;
@@ -78,21 +83,54 @@ export const EditableImage = ({
     // 1. Update in-memory visual editor draft state
     updateContent(pageKey, sectionKey, elementKey, { media_url: url });
 
-    // 2. Direct database persistence so changes survive reload instantly
-    try {
-      await supabase.from("page_content" as any).upsert(
-        {
-          page_key: pageKey,
-          section_key: sectionKey,
-          element_key: elementKey,
-          media_url: url,
-          is_visible: true,
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: "page_key,section_key,element_key" }
-      );
+    // 2. Broadcast immediately so hero section updates live in real-time
+    if (folder === "hero" || sectionKey === "hero" || elementKey === "bg_image") {
+      window.dispatchEvent(new CustomEvent("fspd:hero_image_updated", { detail: url }));
+    }
 
-      if (folder === "hero" || elementKey === "bg_image") {
+    // 3. Persist to site_settings
+    try {
+      const { data: settingsData } = await supabase
+        .from("site_settings")
+        .select("value")
+        .eq("key", "visual_editor_page_content")
+        .maybeSingle();
+
+      const currentSettings =
+        settingsData && settingsData.value && typeof settingsData.value === "object"
+          ? { ...settingsData.value }
+          : {};
+
+      currentSettings[`${pageKey}:${sectionKey}:${elementKey}`] = {
+        page_key: pageKey,
+        section_key: sectionKey,
+        element_key: elementKey,
+        media_url: url,
+        is_visible: true,
+        updated_at: new Date().toISOString(),
+      };
+
+      await supabase
+        .from("site_settings")
+        .upsert(
+          {
+            key: "visual_editor_page_content",
+            value: currentSettings,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: "key" }
+        );
+
+      try {
+        localStorage.setItem("fspd_visual_editor_content", JSON.stringify(currentSettings));
+      } catch (_) {}
+    } catch (e) {
+      console.warn("Could not save to site_settings:", e);
+    }
+
+    // 4. Sync to site_assets for hero banners
+    if (folder === "hero" || sectionKey === "hero" || elementKey === "bg_image") {
+      try {
         await supabase
           .from("site_assets")
           .update({ is_active: false })
@@ -105,13 +143,25 @@ export const EditableImage = ({
           name: "Hero Banner",
           sort_order: 0,
         });
-
-        // Broadcast event so any active hero section updates state immediately
-        window.dispatchEvent(new CustomEvent("fspd:hero_image_updated", { detail: url }));
+      } catch (assetErr) {
+        console.warn("Could not sync to site_assets:", assetErr);
       }
-    } catch (e) {
-      console.error("Failed to auto-persist banner/image to database:", e);
     }
+
+    // 5. Try page_content table if it exists
+    try {
+      await supabase.from("page_content" as any).upsert(
+        {
+          page_key: pageKey,
+          section_key: sectionKey,
+          element_key: elementKey,
+          media_url: url,
+          is_visible: true,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "page_key,section_key,element_key" }
+      );
+    } catch (_) {}
   };
 
   const isVideo = isVideoMedia(activeSrc);
@@ -119,12 +169,13 @@ export const EditableImage = ({
   return (
     <div
       className={`relative inline-block group cursor-pointer ${containerClassName} ${
-        isSelected
-          ? "ve-selected"
-          : "ve-editable"
+        isSelected ? "ve-selected" : "ve-editable"
       }`}
       style={{ borderRadius: "inherit" }}
-      onClick={(e) => { e.stopPropagation(); setSelectedElement(key); }}
+      onClick={(e) => {
+        e.stopPropagation();
+        setSelectedElement(key);
+      }}
     >
       {isVideo ? (
         <video
@@ -148,16 +199,24 @@ export const EditableImage = ({
       <div className="absolute inset-0 bg-black/50 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-opacity rounded-[inherit] flex items-center justify-center gap-2 z-10">
         <button
           type="button"
-          onClick={(e) => { e.stopPropagation(); setSelectedElement(key); setModalOpen(true); }}
+          onClick={(e) => {
+            e.stopPropagation();
+            setSelectedElement(key);
+            setModalOpen(true);
+          }}
           className="px-3.5 py-2 rounded-full bg-primary text-primary-foreground text-xs font-semibold font-bengali shadow-lg hover:scale-105 transition-transform flex items-center gap-1.5"
         >
           <ImagePlus className="w-3.5 h-3.5" />
-          <span>ছবি বা ভিডিও পরিবর্তন</span>
+          <span>{currentLang === "en" ? "Change Media" : "ছবি বা ভিডিও পরিবর্তন"}</span>
         </button>
 
         <button
           type="button"
-          onClick={(e) => { e.stopPropagation(); setSelectedElement(key); setIsDrawerOpen(true); }}
+          onClick={(e) => {
+            e.stopPropagation();
+            setSelectedElement(key);
+            setIsDrawerOpen(true);
+          }}
           className="p-2 rounded-full bg-slate-900/90 text-white hover:bg-slate-900 text-xs shadow-lg transition-transform hover:scale-105"
           title="Image Properties"
         >
@@ -170,7 +229,11 @@ export const EditableImage = ({
         onClose={() => setModalOpen(false)}
         onSelect={handleSelect}
         currentUrl={activeSrc}
-        title={`ছবি বা ভিডিও পরিবর্তন — ${sectionKey} / ${elementKey}`}
+        title={
+          currentLang === "en"
+            ? `Change Media — ${sectionKey} / ${elementKey}`
+            : `ছবি বা ভিডিও পরিবর্তন — ${sectionKey} / ${elementKey}`
+        }
         folder={folder}
       />
     </div>

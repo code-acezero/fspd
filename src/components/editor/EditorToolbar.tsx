@@ -40,7 +40,8 @@ export const EditorToolbar = () => {
     isDrawerOpen,
   } = useVisualEditor();
 
-  const { lang } = useLanguage();
+  const { lang, setLang } = useLanguage();
+  const currentLang = activeLanguage || lang;
 
   if (role !== "admin" && role !== "moderator") return null;
   // Hide editor floating dock on Admin dashboard and auth pages
@@ -59,11 +60,11 @@ export const EditorToolbar = () => {
           whileTap={{ scale: 0.95 }}
           onClick={() => setEditMode(true)}
           className="fixed bottom-20 md:bottom-6 right-4 md:right-6 z-[200] group flex items-center justify-center h-11 md:h-12 rounded-full bg-primary text-primary-foreground shadow-2xl shadow-primary/40 px-3.5 transition-all duration-300 ease-out overflow-hidden"
-          title={lang === "bn" ? "লাইভ ভিজ্যুয়াল এডিটর চালু করুন" : "Enable Live Visual Editor"}
+          title={currentLang === "bn" ? "লাইভ ভিজ্যুয়াল এডিটর চালু করুন" : "Enable Live Visual Editor"}
         >
           <Edit3 className="w-5 h-5 shrink-0 transition-transform duration-300 group-hover:rotate-12" />
           <span className="hidden md:inline-block max-w-0 opacity-0 group-hover:max-w-[200px] group-hover:opacity-100 group-hover:pl-2 group-hover:pr-1 text-xs font-bold font-bengali tracking-wide whitespace-nowrap transition-all duration-300 ease-out overflow-hidden">
-            {lang === "bn" ? "লাইভ ভিজ্যুয়াল এডিটর" : "Live Visual Editor"}
+            {currentLang === "bn" ? "লাইভ ভিজ্যুয়াল এডিটর" : "Live Visual Editor"}
           </span>
         </motion.button>
       )}
@@ -84,7 +85,7 @@ export const EditorToolbar = () => {
               <div className="flex items-center gap-1 pl-1 pr-1.5 border-r border-white/15">
                 <Edit3 className="w-3 h-3 text-primary shrink-0" />
                 <span className="text-[11px] font-bold font-bengali hidden lg:inline">
-                  {lang === "bn" ? "এডিটর" : "Editor"}
+                  {currentLang === "bn" ? "এডিটর" : "Editor"}
                 </span>
               </div>
 
@@ -99,7 +100,7 @@ export const EditorToolbar = () => {
                 title="Browse all pages and sections"
               >
                 <FolderTree className="w-3 h-3 text-accent shrink-0" />
-                <span>{lang === "bn" ? "পেজ তালিকা" : "Pages"}</span>
+                <span>{currentLang === "bn" ? "পেজ তালিকা" : "Pages"}</span>
               </button>
             </div>
 
@@ -107,9 +108,12 @@ export const EditorToolbar = () => {
             <div className="flex items-center rounded-full bg-white/10 p-0.5 border border-white/10 shrink-0">
               <button
                 type="button"
-                onClick={() => setActiveLanguage("bn")}
+                onClick={() => {
+                  setActiveLanguage("bn");
+                  setLang("bn");
+                }}
                 className={`px-2 py-0.5 rounded-full text-[10px] sm:text-[11px] font-bold font-bengali transition-colors ${
-                  activeLanguage === "bn" ? "bg-primary text-primary-foreground shadow-xs" : "text-white/70 hover:text-white"
+                  currentLang === "bn" ? "bg-primary text-primary-foreground shadow-xs" : "text-white/70 hover:text-white"
                 }`}
                 title="Edit Bengali Content"
               >
@@ -117,9 +121,12 @@ export const EditorToolbar = () => {
               </button>
               <button
                 type="button"
-                onClick={() => setActiveLanguage("en")}
+                onClick={() => {
+                  setActiveLanguage("en");
+                  setLang("en");
+                }}
                 className={`px-2 py-0.5 rounded-full text-[10px] sm:text-[11px] font-bold transition-colors ${
-                  activeLanguage === "en" ? "bg-accent text-accent-foreground shadow-xs" : "text-white/70 hover:text-white"
+                  currentLang === "en" ? "bg-accent text-accent-foreground shadow-xs" : "text-white/70 hover:text-white"
                 }`}
                 title="Edit English Content"
               >

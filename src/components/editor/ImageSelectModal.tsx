@@ -495,7 +495,10 @@ export const ImageSelectModal: React.FC<ImageSelectModalProps> = ({
                         JPG · PNG · WEBP · MP4 · WEBM · MOV · SVG · GIF (Max 100MB)
                       </p>
                       <p className="text-[10px] text-muted-foreground font-mono">
-                        ফোল্ডার: <span className="text-foreground font-semibold">{FOLDER_MAP[folder] || folder}</span>
+                        {lang === "bn" ? "ফোল্ডার:" : "Folder:"}{" "}
+                        <span className="text-foreground font-semibold">
+                          {FOLDER_MAP[folder] || folder}
+                        </span>
                       </p>
                     </div>
                   </>

@@ -70,7 +70,9 @@ export const VisualEditorDrawer = () => {
 };
 
 const DrawerMaster = () => {
-  const { selectedElement, setSelectedElement, setIsDrawerOpen, dirtyCount, saveChanges, isSaving } = useVisualEditor();
+  const { selectedElement, setSelectedElement, setIsDrawerOpen, dirtyCount, saveChanges, isSaving, activeLanguage } = useVisualEditor();
+  const { lang } = useLanguage();
+  const currentLang = activeLanguage || lang;
   const [activeTab, setActiveTab] = useState<"inspector" | "directory" | "media">(
     selectedElement ? "inspector" : "directory"
   );
@@ -98,7 +100,7 @@ const DrawerMaster = () => {
               }`}
             >
               <SlidersHorizontal className="w-3.5 h-3.5 shrink-0" />
-              <span className="truncate">এডিটর</span>
+              <span className="truncate">{currentLang === "en" ? "Inspector" : "এডিটর"}</span>
             </button>
           )}
 
@@ -112,7 +114,7 @@ const DrawerMaster = () => {
             }`}
           >
             <FolderTree className="w-3.5 h-3.5 shrink-0" />
-            <span className="truncate">পেজ ও সেকশন</span>
+            <span className="truncate">{currentLang === "en" ? "Pages & Sections" : "পেজ ও সেকশন"}</span>
           </button>
 
           <button
@@ -125,7 +127,7 @@ const DrawerMaster = () => {
             }`}
           >
             <ImageLucide className="w-3.5 h-3.5 shrink-0" />
-            <span className="truncate">মিডিয়া</span>
+            <span className="truncate">{currentLang === "en" ? "Media" : "মিডিয়া"}</span>
           </button>
         </div>
 
@@ -156,12 +158,12 @@ const DrawerMaster = () => {
           {dirtyCount > 0 ? (
             <span className="px-2.5 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-400 text-[10px] font-mono font-bold flex items-center gap-1.5 animate-pulse">
               <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
-              {dirtyCount} unsaved
+              {currentLang === "en" ? `${dirtyCount} unsaved` : `${dirtyCount}টি পরিবর্তন`}
             </span>
           ) : (
             <span className="text-[10px] text-muted-foreground font-bengali flex items-center gap-1.5">
               <Check className="w-3 h-3 text-primary" />
-              সব সংরক্ষিত (Saved)
+              {currentLang === "en" ? "All saved" : "সব সংরক্ষিত"}
             </span>
           )}
         </div>
@@ -175,7 +177,7 @@ const DrawerMaster = () => {
               className="px-4 py-2 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-bengali font-bold text-xs shadow-lg shadow-primary/25 flex items-center gap-1.5 active:scale-95 transition-all disabled:opacity-50"
             >
               {isSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
-              <span>সেভ করুন ({dirtyCount})</span>
+              <span>{currentLang === "en" ? `Save (${dirtyCount})` : `সেভ করুন (${dirtyCount})`}</span>
             </button>
           )}
 
@@ -184,7 +186,7 @@ const DrawerMaster = () => {
             onClick={() => setIsDrawerOpen(false)}
             className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-foreground font-bengali font-semibold text-xs border border-white/10 transition-all"
           >
-            সম্পন্ন (Done)
+            {currentLang === "en" ? "Done" : "সম্পন্ন"}
           </button>
         </div>
       </div>
@@ -198,7 +200,10 @@ const DrawerMaster = () => {
 const PagesDirectory = ({ onSelectElement }: { onSelectElement: () => void }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { setSelectedElement, getContent, setIsDrawerOpen } = useVisualEditor();
+  const { setSelectedElement, getContent, setIsDrawerOpen, activeLanguage } = useVisualEditor();
+  const { lang } = useLanguage();
+  const currentLang = activeLanguage || lang;
+
   const [expandedPages, setExpandedPages] = useState<Record<string, boolean>>({
     landing: true,
     home: true,
@@ -236,10 +241,12 @@ const PagesDirectory = ({ onSelectElement }: { onSelectElement: () => void }) =>
       <div>
         <h3 className="font-bengali font-bold text-sm text-foreground flex items-center gap-2">
           <FolderTree className="w-4 h-4 text-primary" />
-          সাইটের সকল পেজ ও সেকশন তালিকা
+          {currentLang === "en" ? "Site Pages & Sections Navigator" : "সাইটের সকল পেজ ও সেকশন তালিকা"}
         </h3>
         <p className="text-xs text-muted-foreground font-bengali mt-0.5">
-          যেকোনো পেজের সেকশন বা টেক্সট নির্বাচন করে সরাসরি লাইভ পরিবর্তন করুন
+          {currentLang === "en"
+            ? "Select any section or element to live edit in real-time"
+            : "যেকোনো পেজের সেকশন বা টেক্সট নির্বাচন করে সরাসরি লাইভ পরিবর্তন করুন"}
         </p>
       </div>
 
@@ -272,7 +279,7 @@ const PagesDirectory = ({ onSelectElement }: { onSelectElement: () => void }) =>
                   </div>
                   <div className="min-w-0">
                     <span className="font-bengali font-bold text-xs text-foreground block truncate">
-                      {page.pageTitleBn}
+                      {currentLang === "en" ? page.pageTitleEn : page.pageTitleBn}
                     </span>
                     <span className="text-[10px] text-muted-foreground font-mono">
                       {page.route}
@@ -292,7 +299,7 @@ const PagesDirectory = ({ onSelectElement }: { onSelectElement: () => void }) =>
                       title="Navigate to page"
                     >
                       <ExternalLink className="w-3 h-3 text-accent" />
-                      যান
+                      {currentLang === "en" ? "Visit" : "যান"}
                     </button>
                   )}
                   <ChevronDown
@@ -314,7 +321,7 @@ const PagesDirectory = ({ onSelectElement }: { onSelectElement: () => void }) =>
                       <div className="flex items-center justify-between">
                         <span className="text-[11px] font-bold font-bengali text-foreground/90 flex items-center gap-1.5">
                           <span className="w-1.5 h-1.5 rounded-full bg-accent" />
-                          {section.sectionTitleBn}
+                          {currentLang === "en" ? section.sectionTitleEn : section.sectionTitleBn}
                         </span>
                         <button
                           type="button"
@@ -325,7 +332,7 @@ const PagesDirectory = ({ onSelectElement }: { onSelectElement: () => void }) =>
                           }}
                           className="text-[10px] text-primary hover:underline font-bengali p-1"
                         >
-                          সেকশন সেটিংস
+                          {currentLang === "en" ? "Section Settings" : "সেকশন সেটিংস"}
                         </button>
                       </div>
 
@@ -349,7 +356,7 @@ const PagesDirectory = ({ onSelectElement }: { onSelectElement: () => void }) =>
                                   : "bg-white/5 border-white/10 text-muted-foreground hover:text-white hover:bg-white/10"
                               }`}
                             >
-                              <span>{el.labelBn}</span>
+                              <span>{currentLang === "en" ? el.labelEn : el.labelBn}</span>
                               {isEdited && <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />}
                             </button>
                           );
@@ -368,7 +375,7 @@ const PagesDirectory = ({ onSelectElement }: { onSelectElement: () => void }) =>
 };
 
 // ══════════════════════════════════════════════════════════════
-// 2. ELEMENT INSPECTOR & EDITOR (Live text/typography/color)
+// 2. ELEMENT INSPECTOR (LIVE BILINGUAL + TYPOGRAPHY + IMAGES)
 // ══════════════════════════════════════════════════════════════
 const ElementInspector = ({ onBackToDirectory }: { onBackToDirectory: () => void }) => {
   const {
@@ -378,26 +385,28 @@ const ElementInspector = ({ onBackToDirectory }: { onBackToDirectory: () => void
     resetElement,
     imageElements,
     setIsDrawerOpen,
+    activeLanguage,
   } = useVisualEditor();
 
   const { lang } = useLanguage();
+  const currentLang = activeLanguage || lang;
   const { toast } = useToast();
 
-  const [pageKey, sectionKey, elementKey] = (selectedElement || "::").split(":");
-  const content = getContent(pageKey, sectionKey, elementKey);
+  if (!selectedElement) return null;
 
+  const [pageKey, sectionKey, elementKey] = selectedElement.split(":");
   const isImageElement =
-    imageElements.has(selectedElement || "") ||
+    imageElements.has(selectedElement) ||
     elementKey === "bg_image" ||
     elementKey.includes("image") ||
-    elementKey.includes("avatar") ||
-    elementKey.includes("banner");
+    elementKey.includes("logo");
   const isSectionElement = elementKey === "__section__";
+
+  const content = getContent(pageKey, sectionKey, elementKey);
 
   const [draftBn, setDraftBn] = useState(content.textBn);
   const [draftEn, setDraftEn] = useState(content.textEn);
   const [styles, setStyles] = useState<Record<string, any>>(content.styles || {});
-  const [customHref, setCustomHref] = useState(content.metadata?.href || "");
   const [imgModalOpen, setImgModalOpen] = useState(false);
   const [deletingFromBucket, setDeletingFromBucket] = useState(false);
 
@@ -415,8 +424,7 @@ const ElementInspector = ({ onBackToDirectory }: { onBackToDirectory: () => void
     setDraftBn(content.textBn);
     setDraftEn(content.textEn);
     setStyles(content.styles || {});
-    setCustomHref(content.metadata?.href || "");
-  }, [selectedElement, content.textBn, content.textEn, content.styles, content.metadata?.href]);
+  }, [selectedElement, content.textBn, content.textEn, content.styles]);
 
   const updateStyle = (styleKey: string, value: any) => {
     const next = { ...styles, [styleKey]: value !== "" ? value : undefined };
@@ -426,7 +434,13 @@ const ElementInspector = ({ onBackToDirectory }: { onBackToDirectory: () => void
 
   const handleImageDelete = async () => {
     if (!content.mediaUrl) return;
-    if (!confirm(lang === "bn" ? "আপনি কি নিশ্চিতভাবে এই ছবিটি স্টোরেজ থেকে চিরতরে মুছে ফেলতে চান?" : "Are you sure you want to permanently delete this image from storage?")) {
+    if (
+      !confirm(
+        currentLang === "en"
+          ? "Are you sure you want to permanently delete this image from storage?"
+          : "আপনি কি নিশ্চিতভাবে এই ছবিটি স্টোরেজ থেকে চিরতরে মুছে ফেলতে চান?"
+      )
+    ) {
       return;
     }
 
@@ -437,13 +451,13 @@ const ElementInspector = ({ onBackToDirectory }: { onBackToDirectory: () => void
     if (delRes.success) {
       updateContent(pageKey, sectionKey, elementKey, { media_url: "" });
       toast({
-        title: lang === "bn" ? "ছবি স্টোরেজ থেকে মুছে ফেলা হয়েছে" : "Image deleted from storage",
+        title: currentLang === "en" ? "Image deleted from storage" : "ছবি স্টোরেজ থেকে মুছে ফেলা হয়েছে",
         description: delRes.message,
       });
     } else {
       updateContent(pageKey, sectionKey, elementKey, { media_url: "" });
       toast({
-        title: lang === "bn" ? "ছবি আনলিংক করা হয়েছে" : "Image unlinked",
+        title: currentLang === "en" ? "Image unlinked" : "ছবি আনলিংক করা হয়েছে",
         description: delRes.message,
       });
     }
@@ -460,12 +474,18 @@ const ElementInspector = ({ onBackToDirectory }: { onBackToDirectory: () => void
             className="text-xs text-primary hover:underline font-bengali flex items-center gap-1.5 py-1"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
-            সকল পেজ ও সেকশন তালিকা
+            {currentLang === "en" ? "Back to pages directory" : "সকল পেজ ও সেকশন তালিকা"}
           </button>
 
           <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-white/[0.04] border border-white/10">
             <div className="w-8 h-8 rounded-lg bg-primary/20 text-primary flex items-center justify-center font-bold text-xs shrink-0">
-              {isImageElement ? <ImageIcon className="w-4 h-4" /> : isSectionElement ? <Layers className="w-4 h-4" /> : <Type className="w-4 h-4" />}
+              {isImageElement ? (
+                <ImageIcon className="w-4 h-4" />
+              ) : isSectionElement ? (
+                <Layers className="w-4 h-4" />
+              ) : (
+                <Type className="w-4 h-4" />
+              )}
             </div>
             <div className="min-w-0 flex-1">
               <span className="text-[10px] text-muted-foreground tracking-wider uppercase font-mono block">
@@ -490,7 +510,9 @@ const ElementInspector = ({ onBackToDirectory }: { onBackToDirectory: () => void
             }`}
           >
             {content.isVisible ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
-            {content.isVisible ? "দৃশ্যমান (Visible)" : "লুকানো (Hidden)"}
+            {content.isVisible
+              ? (currentLang === "en" ? "Visible" : "দৃশ্যমান")
+              : (currentLang === "en" ? "Hidden" : "লুকানো")}
           </button>
 
           <button
@@ -500,7 +522,7 @@ const ElementInspector = ({ onBackToDirectory }: { onBackToDirectory: () => void
             title="Reset to default code value"
           >
             <RotateCcw className="w-3.5 h-3.5" />
-            রিসেট (Reset)
+            {currentLang === "en" ? "Reset" : "রিসেট"}
           </button>
         </div>
 
@@ -509,7 +531,7 @@ const ElementInspector = ({ onBackToDirectory }: { onBackToDirectory: () => void
           <div className="space-y-4 pt-2">
             <h5 className="font-bengali font-bold text-xs text-foreground flex items-center gap-2">
               <ImageIcon className="w-4 h-4 text-accent" />
-              ছবি নির্বাচন ও পরিবর্তন (Image Asset)
+              {currentLang === "en" ? "Image Selection & Properties" : "ছবি নির্বাচন ও পরিবর্তন"}
             </h5>
 
             {content.mediaUrl ? (
@@ -526,7 +548,7 @@ const ElementInspector = ({ onBackToDirectory }: { onBackToDirectory: () => void
                     className="flex-1 py-2.5 px-3 rounded-xl bg-primary text-primary-foreground text-xs font-bengali font-bold hover:bg-primary/90 transition-colors flex items-center justify-center gap-1.5 active:scale-95"
                   >
                     <ImageIcon className="w-3.5 h-3.5" />
-                    ছবি পরিবর্তন করুন
+                    {currentLang === "en" ? "Change Media" : "ছবি পরিবর্তন করুন"}
                   </button>
                   <button
                     type="button"
@@ -536,7 +558,7 @@ const ElementInspector = ({ onBackToDirectory }: { onBackToDirectory: () => void
                     title="Delete completely from storage bucket"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
-                    মুছুন
+                    {currentLang === "en" ? "Delete" : "মুছুন"}
                   </button>
                 </div>
               </div>
@@ -547,14 +569,18 @@ const ElementInspector = ({ onBackToDirectory }: { onBackToDirectory: () => void
                 className="w-full py-8 border-2 border-dashed border-white/20 hover:border-primary/60 rounded-2xl bg-white/[0.02] hover:bg-primary/5 text-muted-foreground hover:text-primary flex flex-col items-center justify-center gap-2 transition-all active:scale-98"
               >
                 <UploadCloud className="w-8 h-8 text-primary/80" />
-                <span className="font-bengali text-xs font-bold">নতুন ছবি আপলোড বা নির্বাচন করুন</span>
+                <span className="font-bengali text-xs font-bold">
+                  {currentLang === "en" ? "Upload or Select New Image" : "নতুন ছবি আপলোড বা নির্বাচন করুন"}
+                </span>
               </button>
             )}
           </div>
         ) : isSectionElement ? (
           <div className="space-y-4 pt-2">
             <p className="text-xs text-muted-foreground font-bengali leading-relaxed">
-              আপনি সম্পূর্ণ সেকশনটি নির্বাচন করেছেন। ওপরের বোতাম ব্যবহার করে সেকশনটি লুকানো বা দৃশ্যমান করতে পারেন।
+              {currentLang === "en"
+                ? "You selected the entire section. Use the visibility button above to toggle display."
+                : "আপনি সম্পূর্ণ সেকশনটি নির্বাচন করেছেন। ওপরের বোতাম ব্যবহার করে সেকশনটি লুকানো বা দৃশ্যমান করতে পারেন।"}
             </p>
           </div>
         ) : (
@@ -582,7 +608,7 @@ const ElementInspector = ({ onBackToDirectory }: { onBackToDirectory: () => void
             <div className="space-y-3 pt-2 border-t border-white/10">
               <h5 className="font-bengali font-bold text-xs text-foreground flex items-center gap-2">
                 <Type className="w-3.5 h-3.5 text-accent" />
-                টাইপোগ্রাফি ও স্টাইল (Typography & Style)
+                {currentLang === "en" ? "Typography & Style" : "টাইপোগ্রাফি ও স্টাইল"}
               </h5>
 
               {/* Text Alignment */}
@@ -612,7 +638,7 @@ const ElementInspector = ({ onBackToDirectory }: { onBackToDirectory: () => void
               <div className="space-y-1.5">
                 <label className="text-[11px] font-bengali text-muted-foreground flex items-center gap-1.5">
                   <Palette className="w-3 h-3 text-primary" />
-                  রঙিন প্যালেট (Text Color)
+                  {currentLang === "en" ? "Text Color" : "রঙিন প্যালেট (Text Color)"}
                 </label>
                 <div className="flex items-center gap-1.5 flex-wrap">
                   {colorPresets.map((p) => (
@@ -640,7 +666,7 @@ const ElementInspector = ({ onBackToDirectory }: { onBackToDirectory: () => void
       <div className="p-3 sm:p-4 border-t border-white/10 bg-slate-950/95 backdrop-blur-xl flex items-center justify-between gap-2 shrink-0">
         <span className="text-[10px] text-muted-foreground font-bengali flex items-center gap-1.5">
           <Wand2 className="w-3 h-3 text-primary" />
-          লাইভ সিংক সক্রিয়
+          {currentLang === "en" ? "Live sync active" : "লাইভ সিংক সক্রিয়"}
         </span>
         <button
           type="button"
@@ -648,7 +674,7 @@ const ElementInspector = ({ onBackToDirectory }: { onBackToDirectory: () => void
           className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-primary to-crimson-dark text-primary-foreground font-bengali font-bold text-xs shadow-lg shadow-primary/25 hover:scale-[1.02] active:scale-95 transition-all flex items-center gap-1.5"
         >
           <Check className="w-3.5 h-3.5" />
-          সম্পন্ন (Done)
+          {currentLang === "en" ? "Done" : "সম্পন্ন (Done)"}
         </button>
       </div>
 
@@ -670,11 +696,68 @@ const ElementInspector = ({ onBackToDirectory }: { onBackToDirectory: () => void
             : "hero"
         }
         currentUrl={content.mediaUrl}
-        onSelect={(url) => {
+        onSelect={async (url) => {
           updateContent(pageKey, sectionKey, elementKey, { media_url: url });
           setImgModalOpen(false);
+
+          if (sectionKey === "hero" || elementKey === "bg_image") {
+            window.dispatchEvent(new CustomEvent("fspd:hero_image_updated", { detail: url }));
+          }
+
+          try {
+            const { data: settingsData } = await supabase
+              .from("site_settings")
+              .select("value")
+              .eq("key", "visual_editor_page_content")
+              .maybeSingle();
+
+            const currentSettings =
+              settingsData && settingsData.value && typeof settingsData.value === "object"
+                ? { ...settingsData.value }
+                : {};
+
+            currentSettings[`${pageKey}:${sectionKey}:${elementKey}`] = {
+              page_key: pageKey,
+              section_key: sectionKey,
+              element_key: elementKey,
+              media_url: url,
+              is_visible: true,
+              updated_at: new Date().toISOString(),
+            };
+
+            await supabase.from("site_settings").upsert(
+              {
+                key: "visual_editor_page_content",
+                value: currentSettings,
+                updated_at: new Date().toISOString(),
+              },
+              { onConflict: "key" }
+            );
+
+            try {
+              localStorage.setItem("fspd_visual_editor_content", JSON.stringify(currentSettings));
+            } catch (_) {}
+          } catch (e) {
+            console.warn("Could not save to site_settings:", e);
+          }
+
+          if (sectionKey === "hero" || elementKey === "bg_image") {
+            try {
+              await supabase.from("site_assets").update({ is_active: false }).eq("slot", "hero");
+              await supabase.from("site_assets").insert({
+                slot: "hero",
+                image_url: url,
+                is_active: true,
+                name: "Hero Banner",
+                sort_order: 0,
+              });
+            } catch (assetErr) {
+              console.warn("Could not sync to site_assets:", assetErr);
+            }
+          }
+
           toast({
-            title: lang === "bn" ? "ছবি সফলভাবে প্রতিস্থাপিত হয়েছে" : "Image replaced successfully",
+            title: currentLang === "en" ? "Image replaced successfully" : "ছবি সফলভাবে প্রতিস্থাপিত হয়েছে",
           });
         }}
       />
