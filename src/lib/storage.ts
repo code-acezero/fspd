@@ -228,5 +228,20 @@ export async function deleteStorageImage(
   }
 }
 
+export const isVideoMedia = (url?: string): boolean => {
+  if (!url) return false;
+  const clean = url.split("?")[0].toLowerCase();
+  return (
+    clean.endsWith(".mp4") ||
+    clean.endsWith(".webm") ||
+    clean.endsWith(".ogg") ||
+    clean.endsWith(".mov") ||
+    clean.endsWith(".m4v") ||
+    clean.endsWith(".mkv") ||
+    url.startsWith("data:video/") ||
+    url.includes("video/")
+  );
+};
+
 export { uploadSiteImage as uploadImage };
 

@@ -10,6 +10,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useSiteSettings } from "@/contexts/SiteSettingsContext";
 import { useVisualEditor } from "@/contexts/VisualEditorContext";
 import { supabase } from "@/integrations/supabase/client";
+import { isVideoMedia } from "@/lib/storage";
 import EditableText from "@/components/editor/EditableText";
 import EditableImage from "@/components/editor/EditableImage";
 import EditableSection from "@/components/editor/EditableSection";
@@ -22,6 +23,21 @@ const HeroSection = () => {
 
   useEffect(() => {
     (async () => {
+      // 1. Try page_content first
+      const { data: pageData } = await supabase
+        .from("page_content" as any)
+        .select("media_url")
+        .eq("page_key", "landing")
+        .eq("section_key", "hero")
+        .eq("element_key", "bg_image")
+        .maybeSingle();
+
+      if ((pageData as any)?.media_url) {
+        setHeroImage((pageData as any).media_url);
+        return;
+      }
+
+      // 2. Try site_assets slot="hero"
       const { data } = await supabase
         .from("site_assets")
         .select("image_url")
@@ -32,6 +48,12 @@ const HeroSection = () => {
         .maybeSingle();
       if (data?.image_url) setHeroImage(data.image_url);
     })();
+
+    const handleHeroUpdated = (e: any) => {
+      if (e?.detail) setHeroImage(e.detail);
+    };
+    window.addEventListener("fspd:hero_image_updated", handleHeroUpdated);
+    return () => window.removeEventListener("fspd:hero_image_updated", handleHeroUpdated);
   }, []);
 
   const heroImageResolution = getContent("landing", "hero", "bg_image", { media: heroImage });
@@ -47,7 +69,7 @@ const HeroSection = () => {
   return (
     <EditableSection pageKey="landing" sectionKey="hero" sectionTitle="হিরো ব্যানার (Hero Banner)">
       <div className="relative min-h-screen flex items-center justify-center overflow-hidden palette-depth">
-        {/* Parallax Background Image */}
+        {/* Parallax Background Image / Video */}
         <motion.div className="absolute inset-0" style={{ y: bgY, transformOrigin: "center top" }}>
           {editMode ? (
             <EditableImage
@@ -59,6 +81,15 @@ const HeroSection = () => {
               alt="Bengali cultural heritage landscape"
               className="w-full h-[125%] object-cover object-center"
               containerClassName="w-full h-full"
+            />
+          ) : isVideoMedia(activeHeroImage) ? (
+            <video
+              src={activeHeroImage}
+              autoPlay
+              loop
+              muted
+              playsInline
+              className="w-full h-[125%] object-cover object-center"
             />
           ) : (
             <img
@@ -142,15 +173,15 @@ const HeroSection = () => {
             <div className="flex items-center gap-2.5">
               <Link
                 to="/home"
-                className="px-5 py-2 text-sm font-medium rounded-full bg-white/10 dark:bg-black/35 backdrop-blur-xl text-foreground/85 hover:text-foreground hover:bg-white/20 dark:hover:bg-black/50 transition-all border border-white/15 hover:border-white/25 font-bengali shadow-sm"
+                className="inline-flex items-center justify-center px-5 h-9 text-xs sm:text-sm font-semibold rounded-full bg-white/10 dark:bg-black/35 backdrop-blur-xl text-foreground/85 hover:text-foreground hover:bg-white/20 dark:hover:bg-black/50 transition-all border border-white/15 hover:border-white/25 shadow-sm leading-none text-center"
               >
-                {t("home")}
+                <span>{t("home")}</span>
               </Link>
               <Link
                 to="/login"
-                className="px-5 py-2 text-sm font-medium rounded-full bg-primary/85 backdrop-blur-xl text-primary-foreground hover:bg-primary transition-all border border-white/20 shadow-md shadow-primary/25 font-bengali"
+                className="inline-flex items-center justify-center px-5 h-9 text-xs sm:text-sm font-semibold rounded-full bg-primary/85 backdrop-blur-xl text-primary-foreground hover:bg-primary transition-all border border-white/20 shadow-md shadow-primary/25 leading-none text-center"
               >
-                {t("joinUs")}
+                <span>{t("joinUs")}</span>
               </Link>
             </div>
           </div>

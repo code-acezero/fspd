@@ -2,6 +2,7 @@ import { useState, useEffect, ImgHTMLAttributes } from "react";
 import { ImagePlus, SlidersHorizontal } from "lucide-react";
 import { useVisualEditor } from "@/contexts/VisualEditorContext";
 import { supabase } from "@/integrations/supabase/client";
+import { isVideoMedia } from "@/lib/storage";
 import ImageSelectModal from "@/components/editor/ImageSelectModal";
 
 interface EditableImageProps extends ImgHTMLAttributes<HTMLImageElement> {
@@ -58,27 +59,62 @@ export const EditableImage = ({
   }
 
   if (!editMode) {
+    if (isVideoMedia(activeSrc)) {
+      return (
+        <video
+          src={activeSrc}
+          autoPlay
+          loop
+          muted
+          playsInline
+          className={className}
+        />
+      );
+    }
     return <img src={activeSrc} alt={alt} className={className} {...imgProps} />;
   }
 
-  const handleSelect = (url: string) => {
+  const handleSelect = async (url: string) => {
+    // 1. Update in-memory visual editor draft state
     updateContent(pageKey, sectionKey, elementKey, { media_url: url });
-    if (folder === "hero" || elementKey === "bg_image") {
-      supabase
-        .from("site_assets")
-        .update({ is_active: false })
-        .eq("slot", "hero")
-        .then(() => {
-          supabase.from("site_assets").insert({
-            slot: "hero",
-            image_url: url,
-            is_active: true,
-            title_bn: "হিরো ব্যানার",
-            title_en: "Hero Banner",
-          });
+
+    // 2. Direct database persistence so changes survive reload instantly
+    try {
+      await supabase.from("page_content" as any).upsert(
+        {
+          page_key: pageKey,
+          section_key: sectionKey,
+          element_key: elementKey,
+          media_url: url,
+          is_visible: true,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "page_key,section_key,element_key" }
+      );
+
+      if (folder === "hero" || elementKey === "bg_image") {
+        await supabase
+          .from("site_assets")
+          .update({ is_active: false })
+          .eq("slot", "hero");
+
+        await supabase.from("site_assets").insert({
+          slot: "hero",
+          image_url: url,
+          is_active: true,
+          name: "Hero Banner",
+          sort_order: 0,
         });
+
+        // Broadcast event so any active hero section updates state immediately
+        window.dispatchEvent(new CustomEvent("fspd:hero_image_updated", { detail: url }));
+      }
+    } catch (e) {
+      console.error("Failed to auto-persist banner/image to database:", e);
     }
   };
+
+  const isVideo = isVideoMedia(activeSrc);
 
   return (
     <div
@@ -90,12 +126,23 @@ export const EditableImage = ({
       style={{ borderRadius: "inherit" }}
       onClick={(e) => { e.stopPropagation(); setSelectedElement(key); }}
     >
-      <img
-        src={activeSrc}
-        alt={alt}
-        className={`${className} ${!content.isVisible ? "opacity-30" : ""}`}
-        {...imgProps}
-      />
+      {isVideo ? (
+        <video
+          src={activeSrc}
+          autoPlay
+          loop
+          muted
+          playsInline
+          className={`${className} ${!content.isVisible ? "opacity-30" : ""}`}
+        />
+      ) : (
+        <img
+          src={activeSrc}
+          alt={alt}
+          className={`${className} ${!content.isVisible ? "opacity-30" : ""}`}
+          {...imgProps}
+        />
+      )}
 
       {/* Hover overlay with actions */}
       <div className="absolute inset-0 bg-black/50 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-opacity rounded-[inherit] flex items-center justify-center gap-2 z-10">
@@ -105,7 +152,7 @@ export const EditableImage = ({
           className="px-3.5 py-2 rounded-full bg-primary text-primary-foreground text-xs font-semibold font-bengali shadow-lg hover:scale-105 transition-transform flex items-center gap-1.5"
         >
           <ImagePlus className="w-3.5 h-3.5" />
-          <span>ছবি পরিবর্তন</span>
+          <span>ছবি বা ভিডিও পরিবর্তন</span>
         </button>
 
         <button
@@ -123,7 +170,7 @@ export const EditableImage = ({
         onClose={() => setModalOpen(false)}
         onSelect={handleSelect}
         currentUrl={activeSrc}
-        title={`ছবি পরিবর্তন — ${sectionKey} / ${elementKey}`}
+        title={`ছবি বা ভিডিও পরিবর্তন — ${sectionKey} / ${elementKey}`}
         folder={folder}
       />
     </div>
@@ -131,3 +178,4 @@ export const EditableImage = ({
 };
 
 export default EditableImage;
+
