@@ -1,6 +1,7 @@
-﻿import { useState, useEffect, ImgHTMLAttributes } from "react";
+import { useState, useEffect, ImgHTMLAttributes } from "react";
 import { ImagePlus, SlidersHorizontal } from "lucide-react";
 import { useVisualEditor } from "@/contexts/VisualEditorContext";
+import { supabase } from "@/integrations/supabase/client";
 import ImageSelectModal from "@/components/editor/ImageSelectModal";
 
 interface EditableImageProps extends ImgHTMLAttributes<HTMLImageElement> {
@@ -62,6 +63,21 @@ export const EditableImage = ({
 
   const handleSelect = (url: string) => {
     updateContent(pageKey, sectionKey, elementKey, { media_url: url });
+    if (folder === "hero" || elementKey === "bg_image") {
+      supabase
+        .from("site_assets")
+        .update({ is_active: false })
+        .eq("slot", "hero")
+        .then(() => {
+          supabase.from("site_assets").insert({
+            slot: "hero",
+            image_url: url,
+            is_active: true,
+            title_bn: "হিরো ব্যানার",
+            title_en: "Hero Banner",
+          });
+        });
+    }
   };
 
   return (

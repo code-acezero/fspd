@@ -3,3 +3,4 @@ deployment:
   tasks:
     - export DEPLOYPATH=/home/sitexuyp/public_html
     - /bin/cp -R dist/* $DEPLOYPATH
+    - /usr/local/cpanel/bin/git-repo-deploy --repository=/home/sitexuyp/repositories/fspd

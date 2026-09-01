@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import {
   UploadCloud, Image as ImageIcon, X, Check, Loader2,
@@ -64,10 +64,10 @@ export const ImageSelectModal = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (open && tab === "library") {
+    if (open) {
       fetchStorageAssets(activeFolder);
     }
-  }, [open, tab, activeFolder]);
+  }, [open, activeFolder]);
 
   const fetchStorageAssets = async (folderPath: string) => {
     setLoadingAssets(true);
@@ -130,8 +130,8 @@ export const ImageSelectModal = ({
     }
 
     toast({
-      title: lang === "bn" ? "সফলভাবে আপলোড হয়েছে" : "Image Uploaded",
-      description: lang === "bn" ? "ছবি সফলভাবে যুক্ত করা হয়েছে" : "Image uploaded successfully.",
+      title: lang === "bn" ? "ব্যানার সফলভাবে আপলোড ও পরিবর্তন হয়েছে" : "Banner Uploaded & Applied",
+      description: lang === "bn" ? "নতুন ছবিটি সক্রিয় করা হয়েছে" : "New image is now active.",
     });
 
     onSelect(result.url);
@@ -142,8 +142,8 @@ export const ImageSelectModal = ({
     if (
       !window.confirm(
         lang === "bn"
-          ? `"${asset.name}" ছবিটি স্টোরেজ থেকে চিরতরে মুছে ফেলবেন?`
-          : `Permanently delete "${asset.name}" from storage?`
+          ? `"${asset.name}" ছবিটি স্টোরেজ থেকে চিরতরে মুছে ফেলবেন? এটি পুনরুদ্ধার করা যাবে না।`
+          : `Permanently delete "${asset.name}" from storage? This cannot be undone.`
       )
     )
       return;
@@ -158,7 +158,7 @@ export const ImageSelectModal = ({
 
       setAssets((prev) => prev.filter((a) => a.id !== asset.id));
       toast({
-        title: lang === "bn" ? "ছবি মুছে ফেলা হয়েছে" : "Image Deleted",
+        title: lang === "bn" ? "ছবি চিরতরে মুছে ফেলা হয়েছে" : "Image Permanently Deleted",
         description: asset.name,
       });
     } catch (e: any) {
@@ -209,8 +209,8 @@ export const ImageSelectModal = ({
         <div className="px-6 pt-4 shrink-0">
           <div className="flex rounded-2xl bg-muted p-1 gap-1">
             {([
-              { key: "upload", icon: UploadCloud, label: lang === "bn" ? "নতুন আপলোড" : "Upload New" },
-              { key: "library", icon: HardDrive, label: lang === "bn" ? "মিডিয়া লাইব্রেরি" : "Media Library" },
+              { key: "upload", icon: UploadCloud, label: lang === "bn" ? "নতুন আপলোড ও পূর্ববর্তী ব্যানার" : "Upload & Switch" },
+              { key: "library", icon: HardDrive, label: lang === "bn" ? "সকল ফোল্ডার গ্যালারি" : "All Folders" },
               { key: "url", icon: Link2, label: lang === "bn" ? "সরাসরি URL" : "Direct URL" },
             ] as const).map(({ key: tabKey, icon: Icon, label }) => (
               <button
@@ -230,11 +230,11 @@ export const ImageSelectModal = ({
         </div>
 
         {/* Tab Content */}
-        <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
+        <div className="flex-1 overflow-y-auto px-6 py-4 space-y-5">
 
-          {/* ── Upload Tab ── */}
+          {/* ── Upload Tab (With Drag & Drop + Previous Banners Section) ── */}
           {tab === "upload" && (
-            <div className="space-y-4">
+            <div className="space-y-5">
               <input
                 ref={fileInputRef}
                 type="file"
@@ -254,7 +254,7 @@ export const ImageSelectModal = ({
                   setDragOver(false);
                   if (e.dataTransfer.files?.[0]) handleFileUpload(e.dataTransfer.files[0]);
                 }}
-                className={`flex flex-col items-center justify-center gap-4 py-14 px-6 rounded-2xl border-2 border-dashed cursor-pointer transition-all ${
+                className={`flex flex-col items-center justify-center gap-3 py-10 px-6 rounded-2xl border-2 border-dashed cursor-pointer transition-all ${
                   dragOver
                     ? "border-primary bg-primary/5"
                     : "border-border hover:border-primary/50 hover:bg-muted/40"
@@ -262,30 +262,145 @@ export const ImageSelectModal = ({
               >
                 {uploading ? (
                   <>
-                    <Loader2 className="w-10 h-10 text-primary animate-spin" />
+                    <Loader2 className="w-9 h-9 text-primary animate-spin" />
                     <p className="font-bengali text-sm text-foreground">
                       {lang === "bn" ? "ছবি আপলোড হচ্ছে..." : "Uploading to Supabase Storage..."}
                     </p>
                   </>
                 ) : (
                   <>
-                    <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
-                      <UploadCloud className="w-7 h-7" />
+                    <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
+                      <UploadCloud className="w-6 h-6" />
                     </div>
-                    <div className="text-center space-y-1">
+                    <div className="text-center space-y-0.5">
                       <p className="font-bengali text-sm font-semibold text-foreground">
                         {lang === "bn"
-                          ? "ছবি নির্বাচন করতে ক্লিক করুন বা এখানে টেনে আনুন"
+                          ? "নতুন ব্যানার বা ছবি আপলোড করতে ক্লিক করুন"
                           : "Click to select or drag & drop image"}
                       </p>
                       <p className="text-xs text-muted-foreground">
                         JPG · PNG · WEBP · SVG · GIF · AVIF (Max 20MB)
                       </p>
-                      <p className="text-[11px] text-muted-foreground font-mono">
-                        Folder: <span className="text-foreground">{FOLDER_MAP[folder] || folder}</span>
+                      <p className="text-[10px] text-muted-foreground font-mono">
+                        ফোল্ডার: <span className="text-foreground font-semibold">{FOLDER_MAP[folder] || folder}</span>
                       </p>
                     </div>
                   </>
+                )}
+              </div>
+
+              {/* ── Previous Banners & Assets in this folder ── */}
+              <div className="space-y-3 pt-1">
+                <div className="flex items-center justify-between border-b border-border/80 pb-2">
+                  <div className="flex items-center gap-2">
+                    <HardDrive className="w-3.5 h-3.5 text-primary" />
+                    <h4 className="font-bengali font-bold text-xs text-foreground">
+                      {lang === "bn"
+                        ? `পূর্বের আপলোডকৃত ব্যানারসমূহ (${assets.length})`
+                        : `Previous Banners in Folder (${assets.length})`}
+                    </h4>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => fetchStorageAssets(activeFolder)}
+                    className="p-1 rounded-lg hover:bg-muted text-muted-foreground transition-colors flex items-center gap-1 text-[11px] font-bengali"
+                    title="Refresh"
+                  >
+                    <RefreshCw className="w-3 h-3" />
+                    <span>{lang === "bn" ? "রিফ্রেশ" : "Refresh"}</span>
+                  </button>
+                </div>
+
+                {loadingAssets ? (
+                  <div className="flex items-center justify-center py-8 text-muted-foreground gap-2">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span className="text-xs font-bengali">{lang === "bn" ? "পূর্বের ব্যানার লোড হচ্ছে..." : "Loading previous banners..."}</span>
+                  </div>
+                ) : assets.length > 0 ? (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    {assets.map((asset) => {
+                      const isActive = currentUrl && (currentUrl === asset.url || currentUrl.includes(asset.name));
+                      return (
+                        <div
+                          key={asset.id || asset.name}
+                          className={`group relative rounded-2xl overflow-hidden border transition-all flex flex-col bg-card/60 ${
+                            isActive
+                              ? "border-primary ring-2 ring-primary/40 shadow-md"
+                              : "border-border hover:border-primary/50"
+                          }`}
+                        >
+                          <div className="relative aspect-video w-full overflow-hidden bg-muted">
+                            <img
+                              src={asset.url}
+                              alt={asset.name}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            />
+                            {isActive && (
+                              <span className="absolute top-1.5 left-1.5 px-2 py-0.5 rounded-full bg-primary text-primary-foreground text-[9px] font-bold font-mono shadow-xs flex items-center gap-1">
+                                <Check className="w-2.5 h-2.5" /> ACTIVE
+                              </span>
+                            )}
+                            {asset.size && (
+                              <span className="absolute bottom-1 right-1 bg-black/70 text-white text-[9px] px-1.5 py-0.5 rounded font-mono">
+                                {formatSize(asset.size)}
+                              </span>
+                            )}
+                          </div>
+
+                          <div className="p-2 space-y-1.5 flex-1 flex flex-col justify-between bg-card">
+                            <p className="text-[10px] font-mono text-muted-foreground truncate" title={asset.name}>
+                              {asset.name}
+                            </p>
+
+                            <div className="flex items-center gap-1.5">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  onSelect(asset.url);
+                                  toast({
+                                    title: lang === "bn" ? "ব্যানার পরিবর্তন সম্পন্ন" : "Banner Switched",
+                                    description: lang === "bn" ? "নির্বাচিত ব্যানার সক্রিয় করা হয়েছে" : "Selected banner is now active.",
+                                  });
+                                  onClose();
+                                }}
+                                className={`flex-1 py-1.5 px-2 rounded-xl text-[11px] font-bengali font-bold flex items-center justify-center gap-1 transition-all active:scale-95 ${
+                                  isActive
+                                    ? "bg-primary/20 text-primary border border-primary/30"
+                                    : "bg-primary text-primary-foreground hover:bg-primary/90 shadow-xs"
+                                }`}
+                              >
+                                <Check className="w-3 h-3" />
+                                <span>{isActive ? (lang === "bn" ? "বর্তমান" : "Current") : (lang === "bn" ? "সুইচ করুন" : "Switch")}</span>
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteAsset(asset);
+                                }}
+                                disabled={deletingId === asset.id}
+                                className="p-1.5 rounded-xl bg-destructive/10 hover:bg-destructive text-destructive hover:text-white transition-colors disabled:opacity-50"
+                                title={lang === "bn" ? "চিরতরে মুছুন" : "Permanently Delete"}
+                              >
+                                {deletingId === asset.id ? (
+                                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                ) : (
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                )}
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <p className="text-xs text-muted-foreground font-bengali text-center py-4 bg-muted/20 rounded-2xl border border-dashed border-border">
+                    {lang === "bn"
+                      ? "এই ফোল্ডারে পূর্বে আপলোডকৃত কোনো ব্যানার পাওয়া যায়নি।"
+                      : "No previous banners found in this folder."}
+                  </p>
                 )}
               </div>
             </div>
