@@ -273,8 +273,18 @@ const MainNav = () => {
           <div className="flex items-center justify-between h-14 lg:h-16">
             <Link to="/" className="flex items-center gap-2.5 group shrink-0">
               <LogoTile size="sm" />
-              <span className="font-bengali font-bold text-foreground text-sm hidden lg:block truncate max-w-[200px]">{siteName}</span>
-              <span className="font-bengali font-bold text-foreground text-sm hidden sm:block lg:hidden truncate max-w-[60px]">{settings.general.site_name_en?.split(' ').map(w => w[0]).join('') || 'FSP'}</span>
+              <div className="hidden sm:block text-left">
+                <span className="font-bengali font-bold text-foreground text-xs md:text-sm block leading-tight truncate">
+                  {lang === "en"
+                    ? (settings.general.site_name_en || "Faridpur Shahitto Parishad")
+                    : (settings.general.site_name_bn || "ফরিদপুর সাহিত্য পরিষদ")}
+                </span>
+                <span className="text-[8.5px] md:text-[9.5px] text-muted-foreground/80 tracking-widest uppercase block leading-tight font-medium mt-0.5 truncate">
+                  {lang === "en"
+                    ? (settings.general.site_name_bn || "ফরিদপুর সাহিত্য পরিষদ")
+                    : (settings.general.site_name_en || "FARIDPUR SHAHITTO PARISHAD")}
+                </span>
+              </div>
             </Link>
 
             {/* Desktop nav links */}

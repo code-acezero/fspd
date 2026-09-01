@@ -259,15 +259,27 @@ const HeroSection = () => {
         ))}
 
         {/* Top bar with quick links */}
-        <div className="absolute top-0 left-0 right-0 z-20 px-6 sm:px-10 lg:px-16 py-6 sm:py-8">
-          <div className="max-w-7xl mx-auto flex items-center justify-between">
-            <div className="flex items-center gap-3">
+        <div className="absolute top-0 left-0 right-0 z-20 py-4 sm:py-5">
+          <div className="w-full max-w-7xl 2xl:max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
+            <Link to="/" className="flex items-center gap-3 group shrink-0">
               <LogoTile size="md" glow="off" dilateRadius={3} />
-            </div>
+              <div className="hidden sm:block text-left">
+                <span className="font-bengali font-bold text-foreground text-sm md:text-base block leading-tight drop-shadow-md">
+                  {lang === "en"
+                    ? (settings.general.site_name_en || "Faridpur Shahitto Parishad")
+                    : (settings.general.site_name_bn || "ফরিদপুর সাহিত্য পরিষদ")}
+                </span>
+                <span className="text-[9px] md:text-[10px] text-white/80 tracking-widest uppercase block leading-tight font-medium mt-0.5 drop-shadow-sm">
+                  {lang === "en"
+                    ? (settings.general.site_name_bn || "ফরিদপুর সাহিত্য পরিষদ")
+                    : (settings.general.site_name_en || "FARIDPUR SHAHITTO PARISHAD")}
+                </span>
+              </div>
+            </Link>
             <div className="flex items-center gap-2.5">
               <Link
                 to="/home"
-                className="inline-flex items-center justify-center px-5 h-9 text-xs sm:text-sm font-semibold rounded-full bg-white/10 dark:bg-black/35 backdrop-blur-xl text-foreground/85 hover:text-foreground hover:bg-white/20 dark:hover:bg-black/50 transition-all border border-white/15 hover:border-white/25 shadow-sm leading-none text-center"
+                className="inline-flex items-center justify-center px-5 h-9 text-xs sm:text-sm font-semibold rounded-full bg-white/10 dark:bg-black/35 backdrop-blur-xl text-foreground/90 hover:text-foreground hover:bg-white/20 dark:hover:bg-black/50 transition-all border border-white/15 hover:border-white/25 shadow-sm leading-none text-center"
               >
                 <span>{t("home")}</span>
               </Link>
@@ -283,7 +295,7 @@ const HeroSection = () => {
 
         {/* Main content with pure scroll-driven fade out */}
         <motion.div
-          className="relative z-10 text-center px-4 max-w-5xl mx-auto pt-32 sm:pt-36 md:pt-40 lg:pt-44 pb-12"
+          className="relative z-10 text-center px-4 max-w-5xl mx-auto pt-28 sm:pt-32 md:pt-36 pb-12"
           style={{ y: textY, opacity: contentOpacity }}
         >
           {/* Top Tagline */}
