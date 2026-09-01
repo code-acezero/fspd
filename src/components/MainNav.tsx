@@ -9,6 +9,7 @@ import { useSiteSettings } from "@/contexts/SiteSettingsContext";
 import { supabase } from "@/integrations/supabase/client";
 import { courses as mockCourses } from "@/data/mockData";
 import { createSlug } from "@/lib/slugify";
+import { getBanglaDate } from "@/lib/specialDays";
 import demoLogo from "@/assets/site-logo.png";
 import LogoTile from "@/components/branding/LogoTile";
 
