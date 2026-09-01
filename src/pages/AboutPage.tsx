@@ -1,4 +1,4 @@
-﻿import { useEffect } from "react";
+import { useEffect } from "react";
 import { motion } from "framer-motion";
 import { BookOpen, Users, Calendar, Award, MapPin, Phone, Mail } from "lucide-react";
 import MainNav from "@/components/MainNav";
@@ -62,7 +62,7 @@ const AboutPage = () => {
       <EditableSection pageKey="about" sectionKey="hero" sectionTitle="হেডার ব্যানার (About Hero)">
         <section className="bg-hero-gradient py-20 relative overflow-hidden">
           <div className="absolute inset-0 alpona-pattern opacity-20" />
-          <div className="container mx-auto px-4 lg:px-8 text-center relative">
+          <div className="w-full max-w-7xl 2xl:max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 text-center relative">
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
               <EditableText
                 pageKey="about"
@@ -102,7 +102,7 @@ const AboutPage = () => {
       {/* Stats */}
       <EditableSection pageKey="about" sectionKey="stats" sectionTitle="পরিসংখ্যান (Statistics)">
         <section className="py-12">
-          <div className="container mx-auto px-4 lg:px-8">
+          <div className="w-full max-w-7xl 2xl:max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
               {stats.map((s, i) => (
                 <motion.div

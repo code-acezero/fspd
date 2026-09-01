@@ -5,7 +5,19 @@ export default {
   content: ["./pages/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}", "./app/**/*.{ts,tsx}", "./src/**/*.{ts,tsx}"],
   prefix: "",
   theme: {
-    container: { center: true, padding: "2rem", screens: { "2xl": "1400px" } },
+    container: {
+      center: true,
+      padding: {
+        DEFAULT: "1rem",
+        sm: "1.5rem",
+        md: "2rem",
+        lg: "2rem",
+        xl: "2.5rem",
+      },
+      screens: {
+        "2xl": "1640px",
+      },
+    },
     extend: {
       fontFamily: {
         display: ['Tiro Bangla', 'Playfair Display', 'Noto Serif Bengali', 'serif'],

@@ -109,7 +109,7 @@ const HomePage = () => {
     <div className="min-h-screen bg-background">
       <MainNav />
       <BannerSlider />
-      <div className="container mx-auto px-4 lg:px-8 py-6 md:py-10 space-y-6 md:space-y-12">
+      <div className="w-full max-w-7xl 2xl:max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-10 space-y-6 md:space-y-12">
         <EditableSection pageKey="home" sectionKey="notices" sectionTitle="জরুরি নোটিশ (Notices)">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-primary/5 border border-primary/20 rounded-2xl md:rounded-3xl p-3 md:p-5 depth-card nakshi-border">
             <div className="flex items-center gap-2 mb-2 md:mb-3">

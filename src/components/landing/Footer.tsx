@@ -37,7 +37,7 @@ const Footer = () => {
           1. DESKTOP & TABLET FOOTER (md and up)
          ══════════════════════════════════════════════════════════════ */}
       <div className="hidden md:block">
-        <div className="container mx-auto px-6 lg:px-12 pt-12 pb-10">
+        <div className="w-full max-w-7xl 2xl:max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-10">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-8 lg:gap-10">
             {/* Column 1: Organization Branding (4 cols) */}
             <div className="lg:col-span-4 space-y-4">
@@ -179,7 +179,7 @@ const Footer = () => {
 
         {/* Desktop Bottom Sub-Footer Bar */}
         <div className="border-t border-border/40 py-4 bg-background/50">
-          <div className="container mx-auto px-6 lg:px-12 grid grid-cols-1 sm:grid-cols-3 items-center gap-4 text-xs text-muted-foreground">
+          <div className="w-full max-w-7xl 2xl:max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 sm:grid-cols-3 items-center gap-4 text-xs text-muted-foreground">
             {/* Left Column: Copyright */}
             <div className="text-center sm:text-left">
               <EditableText

@@ -269,7 +269,7 @@ const MainNav = () => {
   return (
     <>
       <nav className="sticky top-0 z-50 bg-background/70 backdrop-blur-2xl border-b border-border/50 shadow-sm" style={{ borderBottomLeftRadius: '1rem', borderBottomRightRadius: '1rem' }}>
-        <div className="container mx-auto px-4 lg:px-8">
+        <div className="w-full max-w-7xl 2xl:max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-14 lg:h-16">
             <Link to="/" className="flex items-center gap-2.5 group shrink-0">
               <LogoTile size="sm" />

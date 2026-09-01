@@ -76,7 +76,7 @@ const MembersSection = () => {
         <div className="absolute top-1/2 left-0 -translate-y-1/2 w-72 md:w-96 h-72 md:h-96 rounded-full bg-primary/8 blur-3xl pointer-events-none -translate-x-1/3" />
         <div className="absolute top-1/2 right-0 -translate-y-1/2 w-72 md:w-96 h-72 md:h-96 rounded-full bg-primary/8 blur-3xl pointer-events-none translate-x-1/3" />
 
-        <div className="container mx-auto px-4 lg:px-8 relative z-10">
+        <div className="w-full max-w-7xl 2xl:max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}

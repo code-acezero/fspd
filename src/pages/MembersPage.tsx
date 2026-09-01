@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import MainNav from "@/components/MainNav";
 import Footer from "@/components/landing/Footer";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -34,7 +34,7 @@ const MembersPage = () => {
       <EditableSection pageKey="members" sectionKey="header" sectionTitle="সদস্য পেজ হেডার (Members Header)">
         <div className="bg-hero-gradient py-16 relative overflow-hidden">
           <div className="absolute inset-0 alpona-pattern opacity-20" />
-          <div className="container mx-auto px-4 lg:px-8 text-center relative">
+          <div className="w-full max-w-7xl 2xl:max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 text-center relative">
             <EditableText
               pageKey="members"
               sectionKey="header"
@@ -57,7 +57,7 @@ const MembersPage = () => {
         </div>
       </EditableSection>
 
-      <div className="container mx-auto px-4 lg:px-8 py-10">
+      <div className="w-full max-w-7xl 2xl:max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-10">
         {seniors.length > 0 && (
           <EditableSection pageKey="members" sectionKey="advisors" sectionTitle="উপদেষ্টা ও প্রতিষ্ঠাতা পরিষদ (Senior Advisors)">
             <EditableText

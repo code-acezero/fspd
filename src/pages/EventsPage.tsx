@@ -46,7 +46,7 @@ const EventsPage = () => {
       <EditableSection pageKey="events" sectionKey="header" sectionTitle="ইভেন্ট পেজ হেডার (Events Header)">
         <div className="bg-hero-gradient py-16 relative overflow-hidden">
           <div className="absolute inset-0 alpona-pattern opacity-20" />
-          <div className="container mx-auto px-4 lg:px-8 text-center relative">
+          <div className="w-full max-w-7xl 2xl:max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 text-center relative">
             <EditableText
               pageKey="events"
               sectionKey="header"
@@ -68,7 +68,7 @@ const EventsPage = () => {
           </div>
         </div>
       </EditableSection>
-      <div className="container mx-auto px-4 lg:px-8 py-10">
+      <div className="w-full max-w-7xl 2xl:max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-10">
         {isLoading ? (
           <div className="flex justify-center py-16"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>
         ) : events.length === 0 ? (

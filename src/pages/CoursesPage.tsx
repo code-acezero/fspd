@@ -92,7 +92,7 @@ const CoursesPage = () => {
       <EditableSection pageKey="courses" sectionKey="header" sectionTitle="কোর্স পেজ হেডার (Courses Header)">
         <div className="bg-hero-gradient py-16 relative overflow-hidden">
           <div className="absolute inset-0 alpona-pattern opacity-20" />
-          <div className="container mx-auto px-4 lg:px-8 text-center relative">
+          <div className="w-full max-w-7xl 2xl:max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 text-center relative">
             <EditableText
               pageKey="courses"
               sectionKey="header"
@@ -115,7 +115,7 @@ const CoursesPage = () => {
         </div>
       </EditableSection>
 
-      <div className="container mx-auto px-4 lg:px-8 py-10">
+      <div className="w-full max-w-7xl 2xl:max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-10">
         {isLoading ? (
           <div className="flex items-center justify-center py-20 text-muted-foreground gap-2">
             <Loader2 className="w-5 h-5 animate-spin" />

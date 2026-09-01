@@ -67,7 +67,7 @@ const BlogListPage = () => {
       <EditableSection pageKey="blog" sectionKey="header" sectionTitle="ব্লগ পেজ হেডার (Blog Header)">
         <div className="bg-hero-gradient py-16 relative overflow-hidden">
           <div className="absolute inset-0 alpona-pattern opacity-30" />
-          <div className="container mx-auto px-4 lg:px-8 text-center relative">
+          <div className="w-full max-w-7xl 2xl:max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 text-center relative">
             <EditableText
               pageKey="blog"
               sectionKey="header"
@@ -89,7 +89,7 @@ const BlogListPage = () => {
           </div>
         </div>
       </EditableSection>
-      <div className="container mx-auto px-4 lg:px-8 py-10">
+      <div className="w-full max-w-7xl 2xl:max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-10">
         <div className="flex flex-col md:flex-row gap-4 mb-8">
           <div className="relative flex-1">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />

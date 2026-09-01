@@ -59,7 +59,7 @@ const AboutSection = () => {
         <motion.div style={{ y: y1 }} className="absolute -top-20 -left-20 w-64 h-64 bg-gradient-to-br from-accent/5 to-transparent rounded-full blur-3xl" />
         <motion.div style={{ y: y2 }} className="absolute -bottom-20 -right-20 w-64 h-64 bg-gradient-to-tl from-primary/5 to-transparent rounded-full blur-3xl" />
 
-        <div className="container mx-auto px-4 lg:px-8">
+        <div className="w-full max-w-7xl 2xl:max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
