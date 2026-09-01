@@ -1,4 +1,4 @@
-﻿export interface PageSectionElementMeta {
+export interface PageSectionElementMeta {
   elementKey: string;
   labelBn: string;
   labelEn: string;
@@ -34,6 +34,7 @@ export const SITE_PAGES_REGISTRY: PageMeta[] = [
         sectionTitleBn: "হিরো ব্যানার (Hero Section)",
         sectionTitleEn: "Hero Banner",
         elements: [
+          { elementKey: "bg_image", labelBn: "হিরো ব্যাকগ্রাউন্ড ছবি", labelEn: "Hero Background Image", type: "image", defaultBn: "", defaultEn: "" },
           { elementKey: "tagline", labelBn: "উপরের ট্যাগলাইন", labelEn: "Tagline", type: "badge", defaultBn: "বাং লা  সং স্কৃ তি র  পা দ পী ঠ", defaultEn: "Seat of Bengali Culture" },
           { elementKey: "title_full", labelBn: "প্রধান শিরোনাম", labelEn: "Main Title", type: "heading", defaultBn: "ফরিদপুর সাহিত্য পরিষদ", defaultEn: "Faridpur Shahitto Parishad" },
           { elementKey: "subtitle", labelBn: "উপ-শিরোনাম ও বিবরণ", labelEn: "Subtitle", type: "text", defaultBn: "সাহিত্য, সংস্কৃতি ও জ্ঞানচর্চার মাধ্যমে বাংলার ঐতিহ্য সংরক্ষণ ও বিকাশে নিবেদিত", defaultEn: "Dedicated to preserving and developing the heritage of Bengal through literature, culture and pursuit of knowledge" },

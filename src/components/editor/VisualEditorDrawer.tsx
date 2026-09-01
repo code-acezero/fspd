@@ -6,7 +6,8 @@ import {
   Palette, Type, AlignLeft, AlignCenter, AlignRight,
   ImageIcon, Trash2, Layers, Check, Wand2,
   FolderTree, ExternalLink, ChevronRight, ChevronDown,
-  Globe, Search, ArrowLeft, Image as ImageLucide
+  Globe, Search, ArrowLeft, Image as ImageLucide,
+  UploadCloud
 } from "lucide-react";
 import { useVisualEditor } from "@/contexts/VisualEditorContext";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -346,7 +347,12 @@ const ElementInspector = ({ onBackToDirectory }: { onBackToDirectory: () => void
   const [pageKey, sectionKey, elementKey] = (selectedElement || "::").split(":");
   const content = getContent(pageKey, sectionKey, elementKey);
 
-  const isImageElement = imageElements.has(selectedElement || "");
+  const isImageElement =
+    imageElements.has(selectedElement || "") ||
+    elementKey === "bg_image" ||
+    elementKey.includes("image") ||
+    elementKey.includes("avatar") ||
+    elementKey.includes("banner");
   const isSectionElement = elementKey === "__section__";
 
   const [draftBn, setDraftBn] = useState(content.textBn);
