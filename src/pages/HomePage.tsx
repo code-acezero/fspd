@@ -1,22 +1,24 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "react-router-dom";
-import { ChevronLeft, ChevronRight, Calendar, Clock, MapPin, ArrowRight, Star, MessageSquare, AlertCircle, BookOpen, Megaphone } from "lucide-react";
+import { ChevronLeft, ChevronRight, Calendar, Clock, MapPin, ArrowRight, Star, AlertCircle, BookOpen, Megaphone } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { createSlug } from "@/lib/slugify";
 import MainNav from "@/components/MainNav";
 import Footer from "@/components/landing/Footer";
 import { useLanguage } from "@/contexts/LanguageContext";
+import EditableText from "@/components/editor/EditableText";
+import EditableSection from "@/components/editor/EditableSection";
 
 const BannerSlider = () => {
   const [current, setCurrent] = useState(0);
   const { t } = useLanguage();
 
   const slides = [
-    { tag: t("bannerTag1"), title: t("bannerTitle1"), subtitle: t("bannerSub1") },
-    { tag: t("bannerTag2"), title: t("bannerTitle2"), subtitle: t("bannerSub2") },
-    { tag: t("bannerTag3"), title: t("bannerTitle3"), subtitle: t("bannerSub3") },
+    { key: "slide_1", tag: t("bannerTag1") || "ঐতিহ্য ও ইতিহাস", title: t("bannerTitle1") || "ফরিদপুরের অমর সাহিত্য ঐতিহ্য", subtitle: t("bannerSub1") || "শতবর্ষের সাহিত্য ও সাংস্কৃতিক মেলবন্ধন" },
+    { key: "slide_2", tag: t("bannerTag2") || "সাহিত্য উৎসব", title: t("bannerTitle2") || "বার্ষিক সাহিত্য সম্মেলন ২০২৬", subtitle: t("bannerSub2") || "গুণীজন সংবর্ধনা ও কবিতা পাঠের আসর" },
+    { key: "slide_3", tag: t("bannerTag3") || "সদস্যপদ", title: t("bannerTitle3") || "সাহিত্য পরিষদে যুক্ত হোন", subtitle: t("bannerSub3") || "নতুন প্রজন্মের সাহিত্যিকদের জন্য উন্মুক্ত মঞ্চ" },
   ];
 
   useEffect(() => {
@@ -29,9 +31,34 @@ const BannerSlider = () => {
       <AnimatePresence mode="wait">
         <motion.div key={current} initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -50 }} transition={{ duration: 0.5 }} className="absolute inset-0 flex items-center justify-center text-center px-8">
           <div>
-            <span className="inline-block px-3 py-1 rounded-full bg-gold/20 text-gold text-[10px] md:text-xs font-semibold mb-2 font-bengali">{slides[current].tag}</span>
-            <h2 className="font-bengali text-lg md:text-2xl lg:text-4xl font-bold text-primary-foreground mb-1 drop-shadow-lg">{slides[current].title}</h2>
-            <p className="font-bengali text-primary-foreground/70 text-xs md:text-sm">{slides[current].subtitle}</p>
+            <span className="inline-block px-3 py-1 rounded-full bg-gold/20 text-gold text-[10px] md:text-xs font-semibold mb-2 font-bengali">
+              <EditableText
+                pageKey="home"
+                sectionKey="banner"
+                elementKey={`${slides[current].key}_tag`}
+                defaultBn={slides[current].tag}
+                defaultEn={slides[current].tag}
+                as="span"
+              />
+            </span>
+            <EditableText
+              pageKey="home"
+              sectionKey="banner"
+              elementKey={`${slides[current].key}_title`}
+              defaultBn={slides[current].title}
+              defaultEn={slides[current].title}
+              as="h2"
+              className="font-bengali text-lg md:text-2xl lg:text-4xl font-bold text-primary-foreground mb-1 drop-shadow-lg block"
+            />
+            <EditableText
+              pageKey="home"
+              sectionKey="banner"
+              elementKey={`${slides[current].key}_sub`}
+              defaultBn={slides[current].subtitle}
+              defaultEn={slides[current].subtitle}
+              as="p"
+              className="font-bengali text-primary-foreground/70 text-xs md:text-sm block"
+            />
           </div>
         </motion.div>
       </AnimatePresence>
@@ -83,32 +110,50 @@ const HomePage = () => {
       <MainNav />
       <BannerSlider />
       <div className="container mx-auto px-4 lg:px-8 py-6 md:py-10 space-y-6 md:space-y-12">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-primary/5 border border-primary/20 rounded-2xl md:rounded-3xl p-3 md:p-5 depth-card nakshi-border">
-          <div className="flex items-center gap-2 mb-2 md:mb-3">
-            <div className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-primary/10 flex items-center justify-center"><Megaphone className="w-3 h-3 md:w-4 md:h-4 text-primary" /></div>
-            <h3 className="font-bengali font-bold text-sm md:text-base text-foreground">{t("notices")}</h3>
-          </div>
-          <div className="space-y-2">
-            {latestPosts.slice(0, 3).map((p: any) => (
-              <Link to={`/blog/${createSlug(p.title_en || p.title, p.id)}`} key={p.id} className="flex items-center justify-between py-1.5 md:py-2 border-b border-border last:border-0 hover:bg-muted/40 px-2 rounded-lg">
-                <div className="flex items-center gap-1.5 min-w-0">
-                  <AlertCircle className="w-3 h-3 md:w-4 md:h-4 shrink-0 text-accent" />
-                  <span className="font-bengali text-xs md:text-sm text-foreground truncate">{lang === "en" && p.title_en ? p.title_en : p.title}</span>
-                </div>
-                <span className="text-[10px] md:text-xs text-muted-foreground shrink-0 ml-4">{new Date(p.created_at).toLocaleDateString(lang === "bn" ? "bn-BD" : "en-US")}</span>
-              </Link>
-            ))}
-            {latestPosts.length === 0 && (
-              <p className="text-xs text-muted-foreground font-bengali text-center py-2">{t("noPosts")}</p>
-            )}
-          </div>
-        </motion.div>
+        <EditableSection pageKey="home" sectionKey="notices" sectionTitle="জরুরি নোটিশ (Notices)">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-primary/5 border border-primary/20 rounded-2xl md:rounded-3xl p-3 md:p-5 depth-card nakshi-border">
+            <div className="flex items-center gap-2 mb-2 md:mb-3">
+              <div className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-primary/10 flex items-center justify-center"><Megaphone className="w-3 h-3 md:w-4 md:h-4 text-primary" /></div>
+              <EditableText
+                pageKey="home"
+                sectionKey="notices"
+                elementKey="title"
+                defaultBn={t("notices") || "জরুরি বিজ্ঞপ্তি"}
+                defaultEn="Announcements & Notices"
+                as="h3"
+                className="font-bengali font-bold text-sm md:text-base text-foreground"
+              />
+            </div>
+            <div className="space-y-2">
+              {latestPosts.slice(0, 3).map((p: any) => (
+                <Link to={`/blog/${createSlug(p.title_en || p.title, p.id)}`} key={p.id} className="flex items-center justify-between py-1.5 md:py-2 border-b border-border last:border-0 hover:bg-muted/40 px-2 rounded-lg">
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <AlertCircle className="w-3 h-3 md:w-4 md:h-4 shrink-0 text-accent" />
+                    <span className="font-bengali text-xs md:text-sm text-foreground truncate">{lang === "en" && p.title_en ? p.title_en : p.title}</span>
+                  </div>
+                  <span className="text-[10px] md:text-xs text-muted-foreground shrink-0 ml-4">{new Date(p.created_at).toLocaleDateString(lang === "bn" ? "bn-BD" : "en-US")}</span>
+                </Link>
+              ))}
+              {latestPosts.length === 0 && (
+                <p className="text-xs text-muted-foreground font-bengali text-center py-2">{t("noPosts")}</p>
+              )}
+            </div>
+          </motion.div>
+        </EditableSection>
 
-        <section>
+        <EditableSection pageKey="home" sectionKey="latest_posts" sectionTitle="সাম্প্রতিক লেখা (Latest Posts)">
           <div className="flex items-center justify-between mb-3 md:mb-6">
             <div className="flex items-center gap-1.5">
               <div className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-primary/10 flex items-center justify-center"><BookOpen className="w-3 h-3 md:w-4 md:h-4 text-primary" /></div>
-              <h2 className="font-bengali text-lg md:text-2xl font-bold text-foreground">{t("latestPosts")}</h2>
+              <EditableText
+                pageKey="home"
+                sectionKey="latest_posts"
+                elementKey="title"
+                defaultBn={t("latestPosts") || "সাম্প্রতিক সাহিত্যকর্ম ও প্রবন্ধ"}
+                defaultEn="Latest Articles & Publications"
+                as="h2"
+                className="font-bengali text-lg md:text-2xl font-bold text-foreground"
+              />
             </div>
             <Link to="/blog" className="text-xs md:text-sm text-primary hover:underline font-bengali flex items-center gap-1 px-3 py-1 rounded-full bg-primary/5 hover:bg-primary/10 transition-colors">{t("viewAll")} <ArrowRight className="w-3 h-3 md:w-4 md:h-4" /></Link>
           </div>
@@ -141,13 +186,21 @@ const HomePage = () => {
               <p className="font-bengali text-muted-foreground py-8">{t("noPosts")}</p>
             )}
           </div>
-        </section>
+        </EditableSection>
 
-        <section>
+        <EditableSection pageKey="home" sectionKey="upcoming_events" sectionTitle="আসন্ন অনুষ্ঠান (Upcoming Events)">
           <div className="flex items-center justify-between mb-3 md:mb-6">
             <div className="flex items-center gap-1.5">
               <div className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-primary/10 flex items-center justify-center"><Calendar className="w-3 h-3 md:w-4 md:h-4 text-primary" /></div>
-              <h2 className="font-bengali text-lg md:text-2xl font-bold text-foreground">{t("upcomingEvents")}</h2>
+              <EditableText
+                pageKey="home"
+                sectionKey="upcoming_events"
+                elementKey="title"
+                defaultBn={t("upcomingEvents") || "আসন্ন অনুষ্ঠান ও সাহিত্যসভা"}
+                defaultEn="Upcoming Events & Sessions"
+                as="h2"
+                className="font-bengali text-lg md:text-2xl font-bold text-foreground"
+              />
             </div>
             <Link to="/events" className="text-xs md:text-sm text-primary hover:underline font-bengali flex items-center gap-1 px-3 py-1 rounded-full bg-primary/5 hover:bg-primary/10 transition-colors">{t("viewAll")} <ArrowRight className="w-3 h-3 md:w-4 md:h-4" /></Link>
           </div>
@@ -174,7 +227,7 @@ const HomePage = () => {
               <p className="font-bengali text-muted-foreground py-8">{t("noEvents")}</p>
             )}
           </div>
-        </section>
+        </EditableSection>
       </div>
       <Footer />
     </div>

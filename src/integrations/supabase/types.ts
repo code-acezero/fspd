@@ -14,6 +14,126 @@ export type Database = {
   }
   public: {
     Tables: {
+      courses: {
+        Row: {
+          cover_image: string
+          created_at: string
+          created_by: string | null
+          description: string
+          description_en: string
+          duration: string
+          duration_en: string
+          enrolled: number
+          highlights: string[]
+          highlights_en: string[]
+          id: string
+          instructor: string
+          instructor_en: string
+          is_active: boolean
+          modules: number
+          sort_order: number
+          status: string
+          title: string
+          title_en: string
+          updated_at: string
+        }
+        Insert: {
+          cover_image?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          description_en?: string
+          duration?: string
+          duration_en?: string
+          enrolled?: number
+          highlights?: string[]
+          highlights_en?: string[]
+          id?: string
+          instructor?: string
+          instructor_en?: string
+          is_active?: boolean
+          modules?: number
+          sort_order?: number
+          status?: string
+          title?: string
+          title_en?: string
+          updated_at?: string
+        }
+        Update: {
+          cover_image?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          description_en?: string
+          duration?: string
+          duration_en?: string
+          enrolled?: number
+          highlights?: string[]
+          highlights_en?: string[]
+          id?: string
+          instructor?: string
+          instructor_en?: string
+          is_active?: boolean
+          modules?: number
+          sort_order?: number
+          status?: string
+          title?: string
+          title_en?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      page_content: {
+        Row: {
+          content_bn: string
+          content_en: string
+          created_at: string
+          element_key: string
+          id: string
+          is_visible: boolean
+          media_url: string
+          metadata: Json
+          page_key: string
+          section_key: string
+          sort_order: number
+          styles: Json
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          content_bn?: string
+          content_en?: string
+          created_at?: string
+          element_key: string
+          id?: string
+          is_visible?: boolean
+          media_url?: string
+          metadata?: Json
+          page_key: string
+          section_key: string
+          sort_order?: number
+          styles?: Json
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          content_bn?: string
+          content_en?: string
+          created_at?: string
+          element_key?: string
+          id?: string
+          is_visible?: boolean
+          media_url?: string
+          metadata?: Json
+          page_key?: string
+          section_key?: string
+          sort_order?: number
+          styles?: Json
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       course_registrations: {
         Row: {
           course_id: string

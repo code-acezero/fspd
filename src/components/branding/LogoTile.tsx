@@ -1,5 +1,4 @@
-import { ImgHTMLAttributes, useId } from "react";
-import { useTheme } from "@/contexts/ThemeContext";
+import { useState, useEffect, ImgHTMLAttributes } from "react";
 import { useSiteSettings } from "@/contexts/SiteSettingsContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 
@@ -10,264 +9,183 @@ interface LogoTileProps extends Omit<ImgHTMLAttributes<HTMLImageElement>, "src" 
   size?: Size;
   /** Render only the image with no tile background */
   bare?: boolean;
-  /** Surrounding liquid blue→crimson halo intensity. Falls back to global setting. */
+  /** Legacy prop - default is off for clean sleek aesthetic */
   glow?: Glow;
-  /** Constrain halo so it never escapes a parent with overflow-hidden */
   contained?: boolean;
-  /**
-   * Per-asset dilation radius (in SVG user units, viewBox 0–100) used to flood-fill
-   * internal transparent gaps when generating the background silhouette.
-   * Defaults to settings.appearance.logo_dilate, then 8.
-   */
   dilateRadius?: number;
 }
 
-// Module-level feature detection for inline SVG filter support. Falls back
-// to a CSS mask-image silhouette in browsers (very old) without filter support.
-const supportsSvgFilter = (() => {
-  if (typeof window === "undefined") return true;
-  try {
-    return (
-      typeof (window as unknown as { SVGFEMorphologyElement?: unknown })
-        .SVGFEMorphologyElement !== "undefined" &&
-      CSS.supports("filter", "url(#x)")
-    );
-  } catch {
-    return true;
-  }
-})();
-
 // Tile sizes — responsive across mobile / tablet / desktop, no cropping.
 const sizeClasses: Record<Size, string> = {
-  sm: "w-9 h-9 sm:w-10 sm:h-10",
-  md: "w-11 h-11 sm:w-12 sm:h-12",
-  lg: "w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16",
-  xl: "w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24",
+  sm: "w-8 h-8 sm:w-9 sm:h-9",
+  md: "w-10 h-10 sm:w-11 sm:h-11",
+  lg: "w-12 h-12 sm:w-14 sm:h-14",
+  xl: "w-16 h-16 sm:w-20 sm:h-20",
 };
 
-// Halo dimensions per intensity. Blur radii use clamp() so they scale with viewport
-// (small on phones, generous on desktop) — keeping the tile from overpowering the header.
-const glowConfig: Record<Exclude<Glow, "off">, {
-  outerOpacity: number;
-  innerOpacity: number;
-  outerBlur: string; // CSS clamp()
-  innerBlur: string;
-  outerInset: string;
-  innerInset: string;
-  containedOuterInset: string;
-  containedInnerInset: string;
-}> = {
-  subtle: {
-    outerOpacity: 0.32, innerOpacity: 0.28,
-    outerBlur: "clamp(8px, 1.6vw, 16px)",
-    innerBlur: "clamp(5px, 1vw, 10px)",
-    outerInset: "-22%", innerInset: "-8%",
-    containedOuterInset: "-8%", containedInnerInset: "-2%",
-  },
-  normal: {
-    outerOpacity: 0.55, innerOpacity: 0.5,
-    outerBlur: "clamp(12px, 2.4vw, 24px)",
-    innerBlur: "clamp(7px, 1.4vw, 14px)",
-    outerInset: "-38%", innerInset: "-14%",
-    containedOuterInset: "-12%", containedInnerInset: "-4%",
-  },
-  bold: {
-    outerOpacity: 0.8, innerOpacity: 0.7,
-    outerBlur: "clamp(16px, 3.2vw, 34px)",
-    innerBlur: "clamp(10px, 1.8vw, 18px)",
-    outerInset: "-52%", innerInset: "-18%",
-    containedOuterInset: "-16%", containedInnerInset: "-6%",
-  },
-};
+// Global memory cache for processed logo Data URLs
+const logoCache = new Map<string, string>();
+
+function generateCrispLogo(imgSrc: string): Promise<string> {
+  if (logoCache.has(imgSrc)) {
+    return Promise.resolve(logoCache.get(imgSrc)!);
+  }
+
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => {
+      try {
+        const w = img.naturalWidth || 447;
+        const h = img.naturalHeight || 559;
+
+        const srcCanvas = document.createElement("canvas");
+        srcCanvas.width = w;
+        srcCanvas.height = h;
+        const srcCtx = srcCanvas.getContext("2d");
+        if (!srcCtx) {
+          resolve(imgSrc);
+          return;
+        }
+        srcCtx.drawImage(img, 0, 0);
+        const imgData = srcCtx.getImageData(0, 0, w, h);
+        const data = imgData.data;
+
+        // Compute row bounds for shield interior
+        const bounds: { minX: number; maxX: number }[] = [];
+        for (let y = 0; y < h; y++) {
+          let minX = -1;
+          let maxX = -1;
+          for (let x = 0; x < w; x++) {
+            if (data[(y * w + x) * 4 + 3] > 25) {
+              if (minX === -1) minX = x;
+              maxX = x;
+            }
+          }
+          bounds.push({ minX, maxX });
+        }
+
+        // Sleek prominent crest border dilation (~22px at 447px width -> ~2.5px solid border on small icons)
+        const borderPx = 22;
+
+        const borderCanvas = document.createElement("canvas");
+        borderCanvas.width = w;
+        borderCanvas.height = h;
+        const bCtx = borderCanvas.getContext("2d");
+        if (!bCtx) {
+          resolve(imgSrc);
+          return;
+        }
+        const bData = bCtx.createImageData(w, h);
+        const bd = bData.data;
+
+        for (let y = 0; y < h; y++) {
+          let minX = -1;
+          let maxX = -1;
+          for (let dy = -borderPx; dy <= borderPx; dy++) {
+            const ny = y + dy;
+            if (ny >= 0 && ny < h) {
+              const b = bounds[ny];
+              if (b.minX !== -1) {
+                const dx = Math.round(Math.sqrt(Math.max(0, borderPx * borderPx - dy * dy)));
+                const rowMin = b.minX - dx;
+                const rowMax = b.maxX + dx;
+                if (minX === -1 || rowMin < minX) minX = rowMin;
+                if (maxX === -1 || rowMax > maxX) maxX = rowMax;
+              }
+            }
+          }
+
+          if (minX !== -1 && maxX !== -1) {
+            const startX = Math.max(0, minX);
+            const endX = Math.min(w - 1, maxX);
+            for (let x = startX; x <= endX; x++) {
+              const idx = (y * w + x) * 4;
+              bd[idx] = 255;     // R
+              bd[idx + 1] = 255; // G
+              bd[idx + 2] = 255; // B
+              bd[idx + 3] = 255; // A (100% solid white backing & sleek border)
+            }
+          }
+        }
+        bCtx.putImageData(bData, 0, 0);
+
+        // Final Composite Canvas: Smooth White Bordered Silhouette + Logo
+        const outCanvas = document.createElement("canvas");
+        outCanvas.width = w;
+        outCanvas.height = h;
+        const outCtx = outCanvas.getContext("2d");
+        if (!outCtx) {
+          resolve(imgSrc);
+          return;
+        }
+
+        // 1. Draw solid white silhouette with sleek slim border
+        outCtx.drawImage(borderCanvas, 0, 0);
+        // 2. Draw crisp original logo centered on top
+        outCtx.drawImage(srcCanvas, 0, 0);
+
+        const dataUrl = outCanvas.toDataURL("image/png");
+        logoCache.set(imgSrc, dataUrl);
+        resolve(dataUrl);
+      } catch (err) {
+        console.warn("Could not generate composite logo:", err);
+        resolve(imgSrc);
+      }
+    };
+    img.onerror = () => resolve(imgSrc);
+    img.src = imgSrc;
+  });
+}
 
 const LogoTile = ({
   size = "md",
   bare = false,
-  glow,
-  contained = false,
-  dilateRadius,
   className = "",
   ...imgProps
 }: LogoTileProps) => {
-  const { theme } = useTheme();
-  const { settings } = useSiteSettings();
+  const { settings, effectivePalette } = useSiteSettings();
   const { lang } = useLanguage();
-  const reactId = useId();
+  const [renderedSrc, setRenderedSrc] = useState<string>("");
 
-  const logoSrc = settings.general.logo_url || "";
+  const rawLogoSrc = settings.general.logo_url || "";
   const altText =
     (lang === "en" ? settings.general.site_name_en : settings.general.site_name_bn) || "Site logo";
 
-  // Without an admin-uploaded logo, render nothing (no hardcoded fallback).
-  if (!logoSrc) return null;
+  const isThemeAdaptive = settings.appearance.theme_adaptive_logo !== false;
+  const currentPalette = PALETTES[effectivePalette] || PALETTES["royal"];
 
-  // Cache-bust: derive token from URL so a new logo URL invalidates the cached image.
-  const cacheBustedSrc = logoSrc.startsWith("/")
-    ? `${logoSrc}?v=${encodeURIComponent(logoSrc)}`
-    : logoSrc;
+  useEffect(() => {
+    if (!rawLogoSrc) return;
+    let isCurrent = true;
+    generateCrispLogo(rawLogoSrc).then((src) => {
+      if (isCurrent) setRenderedSrc(src);
+    });
+    return () => {
+      isCurrent = false;
+    };
+  }, [rawLogoSrc]);
 
-  // Sitewide intensity (admin can dial down): settings.appearance.logo_glow.
-  const appearance = settings.appearance as unknown as {
-    logo_glow?: Glow;
-    logo_dilate?: number;
-  };
-  const globalGlow = appearance?.logo_glow ?? "normal";
-  const effectiveGlow: Glow = glow ?? globalGlow;
-  // Per-asset dilation: prop > admin setting > sensible default. Clamped to a
-  // safe range so it never over-expands past the logo's true outer edge.
-  const effectiveDilate = Math.max(
-    0,
-    Math.min(20, dilateRadius ?? appearance?.logo_dilate ?? 8),
-  );
+  if (!rawLogoSrc) return null;
 
-  // Logo color is recolored on the fly via a CSS var set by the active palette.
-  // Fallback: theme primary tint.
-  const themeFilter =
-    "var(--logo-filter, brightness(0) saturate(100%) invert(18%) sepia(78%) saturate(3500%) hue-rotate(338deg) brightness(95%) contrast(105%) drop-shadow(0 1px 2px hsl(0 0% 0% / 0.15)))";
-  const img = (
-    <img
-      src={cacheBustedSrc}
-      alt={altText}
-      loading="lazy"
-      decoding="async"
-      className={`max-w-full max-h-full object-contain ${className}`}
-      style={{ filter: themeFilter }}
-      {...imgProps}
-    />
-  );
-
-  if (bare) return img;
-
-  // White background follows the logo's OUTER silhouette only — inner transparent
-  // holes inside the logo are filled (so the white shows through them), and the
-  // outside edges are clipped flush to the logo shape.
-  //
-  // Filter chain (alpha-compositing, hole-filling):
-  //   1. SourceAlpha          → strip out color, keep only the logo's alpha mask
-  //   2. feMorphology dilate  → grow the silhouette by `effectiveDilate` units to
-  //                              flood-fill internal transparent gaps
-  //   3. feComponentTransfer  → discrete alpha ramp (semi-transparent → 1) so the
-  //                              dilated edges are fully opaque, no soft fringe
-  //   4. feFlood + feComposite "in" → paint the resulting solid silhouette with
-  //                              the tile background color
-  const tileBg = theme === "dark" ? "hsl(0,0%,96%)" : "#ffffff";
-  // Unique per-instance id so multiple LogoTiles on the page don't collide.
-  const filterId = `logo-silhouette-${reactId.replace(/:/g, "")}-${size}`;
-
-  const silhouetteSvg = (
-    <svg
-      aria-hidden
-      viewBox="0 0 100 100"
-      preserveAspectRatio="xMidYMid meet"
-      className="absolute inset-0 w-full h-full"
-    >
-      <defs>
-        <filter
-          id={filterId}
-          x="-10%"
-          y="-10%"
-          width="120%"
-          height="120%"
-          colorInterpolationFilters="sRGB"
-        >
-          <feMorphology
-            in="SourceAlpha"
-            operator="dilate"
-            radius={effectiveDilate}
-            result="dilatedAlpha"
-          />
-          <feComponentTransfer in="dilatedAlpha" result="solidAlpha">
-            {/* Snap any partial alpha to fully opaque to kill soft halos */}
-            <feFuncA type="discrete" tableValues="0 1 1 1 1" />
-          </feComponentTransfer>
-          <feFlood floodColor={tileBg} result="flood" />
-          <feComposite in="flood" in2="solidAlpha" operator="in" />
-        </filter>
-      </defs>
-      <image
-        href={cacheBustedSrc}
-        x="0"
-        y="0"
-        width="100"
-        height="100"
-        preserveAspectRatio="xMidYMid meet"
-        filter={`url(#${filterId})`}
-      />
-    </svg>
-  );
-
-  // Fallback for environments without SVG filter support: a plain CSS mask
-  // clipped to the logo's alpha. Internal holes won't be filled but the
-  // outside silhouette stays clean.
-  const silhouetteFallback = (
-    <div
-      aria-hidden
-      className={`absolute inset-0 ${theme === "dark" ? "bg-[hsl(0_0%_96%)]" : "bg-white"}`}
-      style={{
-        WebkitMaskImage: `url(${cacheBustedSrc})`,
-        maskImage: `url(${cacheBustedSrc})`,
-        WebkitMaskRepeat: "no-repeat",
-        maskRepeat: "no-repeat",
-        WebkitMaskPosition: "center",
-        maskPosition: "center",
-        WebkitMaskSize: "contain",
-        maskSize: "contain",
-      }}
-    />
-  );
-
-  const silhouette = supportsSvgFilter ? silhouetteSvg : silhouetteFallback;
-
-  const tile = (
-    <div
-      className={`relative ${sizeClasses[size]} flex items-center justify-center shrink-0`}
-    >
-      {silhouette}
-      <div className="relative z-10 w-full h-full flex items-center justify-center">
-        {img}
-      </div>
-    </div>
-  );
-
-  if (effectiveGlow === "off") return tile;
-
-  const cfg = glowConfig[effectiveGlow];
-  const outerInset = contained ? cfg.containedOuterInset : cfg.outerInset;
-  const innerInset = contained ? cfg.containedInnerInset : cfg.innerInset;
-  // Slight boost in dark mode so the halo reads against deep charcoal.
-  const outerOpacity = theme === "dark" ? Math.min(1, cfg.outerOpacity * 1.2) : cfg.outerOpacity;
-  const innerOpacity = theme === "dark" ? Math.min(1, cfg.innerOpacity * 1.15) : cfg.innerOpacity;
+  const displaySrc = renderedSrc || rawLogoSrc;
 
   return (
-    <div className="relative isolate inline-flex items-center justify-center">
-      {/* Outer radial halo — crimson core fading through gold into transparency */}
-      <div
-        aria-hidden
-        className="logo-halo-pulse pointer-events-none absolute rounded-full"
+    <div
+      className={`relative ${sizeClasses[size]} flex items-center justify-center shrink-0 select-none ${className}`}
+    >
+      <img
+        src={displaySrc}
+        alt={altText}
+        loading="eager"
+        decoding="async"
         style={{
-          inset: outerInset,
-          background:
-            "radial-gradient(circle, hsl(var(--primary) / 0.85) 0%, hsl(var(--crimson, var(--primary)) / 0.55) 35%, hsl(var(--gold) / 0.45) 65%, transparent 80%)",
-          filter: `blur(${cfg.outerBlur})`,
-          ["--halo-opacity" as never]: String(outerOpacity),
-          opacity: outerOpacity,
-          zIndex: 0,
+          filter: isThemeAdaptive && currentPalette ? currentPalette.logoFilter : "none",
+          ...(imgProps.style || {}),
         }}
+        className={`w-full h-full object-contain transition-all duration-300 ${imgProps.className || ""}`}
+        {...imgProps}
       />
-      {/* Inner conic ring — primary → gold → primary, on-theme rotation */}
-      <div
-        aria-hidden
-        className="logo-halo-spin pointer-events-none absolute rounded-full"
-        style={{
-          inset: innerInset,
-          background:
-            "conic-gradient(from 0deg, hsl(var(--primary)), hsl(var(--gold)), hsl(var(--primary)), hsl(var(--accent, var(--gold))), hsl(var(--primary)))",
-          filter: `blur(${cfg.innerBlur})`,
-          opacity: innerOpacity,
-          zIndex: 0,
-        }}
-      />
-      {tile}
     </div>
   );
 };

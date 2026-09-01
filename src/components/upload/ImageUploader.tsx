@@ -1,30 +1,16 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type ChangeEvent, type DragEvent } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Image as ImageIcon, Loader2, UploadCloud, X, AlertCircle } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useToast } from "@/hooks/use-toast";
-
-/**
- * Reusable image uploader with drag-and-drop, instant client-side preview,
- * MIME / size / dimension validation, and Supabase Storage upload.
- *
- * Storage RLS expects upload paths under `posts/<auth.uid()>/...` for non-admins.
- * When folder is "post", we apply that scheme; otherwise (avatar/event/logo)
- * the caller is expected to have admin/moderator access.
- */
-
-export type ImageFolder = "post" | "avatar" | "event" | "logo";
-
-const ACCEPT = "image/jpeg,image/png,image/webp";
-const ACCEPT_LIST = ["image/jpeg", "image/png", "image/webp"];
+import { uploadSiteImage, ALLOWED_IMAGE_TYPES, ImageFolder } from "@/lib/storage";
 
 interface ImageUploaderProps {
   value: string[];
   onChange: (urls: string[]) => void;
   folder?: ImageFolder;
-  bucket?: string; // defaults: post -> content-images, others -> avatars
+  bucket?: "content-images" | "avatars";
   maxImages?: number;
   maxFileMB?: number;
   minWidth?: number;
@@ -44,44 +30,13 @@ interface PendingItem {
   progress: number;
 }
 
-const buildPath = (folder: ImageFolder, userId: string, fileName: string) => {
-  const safeName = `${Date.now()}-${fileName.replace(/[^A-Za-z0-9._-]/g, "_")}`;
-  if (folder === "post") return `posts/${userId}/${safeName}`;
-  if (folder === "avatar") return `${userId}/${safeName}`;
-  if (folder === "event") return `events/${safeName}`;
-  return `site/${safeName}`;
-};
-
-const defaultBucket = (folder: ImageFolder) =>
-  folder === "avatar" ? "avatars" : "content-images";
-
-/** Read intrinsic dimensions of an image File via a temporary object URL. */
-const readImageDimensions = (file: File): Promise<{ width: number; height: number }> =>
-  new Promise((resolve, reject) => {
-    const url = URL.createObjectURL(file);
-    const img = new Image();
-    img.onload = () => {
-      URL.revokeObjectURL(url);
-      resolve({ width: img.naturalWidth, height: img.naturalHeight });
-    };
-    img.onerror = () => {
-      URL.revokeObjectURL(url);
-      reject(new Error("decode failed"));
-    };
-    img.src = url;
-  });
-
 export const ImageUploader = ({
   value,
   onChange,
   folder = "post",
   bucket,
   maxImages = 4,
-  maxFileMB = 5,
-  minWidth = 200,
-  minHeight = 200,
-  maxWidth = 8000,
-  maxHeight = 8000,
+  maxFileMB = 20,
   multiple = true,
   className = "",
 }: ImageUploaderProps) => {
@@ -91,7 +46,6 @@ export const ImageUploader = ({
   const fileRef = useRef<HTMLInputElement>(null);
   const [dragOver, setDragOver] = useState(false);
   const [pending, setPending] = useState<PendingItem[]>([]);
-  const activeBucket = bucket || defaultBucket(folder);
 
   // Revoke any leftover object URLs on unmount.
   useEffect(() => () => {
@@ -101,10 +55,14 @@ export const ImageUploader = ({
   const remaining = maxImages - value.length;
 
   const validate = (file: File): string | null => {
-    if (!ACCEPT_LIST.includes(file.type)) {
+    const ext = file.name.split(".").pop()?.toLowerCase();
+    const isMimeAllowed = ALLOWED_IMAGE_TYPES.includes(file.type);
+    const isExtAllowed = ext && ["jpg", "jpeg", "png", "webp", "gif", "svg", "avif"].includes(ext);
+
+    if (!isMimeAllowed && !isExtAllowed) {
       return lang === "bn"
-        ? "শুধুমাত্র JPG, PNG, WEBP গ্রহণযোগ্য"
-        : "Only JPG, PNG, WEBP allowed";
+        ? "শুধুমাত্র JPG, PNG, WEBP, GIF, SVG, AVIF গ্রহণযোগ্য"
+        : "Only JPG, PNG, WEBP, GIF, SVG, AVIF allowed";
     }
     if (file.size > maxFileMB * 1024 * 1024) {
       return lang === "bn"
@@ -138,76 +96,46 @@ export const ImageUploader = ({
       }));
       setPending((p) => [...p, ...items]);
 
-      // Validate + upload sequentially to avoid storage rate spikes.
+      // Process uploads
       for (const item of items) {
         const mimeErr = validate(item.file);
         if (mimeErr) {
           setPending((p) => p.map((it) => (it.id === item.id ? { ...it, status: "error", error: mimeErr } : it)));
           continue;
         }
-        try {
-          const dim = await readImageDimensions(item.file);
-          if (dim.width < minWidth || dim.height < minHeight) {
-            setPending((p) =>
-              p.map((it) =>
-                it.id === item.id
-                  ? { ...it, status: "error", error: `${minWidth}×${minHeight}+ ${lang === "bn" ? "প্রয়োজন" : "required"}` }
-                  : it,
-              ),
-            );
-            continue;
-          }
-          if (dim.width > maxWidth || dim.height > maxHeight) {
-            setPending((p) =>
-              p.map((it) =>
-                it.id === item.id
-                  ? { ...it, status: "error", error: `${lang === "bn" ? "ছবি অনেক বড়" : "Image too large"} (max ${maxWidth}×${maxHeight})` }
-                  : it,
-              ),
-            );
-            continue;
-          }
-        } catch {
-          setPending((p) =>
-            p.map((it) =>
-              it.id === item.id ? { ...it, status: "error", error: lang === "bn" ? "ছবি পড়া যায়নি" : "Cannot read image" } : it,
-            ),
-          );
+
+        setPending((p) => p.map((it) => (it.id === item.id ? { ...it, status: "uploading", progress: 40 } : it)));
+
+        const res = await uploadSiteImage({
+          file: item.file,
+          folder,
+          bucket,
+          userId: user.id,
+        });
+
+        if (!res.success || !res.url) {
+          setPending((p) => p.map((it) => (it.id === item.id ? { ...it, status: "error", error: res.error || "Upload failed" } : it)));
           continue;
         }
 
-        setPending((p) => p.map((it) => (it.id === item.id ? { ...it, status: "uploading", progress: 25 } : it)));
-        const path = buildPath(folder, user.id, item.file.name);
-        const { error } = await supabase.storage.from(activeBucket).upload(path, item.file, {
-          upsert: false,
-          cacheControl: "3600",
-          contentType: item.file.type,
-        });
-        if (error) {
-          setPending((p) => p.map((it) => (it.id === item.id ? { ...it, status: "error", error: error.message } : it)));
-          continue;
-        }
-        const { data: pub } = supabase.storage.from(activeBucket).getPublicUrl(path);
         // Bubble URL up immediately, then mark item done so it can fade out.
-        onChange([...value, pub.publicUrl].slice(0, maxImages));
+        onChange([...value, res.url].slice(0, maxImages));
         setPending((p) => p.map((it) => (it.id === item.id ? { ...it, status: "done", progress: 100 } : it)));
-        // Remove the pending tile shortly after it's persisted in `value`.
         setTimeout(() => {
           setPending((p) => p.filter((it) => it.id !== item.id));
           URL.revokeObjectURL(item.previewUrl);
-        }, 800);
+        }, 600);
       }
     },
-    [activeBucket, folder, lang, maxFileMB, maxImages, maxWidth, maxHeight, minWidth, minHeight, onChange, remaining, t, toast, user, value],
+    [bucket, folder, lang, maxFileMB, maxImages, onChange, remaining, t, toast, user, value]
   );
 
-  const onPicked = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const onPicked = (e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) handleFiles(Array.from(e.target.files));
-    // Reset so picking the same file again still triggers onChange.
     e.target.value = "";
   };
 
-  const onDrop = (e: React.DragEvent) => {
+  const onDrop = (e: DragEvent) => {
     e.preventDefault();
     setDragOver(false);
     if (!e.dataTransfer.files?.length) return;
@@ -231,7 +159,7 @@ export const ImageUploader = ({
       <input
         ref={fileRef}
         type="file"
-        accept={ACCEPT}
+        accept={ALLOWED_IMAGE_TYPES.join(",")}
         multiple={multiple}
         onChange={onPicked}
         className="hidden"
@@ -263,7 +191,9 @@ export const ImageUploader = ({
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.9 }}
-                className={`relative aspect-square rounded-xl overflow-hidden border ${p.status === "error" ? "border-destructive" : "border-border"}`}
+                className={`relative aspect-square rounded-xl overflow-hidden border ${
+                  p.status === "error" ? "border-destructive" : "border-border"
+                }`}
               >
                 <img src={p.previewUrl} alt="" className="w-full h-full object-cover" />
                 <div className="absolute inset-0 bg-background/60 backdrop-blur-sm flex flex-col items-center justify-center text-center px-2 gap-1">
@@ -329,11 +259,11 @@ export const ImageUploader = ({
             <UploadCloud className="w-5 h-5 text-muted-foreground" />
             <p className="text-xs font-bengali text-muted-foreground text-center">
               {lang === "bn"
-                ? "ছবি টেনে আনুন বা ক্লিক করুন"
+                ? "ছবি টেনে আনুন বা ফাইল নির্বাচন করতে ক্লিক করুন"
                 : "Drag & drop, or click to select"}
             </p>
             <p className="text-[10px] text-muted-foreground/80">
-              JPG · PNG · WEBP · ≤{maxFileMB}MB · {value.length}/{maxImages}
+              JPG · PNG · WEBP · SVG · GIF · AVIF (Max {maxFileMB}MB)
             </p>
           </>
         ) : (

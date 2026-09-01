@@ -1,19 +1,23 @@
 import { useRef, useEffect, useState } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
-import { ChevronDown, Eye, Home } from "lucide-react";
+import { ChevronDown, Home } from "lucide-react";
 import { Link } from "react-router-dom";
 import heroBanner from "@/assets/hero-banner.jpg";
 import alponaMotif from "@/assets/alpona-motif.png";
 import LogoTile from "@/components/branding/LogoTile";
+import HeritageRibbon from "@/components/branding/HeritageRibbon";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useSiteSettings } from "@/contexts/SiteSettingsContext";
+import { useVisualEditor } from "@/contexts/VisualEditorContext";
 import { supabase } from "@/integrations/supabase/client";
+import EditableText from "@/components/editor/EditableText";
+import EditableImage from "@/components/editor/EditableImage";
+import EditableSection from "@/components/editor/EditableSection";
 
 const HeroSection = () => {
   const { lang, t } = useLanguage();
   const { settings } = useSiteSettings();
-  const siteName = lang === "en" ? settings.general.site_name_en : settings.general.site_name_bn;
-  const tagline = lang === "en" ? settings.general.tagline_en : settings.general.tagline_bn;
+  const { getContent, editMode } = useVisualEditor();
   const [heroImage, setHeroImage] = useState<string>(heroBanner);
 
   useEffect(() => {
@@ -29,121 +33,258 @@ const HeroSection = () => {
       if (data?.image_url) setHeroImage(data.image_url);
     })();
   }, []);
-  const sectionRef = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({ target: sectionRef, offset: ["start start", "end start"] });
-  const bgY = useTransform(scrollYProgress, [0, 1], ["0%", "35%"]);
-  const textY = useTransform(scrollYProgress, [0, 1], ["0%", "20%"]);
-  const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
-  const scale = useTransform(scrollYProgress, [0, 0.5], [1, 1.15]);
-  const rotateX = useTransform(scrollYProgress, [0, 1], [0, 8]);
+
+  const heroImageResolution = getContent("landing", "hero", "bg_image", { media: heroImage });
+  const activeHeroImage = heroImageResolution.mediaUrl || heroImage;
+
+  const { scrollY } = useScroll();
+  const bgY = useTransform(scrollY, [0, 700], [0, 140], { clamp: true });
+  const textY = useTransform(scrollY, [0, 500], [0, -80], { clamp: true });
+  const contentOpacity = useTransform(scrollY, [0, 480], [1, 0], { clamp: true });
+  const heroBlendDarken = useTransform(scrollY, [0, 550], [0, 1], { clamp: true });
+  const chevronOpacity = useTransform(scrollY, [0, 150], [1, 0], { clamp: true });
 
   return (
-    <section ref={sectionRef} className="relative min-h-screen flex items-center justify-center overflow-hidden palette-depth">
-      {/* Deep parallax background with perspective */}
-      <motion.div className="absolute inset-0" style={{ y: bgY, scale, rotateX, transformOrigin: "center top" }}>
-        <img src={heroImage} alt="Bengali cultural heritage landscape" className="w-full h-[120%] object-cover" width={1920} height={960} />
-        <div className="absolute inset-0 bg-gradient-to-b from-background/80 via-background/60 to-background" />
-        <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-background via-background/80 to-transparent" />
-        <div className="absolute inset-0 bg-gradient-to-tr from-primary/8 via-transparent to-accent/5" />
-      </motion.div>
+    <EditableSection pageKey="landing" sectionKey="hero" sectionTitle="হিরো ব্যানার (Hero Banner)">
+      <div className="relative min-h-screen flex items-center justify-center overflow-hidden palette-depth">
+        {/* Parallax Background Image */}
+        <motion.div className="absolute inset-0" style={{ y: bgY, transformOrigin: "center top" }}>
+          {editMode ? (
+            <EditableImage
+              pageKey="landing"
+              sectionKey="hero"
+              elementKey="bg_image"
+              defaultSrc={activeHeroImage}
+              folder="hero"
+              alt="Bengali cultural heritage landscape"
+              className="w-full h-[125%] object-cover object-center"
+              containerClassName="w-full h-full"
+            />
+          ) : (
+            <img
+              src={activeHeroImage}
+              alt="Bengali cultural heritage landscape"
+              className="w-full h-[125%] object-cover object-center"
+              width={1920}
+              height={960}
+            />
+          )}
+          <div className="absolute inset-0 bg-black/35" />
+          <div className="absolute inset-0 bg-gradient-to-tr from-primary/10 via-transparent to-accent/8" />
+        </motion.div>
 
-      {/* Floating cultural motifs with depth layers */}
-      <motion.img src={alponaMotif} alt="" className="absolute top-16 right-8 w-40 h-40 opacity-[0.03] pointer-events-none"
-        style={{ y: useTransform(scrollYProgress, [0, 1], [0, -80]) }}
-        animate={{ rotate: 360 }} transition={{ duration: 60, repeat: Infinity, ease: "linear" }} loading="lazy" width={512} height={512} />
-      <motion.img src={alponaMotif} alt="" className="absolute bottom-24 left-8 w-32 h-32 opacity-[0.03] pointer-events-none"
-        style={{ y: useTransform(scrollYProgress, [0, 1], [0, 60]) }}
-        animate={{ rotate: -360 }} transition={{ duration: 50, repeat: Infinity, ease: "linear" }} loading="lazy" width={512} height={512} />
-
-      {/* Floating light orbs */}
-      {[...Array(8)].map((_, i) => (
+        {/* Dynamic Scroll Darken Blend Veil (Clean at scroll 0, darkens smoothly on scroll) */}
         <motion.div
-          key={i}
-          className="absolute rounded-full pointer-events-none"
-          style={{
-            top: `${10 + i * 11}%`,
-            left: `${5 + i * 12}%`,
-            width: `${4 + (i % 3) * 3}px`,
-            height: `${4 + (i % 3) * 3}px`,
-            background: i % 2 === 0
-              ? "radial-gradient(circle, hsl(var(--gold) / 0.4), transparent)"
-              : "radial-gradient(circle, hsl(var(--crimson-light) / 0.3), transparent)",
-            y: useTransform(scrollYProgress, [0, 1], [0, -30 - i * 10]),
-          }}
-          animate={{
-            y: [0, -20, 0],
-            opacity: [0.2, 0.6, 0.2],
-            scale: [1, 1.3, 1],
-          }}
-          transition={{ duration: 3 + i * 0.5, repeat: Infinity, delay: i * 0.4 }}
+          className="absolute inset-0 bg-background pointer-events-none z-[1]"
+          style={{ opacity: heroBlendDarken }}
         />
-      ))}
 
-      {/* Top bar */}
-      <div className="absolute top-0 left-0 right-0 z-20 p-4 lg:p-6">
-        <div className="container mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <motion.div
-              initial={{ scale: 0 }} animate={{ scale: 1 }}
-              transition={{ type: "spring", delay: 0.3 }}
-            >
-              <LogoTile size="md" glow="subtle" contained />
-            </motion.div>
+        {/* Deep Bottom Feathered Gradient Blend (Dissolves bottom into next section seamlessly) */}
+        <div className="absolute bottom-0 left-0 right-0 h-48 sm:h-64 md:h-80 bg-gradient-to-t from-background via-background/80 via-background/25 to-transparent pointer-events-none z-[2]" />
+
+        {/* Top Header Subtle Shadow Blend */}
+        <div className="absolute top-0 left-0 right-0 h-28 bg-gradient-to-b from-background/70 via-background/20 to-transparent pointer-events-none z-[2]" />
+
+        {/* Floating cultural motifs with depth layers */}
+        <motion.img
+          src={alponaMotif}
+          alt=""
+          className="absolute top-16 right-8 w-40 h-40 opacity-[0.03] pointer-events-none"
+          animate={{ rotate: 360 }}
+          transition={{ duration: 60, repeat: Infinity, ease: "linear" }}
+          loading="lazy"
+          width={512}
+          height={512}
+        />
+        <motion.img
+          src={alponaMotif}
+          alt=""
+          className="absolute bottom-24 left-8 w-32 h-32 opacity-[0.03] pointer-events-none"
+          animate={{ rotate: -360 }}
+          transition={{ duration: 50, repeat: Infinity, ease: "linear" }}
+          loading="lazy"
+          width={512}
+          height={512}
+        />
+
+        {/* Floating light orbs */}
+        {[...Array(8)].map((_, i) => (
+          <motion.div
+            key={i}
+            className="absolute rounded-full pointer-events-none"
+            style={{
+              top: `${10 + i * 11}%`,
+              left: `${5 + i * 12}%`,
+              width: `${4 + (i % 3) * 3}px`,
+              height: `${4 + (i % 3) * 3}px`,
+              background: i % 2 === 0 ? "hsl(var(--gold))" : "hsl(var(--accent))",
+              opacity: 0.15 + (i % 3) * 0.1,
+              filter: "blur(1px)",
+            }}
+            animate={{
+              y: [0, -15, 0],
+              opacity: [0.1, 0.3, 0.1],
+            }}
+            transition={{
+              duration: 3 + i * 0.7,
+              repeat: Infinity,
+              ease: "easeInOut",
+            }}
+          />
+        ))}
+
+        {/* Top bar with quick links */}
+        <div className="absolute top-0 left-0 right-0 z-20 px-6 lg:px-12 py-6">
+          <div className="max-w-7xl mx-auto flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <LogoTile size="md" glow="off" dilateRadius={3} />
+            </div>
+            <div className="flex items-center gap-2.5">
+              <Link
+                to="/home"
+                className="px-5 py-2 text-sm font-medium rounded-full bg-white/10 dark:bg-black/35 backdrop-blur-xl text-foreground/85 hover:text-foreground hover:bg-white/20 dark:hover:bg-black/50 transition-all border border-white/15 hover:border-white/25 font-bengali shadow-sm"
+              >
+                {t("home")}
+              </Link>
+              <Link
+                to="/login"
+                className="px-5 py-2 text-sm font-medium rounded-full bg-primary/85 backdrop-blur-xl text-primary-foreground hover:bg-primary transition-all border border-white/20 shadow-md shadow-primary/25 font-bengali"
+              >
+                {t("joinUs")}
+              </Link>
+            </div>
           </div>
-          <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }} className="flex items-center gap-2">
-            <Link to="/home" className="px-5 py-2 text-sm rounded-full bg-foreground/10 backdrop-blur-md text-foreground/80 hover:text-foreground hover:bg-foreground/20 transition-all border border-foreground/10 font-bengali">{t("home")}</Link>
-            <Link to="/login" className="px-5 py-2 text-sm rounded-full bg-primary backdrop-blur-md text-primary-foreground hover:bg-crimson-dark transition-all shadow-lg shadow-primary/30 font-bengali">{t("joinUs")}</Link>
-          </motion.div>
         </div>
-      </div>
 
-      {/* Main content with parallax + perspective */}
-      <motion.div className="relative z-10 text-center px-4 max-w-4xl mx-auto pt-20" style={{ y: textY, opacity }}>
-        <motion.div initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1, ease: "easeOut" }}>
-          <p className="text-accent text-sm md:text-base tracking-[0.3em] uppercase mb-4 font-medium">{tagline}</p>
-        </motion.div>
-
-        <motion.h1
-          initial={{ opacity: 0, y: 40, rotateX: 20 }}
-          animate={{ opacity: 1, y: 0, rotateX: 0 }}
-          transition={{ duration: 1, delay: 0.2, ease: "easeOut" }}
-          className="font-bengali text-4xl md:text-6xl lg:text-7xl font-bold text-foreground mb-6 leading-tight"
-          style={{ textShadow: "0 4px 30px hsl(var(--primary) / 0.15)" }}
+        {/* Main content with pure scroll-driven fade out */}
+        <motion.div
+          className="relative z-10 text-center px-4 max-w-5xl mx-auto pt-20"
+          style={{ y: textY, opacity: contentOpacity }}
         >
-          {siteName}
-        </motion.h1>
+          {/* Top Tagline */}
+          <div className="mb-4">
+            <EditableText
+              pageKey="landing"
+              sectionKey="hero"
+              elementKey="tagline"
+              defaultBn="বাং লা  সং স্কৃ তি র  পা দ পী ঠ"
+              defaultEn="THE CRADLE OF BENGALI CULTURE"
+              as="p"
+              className="text-cyan-400 text-sm md:text-base tracking-[0.35em] uppercase font-semibold"
+            />
+          </div>
 
-        <motion.p initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.4 }} className="text-muted-foreground text-lg md:text-xl max-w-2xl mx-auto mb-4 font-bengali">
-          {t("heroSubtitle")}
-        </motion.p>
+          {/* Single-Row Hero Title */}
+          <h1
+            className="font-bengali text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-foreground mb-5 leading-tight tracking-tight drop-shadow-xl"
+            style={{ textShadow: "0 4px 30px hsl(var(--primary) / 0.18)" }}
+          >
+            <EditableText
+              pageKey="landing"
+              sectionKey="hero"
+              elementKey="title_full"
+              defaultBn="ফরিদপুর সাহিত্য পরিষদ"
+              defaultEn="Faridpur Shahitto Parishad"
+              as="span"
+            />
+          </h1>
+
+          {/* Established 1975 Vintage Heritage Folded Ribbon Banner */}
+          <div className="flex justify-center mb-6">
+            <HeritageRibbon
+              text="প্রতিষ্ঠিত  ১৯৭৫"
+              className="w-[300px] sm:w-[350px] md:w-[390px] h-[66px] sm:h-[76px] md:h-[84px]"
+            />
+          </div>
+
+          {/* Subtitle */}
+          <p className="text-muted-foreground text-sm md:text-base max-w-2xl mx-auto mb-6 font-bengali leading-relaxed text-center">
+            <EditableText
+              pageKey="landing"
+              sectionKey="hero"
+              elementKey="subtitle"
+              defaultBn="সাহিত্য, সংস্কৃতি ও জ্ঞানচর্চার মাধ্যমে বাংলার ঐতিহ্য সংরক্ষণ ও বিকাশে নিবেদিত"
+              defaultEn="Dedicated to preserving and developing the heritage of Bengal through literature, culture and pursuit of knowledge"
+              multiline
+              as="span"
+            />
+          </p>
+
+          {/* Visitor Counter (Clean text, perfectly centered) */}
+          <div className="inline-flex items-center justify-center px-7 py-2 rounded-full bg-black/35 backdrop-blur-xl border border-white/10 mb-10 shadow-inner">
+            <span className="text-foreground/90 text-xs md:text-sm font-medium tracking-wide">
+              <span className="font-bold text-cyan-400">10000</span>{" "}
+              <EditableText
+                pageKey="landing"
+                sectionKey="hero"
+                elementKey="visitors_badge"
+                defaultBn="জন পরিদর্শক"
+                defaultEn="Visitors"
+                as="span"
+              />
+            </span>
+          </div>
+
+          {/* Symmetrical 3-Button Action Cluster */}
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center max-w-3xl mx-auto">
+            {/* Left Button (Foreshadow Frosted Glass: About) */}
+            <a
+              href="#about"
+              className="w-full sm:w-[210px] md:w-[220px] h-[50px] rounded-full bg-white/5 dark:bg-card/40 backdrop-blur-xl border border-white/10 text-foreground/85 font-semibold font-bengali shadow-md hover:bg-white/12 dark:hover:bg-card/70 hover:text-foreground hover:border-white/25 transition-all duration-300 flex items-center justify-center text-sm md:text-base text-center px-4"
+            >
+              <EditableText
+                pageKey="landing"
+                sectionKey="hero"
+                elementKey="cta_about"
+                defaultBn="আমাদের সম্পর্কে জানুন"
+                defaultEn="Learn About Us"
+                as="span"
+              />
+            </a>
+
+            {/* Center Main Button (Sleek Frosted Glass Hero: Home) */}
+            <Link
+              to="/home"
+              className="w-full sm:w-[220px] md:w-[230px] h-[50px] rounded-full bg-primary/85 hover:bg-primary backdrop-blur-2xl border border-white/25 text-primary-foreground font-semibold font-bengali shadow-md hover:shadow-lg transition-all duration-300 flex items-center gap-2 justify-center text-sm md:text-base group text-center px-4"
+            >
+              <Home className="w-4 h-4 text-primary-foreground/90 group-hover:scale-110 transition-transform duration-300" />
+              <EditableText
+                pageKey="landing"
+                sectionKey="hero"
+                elementKey="cta_home"
+                defaultBn="হোম পেজ দেখুন"
+                defaultEn="Explore Home"
+                as="span"
+              />
+            </Link>
+
+            {/* Right Button (Foreshadow Frosted Glass: Members) */}
+            <Link
+              to="/members"
+              className="w-full sm:w-[210px] md:w-[220px] h-[50px] rounded-full bg-white/5 dark:bg-card/40 backdrop-blur-xl border border-white/10 text-foreground/85 font-semibold font-bengali shadow-md hover:bg-white/12 dark:hover:bg-card/70 hover:text-foreground hover:border-white/25 transition-all duration-300 flex items-center justify-center text-sm md:text-base text-center px-4"
+            >
+              <EditableText
+                pageKey="landing"
+                sectionKey="hero"
+                elementKey="cta_members"
+                defaultBn="সদস্যবৃন্দ দেখুন"
+                defaultEn="View Members"
+                as="span"
+              />
+            </Link>
+          </div>
+        </motion.div>
 
         <motion.div
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.6, delay: 0.6 }}
-          className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-secondary/60 backdrop-blur-xl border border-border/30 mb-10 shadow-inner"
+          className="absolute bottom-8 left-1/2 -translate-x-1/2 pointer-events-none"
+          style={{ opacity: chevronOpacity }}
+          animate={{ y: [0, 12, 0] }}
+          transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
         >
-          <Eye className="w-4 h-4 text-accent" />
-          <span className="text-foreground/90 text-sm"><span className="font-semibold text-accent">১২,৪৫৬</span> {t("visitors")}</span>
+          <ChevronDown className="w-6 h-6 text-muted-foreground/40" />
         </motion.div>
-
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.7 }} className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Link to="/home" className="px-8 py-3.5 bg-primary text-primary-foreground font-semibold rounded-full hover:bg-crimson-dark transition-all shadow-xl shadow-primary/25 font-bengali hover:shadow-primary/40 hover:-translate-y-1 inline-flex items-center gap-2 justify-center">
-            <Home className="w-4 h-4" />{t("exploreHome")}
-          </Link>
-          <a href="#about" className="px-8 py-3.5 bg-foreground/5 text-foreground font-semibold rounded-full hover:bg-foreground/10 transition-all backdrop-blur-md border border-foreground/10 font-bengali hover:-translate-y-1">
-            {t("learnAbout")}
-          </a>
-          <Link to="/members" className="px-8 py-3.5 bg-foreground/5 text-foreground font-semibold rounded-full hover:bg-foreground/10 transition-all backdrop-blur-md border border-foreground/10 font-bengali hover:-translate-y-1">
-            {t("viewMembers")}
-          </Link>
-        </motion.div>
-      </motion.div>
-
-      <motion.div className="absolute bottom-8 left-1/2 -translate-x-1/2" animate={{ y: [0, 12, 0] }} transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}>
-        <ChevronDown className="w-6 h-6 text-muted-foreground/40" />
-      </motion.div>
-    </section>
+      </div>
+    </EditableSection>
   );
 };
 

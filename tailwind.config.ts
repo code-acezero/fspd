@@ -8,9 +8,9 @@ export default {
     container: { center: true, padding: "2rem", screens: { "2xl": "1400px" } },
     extend: {
       fontFamily: {
-        display: ['Playfair Display', 'Noto Serif Bengali', 'serif'],
-        body: ['Inter', 'Hind Siliguri', 'sans-serif'],
-        bengali: ['Noto Serif Bengali', 'Hind Siliguri', 'serif'],
+        display: ['Tiro Bangla', 'Playfair Display', 'Noto Serif Bengali', 'serif'],
+        body: ['Baloo Da 2', 'Inter', 'sans-serif'],
+        bengali: ['Tiro Bangla', 'Baloo Da 2', 'Noto Serif Bengali', 'serif'],
       },
       colors: {
         border: "hsl(var(--border))", input: "hsl(var(--input))", ring: "hsl(var(--ring))",

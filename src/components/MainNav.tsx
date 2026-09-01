@@ -48,9 +48,10 @@ const MainNav = () => {
 
   const siteName = lang === "en" ? settings.general.site_name_en : settings.general.site_name_bn;
   const themeToggleLabel = theme === "dark" ? t("lightMode") : t("darkMode");
+  const todayBangla = getBanglaDate();
 
   // Title + theme-tinted favicon. Recolors the source logo via canvas so the
-  // tab icon matches the active palette (sitewide).
+  // tab icon matches the active palette (sitewide) if theme_adaptive_logo is enabled.
   useEffect(() => {
     document.title = `${settings.general.site_name_bn} | ${settings.general.site_name_en}`;
     const favicon = document.getElementById("dynamic-favicon") as HTMLLinkElement | null;
@@ -63,6 +64,8 @@ const MainNav = () => {
       favicon.href = href;
       favicon.type = type;
     };
+
+    const isThemeAdaptive = settings.appearance.theme_adaptive_logo !== false;
 
     // Pull current primary HSL from CSS var so it tracks the palette.
     const primaryHsl = getComputedStyle(document.documentElement)
@@ -81,10 +84,14 @@ const MainNav = () => {
         if (!ctx) throw new Error("no ctx");
         ctx.clearRect(0, 0, size, size);
         ctx.drawImage(img, 0, 0, size, size);
-        // Re-tint: keep alpha, fill with palette color using source-in.
-        ctx.globalCompositeOperation = "source-in";
-        ctx.fillStyle = `hsl(${primaryHsl})`;
-        ctx.fillRect(0, 0, size, size);
+        
+        // Re-tint with active palette color if theme adaptive is enabled
+        if (isThemeAdaptive) {
+          ctx.globalCompositeOperation = "source-in";
+          ctx.fillStyle = `hsl(${primaryHsl})`;
+          ctx.fillRect(0, 0, size, size);
+        }
+        
         apply(canvas.toDataURL("image/png"), "image/png");
       } catch {
         const bust = `${logoUrl}${logoUrl.includes("?") ? "&" : "?"}v=${encodeURIComponent(logoUrl + primaryHsl)}`;
@@ -102,6 +109,7 @@ const MainNav = () => {
     settings.general.site_name_en,
     settings.general.logo_url,
     settings.appearance.palette,
+    settings.appearance.theme_adaptive_logo,
   ]);
 
   const handleSignOut = async () => {
@@ -258,7 +266,13 @@ const MainNav = () => {
               })}
             </div>
 
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-2">
+              {/* Live Bangla Date Pill */}
+              <div className="hidden xl:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-secondary/80 border border-border/60 text-[11px] font-bengali text-foreground select-none shadow-2xs">
+                <span className="text-sm">🇧🇩</span>
+                <span className="font-bold text-primary">{todayBangla.formattedBn}</span>
+              </div>
+
               {/* Search bar with suggestions */}
               <div className="relative" ref={searchRef}>
                 <form onSubmit={handleSearchSubmit}>
@@ -343,77 +357,6 @@ const MainNav = () => {
           </div>
         </div>
       </nav>
-
-      {/* Mobile/Tablet: Waving arrow trigger */}
-      <div className="lg:hidden fixed right-0 top-1/2 -translate-y-1/2 z-[61]">
-        <motion.button
-          onClick={handleArrowToggle}
-          animate={{ x: sidebarVisible ? -2 : [0, -3, 0] }}
-          transition={sidebarVisible ? { duration: 0.2 } : { repeat: Infinity, duration: 2, ease: "easeInOut" }}
-          className="w-3 h-6 rounded-l-md bg-primary/60 backdrop-blur-md flex items-center justify-center shadow-sm border border-primary/20 border-r-0"
-        >
-          <ChevronLeft className={`w-2.5 h-2.5 text-primary-foreground transition-transform duration-300 ${sidebarVisible ? "rotate-180" : ""}`} />
-        </motion.button>
-      </div>
-
-      {/* Mobile glassmorphism sidebar capsule */}
-      <AnimatePresence>
-        {sidebarVisible && (
-          <motion.div
-            ref={sidebarRef}
-            initial={{ x: 80, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            exit={{ x: 80, opacity: 0 }}
-            transition={{ type: "spring", stiffness: 300, damping: 28 }}
-            className="fixed right-3 top-1/2 -translate-y-1/2 z-[60] lg:hidden"
-          >
-            <div className={`bg-background/60 backdrop-blur-2xl border border-border/40 shadow-2xl flex max-h-[calc(100vh-2rem)] flex-col items-center gap-1 overflow-y-auto py-2 transition-all duration-300 ${sidebarExpanded ? "rounded-2xl px-3" : "rounded-full px-1.5"}`}
-              style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.1)" }}
-            >
-              <button onClick={() => setSidebarExpanded(!sidebarExpanded)} className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-secondary/50 transition-colors mb-1">
-                {sidebarExpanded ? <ChevronRight className="w-4 h-4 text-muted-foreground" /> : <ChevronLeft className="w-4 h-4 text-muted-foreground" />}
-              </button>
-
-              {navItems.map((item) => {
-                const active = location.pathname === item.to;
-                const Icon = item.icon;
-                return (
-                  <Link key={item.to} to={item.to} className={`flex items-center gap-2.5 rounded-full transition-all duration-200 ${sidebarExpanded ? "px-3 py-2.5 w-full" : "w-9 h-9 justify-center"} ${active ? "bg-primary text-primary-foreground shadow-md" : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"}`}>
-                    <Icon className="w-4 h-4 shrink-0" />
-                    {sidebarExpanded && <motion.span initial={{ opacity: 0, width: 0 }} animate={{ opacity: 1, width: "auto" }} className="text-xs font-bengali whitespace-nowrap overflow-hidden">{t(item.key)}</motion.span>}
-                  </Link>
-                );
-              })}
-
-              <div className="w-6 h-px bg-border/50 my-1" />
-
-              {user ? (
-                <>
-                  <Link to="/profile" className={`flex items-center gap-2.5 rounded-full transition-all duration-200 text-muted-foreground hover:text-foreground hover:bg-secondary/50 ${sidebarExpanded ? "px-3 py-2.5 w-full" : "w-9 h-9 justify-center"}`}>
-                    <User className="w-4 h-4 shrink-0" />
-                    {sidebarExpanded && <span className="text-xs font-bengali whitespace-nowrap">{t("profile")}</span>}
-                  </Link>
-                  {role === "admin" && (
-                    <Link to="/admin" className={`flex items-center gap-2.5 rounded-full transition-all duration-200 text-muted-foreground hover:text-foreground hover:bg-secondary/50 ${sidebarExpanded ? "px-3 py-2.5 w-full" : "w-9 h-9 justify-center"}`}>
-                      <Shield className="w-4 h-4 shrink-0" />
-                      {sidebarExpanded && <span className="text-xs font-bengali whitespace-nowrap">{t("adminPanel")}</span>}
-                    </Link>
-                  )}
-                  <button onClick={handleSignOut} className={`flex items-center gap-2.5 rounded-full transition-all duration-200 text-destructive hover:bg-destructive/10 ${sidebarExpanded ? "px-3 py-2.5 w-full" : "w-9 h-9 justify-center"}`}>
-                    <LogOut className="w-4 h-4 shrink-0" />
-                    {sidebarExpanded && <span className="text-xs font-bengali whitespace-nowrap">{t("logout")}</span>}
-                  </button>
-                </>
-              ) : (
-                <Link to="/login" className={`flex items-center gap-2.5 rounded-full transition-all duration-200 text-primary hover:bg-primary/10 ${sidebarExpanded ? "px-3 py-2.5 w-full" : "w-9 h-9 justify-center"}`}>
-                  <User className="w-4 h-4 shrink-0" />
-                  {sidebarExpanded && <span className="text-xs font-bengali whitespace-nowrap">{t("login")}</span>}
-                </Link>
-              )}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </>
   );
 };

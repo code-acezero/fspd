@@ -1,6 +1,8 @@
 import { useParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, GraduationCap, Clock, BookOpen, Users, CheckCircle, Share2, Loader2 } from "lucide-react";
+import { ArrowLeft, GraduationCap, Clock, BookOpen, Users, CheckCircle, Share2, Loader2, FileEdit } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { courses as mockCourses } from "@/data/mockData";
 import MainNav from "@/components/MainNav";
 import Footer from "@/components/landing/Footer";
@@ -8,23 +10,73 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useState } from "react";
 import { extractIdFromSlug } from "@/lib/slugify";
 import CourseRegisterDialog from "@/components/courses/CourseRegisterDialog";
+import CorrectionRequestModal from "@/components/common/CorrectionRequestModal";
 
 const CourseDetailPage = () => {
   const { slug } = useParams();
   const { t, lang } = useLanguage();
   const [showShareMenu, setShowShareMenu] = useState(false);
   const [registerOpen, setRegisterOpen] = useState(false);
+  const [correctionModalOpen, setCorrectionModalOpen] = useState(false);
 
   // Support slug-based, direct ID, or trailing-numeric-id formats.
   const shortId = slug ? extractIdFromSlug(slug) : "";
   const trailingNumeric = slug ? (slug.match(/-(\d+)$/)?.[1] ?? "") : "";
-  const course = mockCourses.find((c) => c.id === slug || c.id === shortId || c.id === trailingNumeric);
+
+  const { data: course, isLoading } = useQuery({
+    queryKey: ["course-detail", slug, shortId, trailingNumeric],
+    queryFn: async () => {
+      // First try Supabase DB
+      const { data, error } = await supabase
+        .from("courses" as any)
+        .select("*")
+        .or(`id.eq.${slug},id.eq.${shortId},title_en.ilike.%${slug?.replace(/-/g, " ")}%`)
+        .maybeSingle();
+
+      if (data) {
+        const row = data as any;
+        return {
+          id: row.id,
+          title: row.title,
+          titleEn: row.title_en || row.title,
+          instructor: row.instructor,
+          instructorEn: row.instructor_en || row.instructor,
+          duration: row.duration,
+          durationEn: row.duration_en || row.duration,
+          modules: row.modules || 0,
+          enrolled: row.enrolled || 0,
+          status: (row.status || "open") as "open" | "ongoing" | "coming_soon",
+          description: row.description || "",
+          descriptionEn: row.description_en || row.description || "",
+          highlights: Array.isArray(row.highlights) ? row.highlights : [],
+          highlightsEn: Array.isArray(row.highlights_en) ? row.highlights_en : (Array.isArray(row.highlights) ? row.highlights : []),
+          cover_image: row.cover_image,
+        };
+      }
+
+      // Fallback to mockData
+      const found = mockCourses.find((c) => c.id === slug || c.id === shortId || c.id === trailingNumeric);
+      return found || null;
+    },
+  });
 
   const statusLabels: Record<string, { label: string; color: string }> = {
-    open: { label: t("statusOpen"), color: "bg-forest text-primary-foreground" },
-    ongoing: { label: t("statusOngoing"), color: "bg-accent text-accent-foreground" },
-    coming_soon: { label: t("statusComingSoon"), color: "bg-muted text-muted-foreground" },
+    open: { label: t("statusOpen") || "নিবন্ধন চলছে", color: "bg-forest text-primary-foreground" },
+    ongoing: { label: t("statusOngoing") || "চলমান", color: "bg-accent text-accent-foreground" },
+    coming_soon: { label: t("statusComingSoon") || "শীঘ্রই আসছে", color: "bg-muted text-muted-foreground" },
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <MainNav />
+        <div className="flex items-center justify-center py-32 text-muted-foreground gap-2">
+          <Loader2 className="w-5 h-5 animate-spin" />
+          <span className="font-bengali">কোর্স বিবরণ লোড হচ্ছে...</span>
+        </div>
+      </div>
+    );
+  }
 
   if (!course) {
     return (
@@ -32,15 +84,17 @@ const CourseDetailPage = () => {
         <MainNav />
         <div className="flex items-center justify-center py-32">
           <div className="text-center">
-            <p className="font-bengali text-xl text-muted-foreground mb-4">{t("courseNotFound")}</p>
-            <Link to="/courses" className="text-primary hover:underline font-bengali px-6 py-2 rounded-full bg-primary/10">{t("backToCourses")}</Link>
+            <p className="font-bengali text-xl text-muted-foreground mb-4">{t("courseNotFound") || "কোর্সটি পাওয়া যায়নি"}</p>
+            <Link to="/courses" className="text-primary hover:underline font-bengali px-6 py-2 rounded-full bg-primary/10">
+              {t("backToCourses") || "সকল কোর্সে ফিরে যান"}
+            </Link>
           </div>
         </div>
       </div>
     );
   }
 
-  const status = statusLabels[course.status];
+  const status = statusLabels[course.status] || statusLabels.open;
   const displayTitle = lang === "en" ? course.titleEn : course.title;
   const shareUrl = window.location.href;
 
@@ -63,6 +117,15 @@ const CourseDetailPage = () => {
               <span className="flex items-center gap-1 px-3 py-1 rounded-full bg-primary-foreground/10 backdrop-blur-sm"><Clock className="w-3.5 h-3.5" />{lang === "en" ? course.durationEn : course.duration}</span>
               <span className="flex items-center gap-1 px-3 py-1 rounded-full bg-primary-foreground/10 backdrop-blur-sm"><BookOpen className="w-3.5 h-3.5" />{course.modules} {t("modules")}</span>
               <span className="flex items-center gap-1 px-3 py-1 rounded-full bg-primary-foreground/10 backdrop-blur-sm"><Users className="w-3.5 h-3.5" />{course.enrolled} {t("enrolled")}</span>
+              <button
+                type="button"
+                onClick={() => setCorrectionModalOpen(true)}
+                className="flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-primary-foreground/15 hover:bg-primary-foreground/25 text-primary-foreground text-xs font-semibold backdrop-blur-sm transition-all font-bengali shadow-xs"
+                title={lang === "en" ? "Suggest Correction / Update" : "তথ্য সংশোধনের আবেদন জানান"}
+              >
+                <FileEdit className="w-3.5 h-3.5" />
+                <span>{lang === "en" ? "Suggest Correction" : "সংশোধনের আবেদন"}</span>
+              </button>
             </div>
           </div>
         </div>
@@ -125,6 +188,18 @@ const CourseDetailPage = () => {
         </div>
       </div>
       <CourseRegisterDialog courseId={course.id} courseTitle={displayTitle} open={registerOpen} onClose={() => setRegisterOpen(false)} />
+
+      {/* Suggest Correction Modal */}
+      {correctionModalOpen && (
+        <CorrectionRequestModal
+          isOpen={correctionModalOpen}
+          onClose={() => setCorrectionModalOpen(false)}
+          targetType="course"
+          targetId={course.id}
+          targetTitle={displayTitle}
+        />
+      )}
+
       <Footer />
     </div>
   );

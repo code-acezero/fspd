@@ -9,6 +9,9 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { createSlug } from "@/lib/slugify";
 
+import EditableSection from "@/components/editor/EditableSection";
+import EditableText from "@/components/editor/EditableText";
+
 const EventsPage = () => {
   const { t, lang } = useLanguage();
 
@@ -40,13 +43,31 @@ const EventsPage = () => {
   return (
     <div className="min-h-screen bg-background">
       <MainNav />
-      <div className="bg-hero-gradient py-16 relative overflow-hidden">
-        <div className="absolute inset-0 alpona-pattern opacity-20" />
-        <div className="container mx-auto px-4 lg:px-8 text-center relative">
-          <h1 className="font-bengali text-3xl md:text-5xl font-bold text-primary-foreground mb-4 drop-shadow-lg">{t("allEvents")}</h1>
-          <p className="font-bengali text-primary-foreground/70 max-w-lg mx-auto">{t("eventsPageSubtitle")}</p>
+      <EditableSection pageKey="events" sectionKey="header" sectionTitle="ইভেন্ট পেজ হেডার (Events Header)">
+        <div className="bg-hero-gradient py-16 relative overflow-hidden">
+          <div className="absolute inset-0 alpona-pattern opacity-20" />
+          <div className="container mx-auto px-4 lg:px-8 text-center relative">
+            <EditableText
+              pageKey="events"
+              sectionKey="header"
+              elementKey="title"
+              defaultBn={t("allEvents") || "সকল আয়োজন ও অনুষ্ঠান"}
+              defaultEn="All Events & Gatherings"
+              as="h1"
+              className="font-bengali text-3xl md:text-5xl font-bold text-primary-foreground mb-4 drop-shadow-lg block"
+            />
+            <EditableText
+              pageKey="events"
+              sectionKey="header"
+              elementKey="subtitle"
+              defaultBn={t("eventsPageSubtitle") || "ফরিদপুর সাহিত্য পরিষদের সাম্প্রতিক ও আসন্ন সকল অনুষ্ঠানের সময়সূচি"}
+              defaultEn="Schedule of recent and upcoming events by Faridpur Shahitto Parishad"
+              as="p"
+              className="font-bengali text-primary-foreground/70 max-w-lg mx-auto block"
+            />
+          </div>
         </div>
-      </div>
+      </EditableSection>
       <div className="container mx-auto px-4 lg:px-8 py-10">
         {isLoading ? (
           <div className="flex justify-center py-16"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>

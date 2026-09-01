@@ -12,6 +12,9 @@ import { createSlug } from "@/lib/slugify";
 
 
 
+import EditableSection from "@/components/editor/EditableSection";
+import EditableText from "@/components/editor/EditableText";
+
 const BlogListPage = () => {
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState("সব");
@@ -61,13 +64,31 @@ const BlogListPage = () => {
   return (
     <div className="min-h-screen bg-background">
       <MainNav />
-      <div className="bg-hero-gradient py-16 relative overflow-hidden">
-        <div className="absolute inset-0 alpona-pattern opacity-30" />
-        <div className="container mx-auto px-4 lg:px-8 text-center relative">
-          <h1 className="font-bengali text-3xl md:text-5xl font-bold text-primary-foreground mb-4 drop-shadow-lg">{t("blogAndPosts")}</h1>
-          <p className="font-bengali text-primary-foreground/70 max-w-lg mx-auto">{t("blogSubtitle")}</p>
+      <EditableSection pageKey="blog" sectionKey="header" sectionTitle="ব্লগ পেজ হেডার (Blog Header)">
+        <div className="bg-hero-gradient py-16 relative overflow-hidden">
+          <div className="absolute inset-0 alpona-pattern opacity-30" />
+          <div className="container mx-auto px-4 lg:px-8 text-center relative">
+            <EditableText
+              pageKey="blog"
+              sectionKey="header"
+              elementKey="title"
+              defaultBn={t("blogAndPosts") || "সাহিত্য ও সংস্কৃতি ব্লগ"}
+              defaultEn="Literature & Culture Blog"
+              as="h1"
+              className="font-bengali text-3xl md:text-5xl font-bold text-primary-foreground mb-4 drop-shadow-lg block"
+            />
+            <EditableText
+              pageKey="blog"
+              sectionKey="header"
+              elementKey="subtitle"
+              defaultBn={t("blogSubtitle") || "কাব্য, গল্প, প্রবন্ধ, সমালোচনা ও গবেষণামূলক লেখার সংকলন"}
+              defaultEn="Collection of poems, stories, essays, critiques, and research articles"
+              as="p"
+              className="font-bengali text-primary-foreground/70 max-w-lg mx-auto block"
+            />
+          </div>
         </div>
-      </div>
+      </EditableSection>
       <div className="container mx-auto px-4 lg:px-8 py-10">
         <div className="flex flex-col md:flex-row gap-4 mb-8">
           <div className="relative flex-1">

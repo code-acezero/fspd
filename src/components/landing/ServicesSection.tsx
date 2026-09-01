@@ -2,6 +2,8 @@ import { useRef } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { BookOpen, Mic2, GraduationCap, Palette, Globe, Heart } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import EditableText from "@/components/editor/EditableText";
+import EditableSection from "@/components/editor/EditableSection";
 
 const ServicesSection = () => {
   const { t } = useLanguage();
@@ -10,50 +12,93 @@ const ServicesSection = () => {
   const y = useTransform(scrollYProgress, [0, 1], [40, -40]);
 
   const services = [
-    { icon: BookOpen, title: t("svcLitPub"), titleEn: "Literary Publications", desc: t("svcLitPubDesc") },
-    { icon: Mic2, title: t("svcCultural"), titleEn: "Cultural Events", desc: t("svcCulturalDesc") },
-    { icon: GraduationCap, title: t("svcEducation"), titleEn: "Educational Programs", desc: t("svcEducationDesc") },
-    { icon: Palette, title: t("svcArts"), titleEn: "Arts & Crafts", desc: t("svcArtsDesc") },
-    { icon: Globe, title: t("svcCommunity"), titleEn: "Community Development", desc: t("svcCommunityDesc") },
-    { icon: Heart, title: t("svcHeritage"), titleEn: "Heritage Preservation", desc: t("svcHeritageDesc") },
+    { key: "svc_lit", icon: BookOpen, title: t("svcLitPub") || "সাহিত্য ও প্রকাশনা", titleEn: "Literary Publications", desc: t("svcLitPubDesc") || "নিয়মিত সাহিত্য পত্রিকা, স্মারকগ্রন্থ ও গ্রন্থ প্রকাশনা।" },
+    { key: "svc_cultural", icon: Mic2, title: t("svcCultural") || "সাংস্কৃতিক অনুষ্ঠান", titleEn: "Cultural Events", desc: t("svcCulturalDesc") || "বার্ষিক সাহিত্য উৎসব, কবিতা পাঠের আসর ও নাট্যোৎসব।" },
+    { key: "svc_edu", icon: GraduationCap, title: t("svcEducation") || "শিক্ষা ও প্রশিক্ষণ", titleEn: "Educational Programs", desc: t("svcEducationDesc") || "সৃজনশীল লেখালেখি ও ভাষা শিক্ষা কর্মশালা।" },
+    { key: "svc_arts", icon: Palette, title: t("svcArts") || "চারুকলা ও ঐতিহ্য", titleEn: "Arts & Crafts", desc: t("svcArtsDesc") || "নকশিকাঁথা, লোকশিল্প ও আলপনা প্রদর্শনী।" },
+    { key: "svc_comm", icon: Globe, title: t("svcCommunity") || "সামাজিক কার্যক্রম", titleEn: "Community Development", desc: t("svcCommunityDesc") || "গুণীজন সংবর্ধনা ও নতুন প্রতিভার পৃষ্ঠপোষকতা।" },
+    { key: "svc_heritage", icon: Heart, title: t("svcHeritage") || "ঐতিহ্য সংরক্ষণ", titleEn: "Heritage Preservation", desc: t("svcHeritageDesc") || "ফরিদপুরের ইতিহাস, মুক্তিযুদ্ধ ও লোকসাহিত্য সংরক্ষণ।" },
   ];
 
   return (
-    <section id="services" ref={ref} className="py-24 bg-background relative overflow-hidden">
-      <motion.div style={{ y }} className="absolute top-0 right-0 w-80 h-80 bg-gradient-to-bl from-accent/3 to-transparent rounded-full blur-3xl" />
+    <EditableSection pageKey="landing" sectionKey="services" sectionTitle="আমাদের কর্মযজ্ঞ (Activities & Services)">
+      <div ref={ref} className="py-24 bg-background relative overflow-hidden">
+        <motion.div style={{ y }} className="absolute top-0 right-0 w-80 h-80 bg-gradient-to-bl from-accent/3 to-transparent rounded-full blur-3xl" />
 
-      <div className="container mx-auto px-4 lg:px-8">
-        <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-16">
-          <p className="text-accent text-sm tracking-[0.2em] uppercase font-semibold mb-3">{t("ourActivities")}</p>
-          <h2 className="font-bengali text-3xl md:text-5xl font-bold text-foreground mb-6">{t("servicesTitle")}</h2>
-          <div className="w-24 h-1 bg-gradient-to-r from-transparent via-accent to-transparent mx-auto rounded-full" />
-        </motion.div>
+        <div className="container mx-auto px-4 lg:px-8">
+          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-16">
+            <EditableText
+              pageKey="landing"
+              sectionKey="services"
+              elementKey="badge"
+              defaultBn={t("ourActivities") || "আমাদের কার্যক্রম"}
+              defaultEn="Our Activities"
+              as="p"
+              className="text-accent text-sm tracking-[0.2em] uppercase font-semibold mb-3"
+            />
+            <EditableText
+              pageKey="landing"
+              sectionKey="services"
+              elementKey="title"
+              defaultBn={t("servicesTitle") || "সাহিত্য ও সংস্কৃতির অনন্য ক্ষেত্র"}
+              defaultEn="A Unique Sphere of Literature & Culture"
+              as="h2"
+              className="font-bengali text-3xl md:text-5xl font-bold text-foreground mb-6"
+            />
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5 lg:gap-6" style={{ perspective: "1200px" }}>
-          {services.map((service, index) => (
-            <motion.div
-              key={index}
-              initial={{ opacity: 0, y: 30, rotateY: -5 }}
-              whileInView={{ opacity: 1, y: 0, rotateY: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: index * 0.08 }}
-              whileHover={{ y: -8, rotateY: 3, scale: 1.02 }}
-              className="group relative bg-card rounded-2xl p-7 border border-border overflow-hidden shadow-md hover:shadow-xl hover:shadow-primary/10 transition-all"
-            >
-              <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-primary via-accent to-primary scale-x-0 group-hover:scale-x-100 transition-transform origin-left rounded-full" />
-              <div className="absolute -top-12 -right-12 w-28 h-28 bg-gradient-to-br from-accent/8 to-transparent rounded-full opacity-0 group-hover:opacity-100 transition-opacity blur-xl" />
+          </motion.div>
 
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/15 to-accent/10 flex items-center justify-center mb-5 group-hover:scale-110 group-hover:rotate-6 transition-transform shadow-inner">
-                <service.icon className="w-6 h-6 text-primary" />
-              </div>
-              <h3 className="font-bengali text-lg font-bold text-foreground mb-1">{service.title}</h3>
-              <p className="text-xs text-accent font-medium mb-3">{service.titleEn}</p>
-              <p className="font-bengali text-sm text-muted-foreground leading-relaxed">{service.desc}</p>
-            </motion.div>
-          ))}
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5 lg:gap-6" style={{ perspective: "1200px" }}>
+            {services.map((service, index) => (
+              <motion.div
+                key={service.key}
+                initial={{ opacity: 0, y: 30, rotateY: -5 }}
+                whileInView={{ opacity: 1, y: 0, rotateY: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: index * 0.08 }}
+                whileHover={{ y: -8, rotateY: 3, scale: 1.02 }}
+                className="group relative bg-card rounded-2xl p-7 border border-border overflow-hidden shadow-sm transition-all"
+              >
+                <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-primary via-accent to-primary scale-x-0 group-hover:scale-x-100 transition-transform origin-left rounded-full" />
+                <div className="absolute -top-12 -right-12 w-28 h-28 bg-gradient-to-br from-accent/8 to-transparent rounded-full opacity-0 group-hover:opacity-100 transition-opacity blur-xl" />
+
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/15 to-accent/10 flex items-center justify-center mb-5 group-hover:scale-110 group-hover:rotate-6 transition-transform shadow-inner">
+                  <service.icon className="w-6 h-6 text-primary" />
+                </div>
+                <EditableText
+                  pageKey="landing"
+                  sectionKey="services"
+                  elementKey={`${service.key}_title`}
+                  defaultBn={service.title}
+                  defaultEn={service.titleEn}
+                  as="h3"
+                  className="font-bengali text-lg font-bold text-foreground mb-1 block"
+                />
+                <EditableText
+                  pageKey="landing"
+                  sectionKey="services"
+                  elementKey={`${service.key}_sub`}
+                  defaultBn={service.titleEn}
+                  defaultEn={service.titleEn}
+                  as="p"
+                  className="text-xs text-accent font-medium mb-3 block"
+                />
+                <EditableText
+                  pageKey="landing"
+                  sectionKey="services"
+                  elementKey={`${service.key}_desc`}
+                  defaultBn={service.desc}
+                  defaultEn={service.desc}
+                  multiline
+                  as="p"
+                  className="font-bengali text-sm text-muted-foreground leading-relaxed block"
+                />
+              </motion.div>
+            ))}
+          </div>
         </div>
       </div>
-    </section>
+    </EditableSection>
   );
 };
 

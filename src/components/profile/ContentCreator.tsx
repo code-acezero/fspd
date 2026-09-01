@@ -41,7 +41,7 @@ const ContentCreator = () => {
   const inputClass = "w-full px-4 py-2.5 rounded-2xl bg-background border border-border text-sm font-bengali focus:outline-none focus:ring-2 focus:ring-primary/20 text-foreground";
 
   return (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="bg-card rounded-3xl border border-border p-6 depth-card">
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="bg-card rounded-3xl border border-border p-6 shadow-sm">
       <div className="flex items-center justify-between mb-4">
         <h2 className="font-bengali text-lg font-bold text-foreground">{t("createContent")}</h2>
         {!activeType && (

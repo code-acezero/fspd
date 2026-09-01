@@ -1,22 +1,39 @@
 import { useParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, Calendar, Clock, MapPin, Share2, Loader2 } from "lucide-react";
-// Mock fallback removed.
+import {
+  ArrowLeft,
+  Calendar,
+  Clock,
+  MapPin,
+  Share2,
+  Loader2,
+  Image as ImageLucide,
+  FileText,
+  GraduationCap,
+  ExternalLink,
+  ChevronRight,
+  FileEdit
+} from "lucide-react";
 import MainNav from "@/components/MainNav";
 import Footer from "@/components/landing/Footer";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useState } from "react";
-import { extractIdFromSlug } from "@/lib/slugify";
+import { extractIdFromSlug, createSlug } from "@/lib/slugify";
+import EventGalleryModal, { EventGalleryItem } from "@/components/events/EventGalleryModal";
+import CorrectionRequestModal from "@/components/common/CorrectionRequestModal";
 
 const EventDetailPage = () => {
   const { slug } = useParams();
   const { t, lang } = useLanguage();
   const [showShareMenu, setShowShareMenu] = useState(false);
+  const [galleryModalOpen, setGalleryModalOpen] = useState(false);
+  const [correctionModalOpen, setCorrectionModalOpen] = useState(false);
 
   const shortId = slug ? extractIdFromSlug(slug) : "";
 
+  // Fetch Event Data
   const { data: dbEvent, isLoading } = useQuery({
     queryKey: ["event", shortId],
     queryFn: async () => {
@@ -33,6 +50,37 @@ const EventDetailPage = () => {
     },
     enabled: !!shortId,
     retry: false,
+  });
+
+  // Fetch Connected Gallery Items
+  const { data: galleryItems = [] } = useQuery<EventGalleryItem[]>({
+    queryKey: ["event-gallery", dbEvent?.id],
+    queryFn: async () => {
+      if (!dbEvent?.id) return [];
+      const { data, error } = await supabase
+        .from("site_assets")
+        .select("id, name, image_url, created_at")
+        .eq("slot", `event:${dbEvent.id}`);
+      if (error) return [];
+      return data || [];
+    },
+    enabled: !!dbEvent?.id,
+  });
+
+  // Fetch Connected Posts
+  const { data: connectedPosts = [] } = useQuery({
+    queryKey: ["event-posts", dbEvent?.id],
+    queryFn: async () => {
+      if (!dbEvent?.id) return [];
+      const { data, error } = await supabase
+        .from("posts")
+        .select("id, title, title_en, cover_image, excerpt")
+        .contains("tags", [`event:${dbEvent.id}`])
+        .eq("published", true);
+      if (error) return [];
+      return data || [];
+    },
+    enabled: !!dbEvent?.id,
   });
 
   const event = dbEvent
@@ -80,7 +128,9 @@ const EventDetailPage = () => {
   return (
     <div className="min-h-screen bg-background">
       <MainNav />
-      <div className="bg-hero-gradient py-10 relative overflow-hidden">
+
+      {/* Header Banner */}
+      <div className="bg-hero-gradient py-12 relative overflow-hidden">
         <div className="absolute inset-0 alpona-pattern opacity-20" />
         <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-background to-transparent" />
         <div className="container mx-auto px-4 lg:px-8 relative">
@@ -96,39 +146,108 @@ const EventDetailPage = () => {
               <span className="flex items-center gap-1 px-3 py-1 rounded-full bg-primary-foreground/10 backdrop-blur-sm"><Calendar className="w-3.5 h-3.5" />{t(event.date) || event.date}</span>
               <span className="flex items-center gap-1 px-3 py-1 rounded-full bg-primary-foreground/10 backdrop-blur-sm"><Clock className="w-3.5 h-3.5" />{t(event.time) || event.time}</span>
               <span className="flex items-center gap-1 px-3 py-1 rounded-full bg-primary-foreground/10 backdrop-blur-sm"><MapPin className="w-3.5 h-3.5" />{t(event.location) || event.location}</span>
+              <button
+                type="button"
+                onClick={() => setCorrectionModalOpen(true)}
+                className="flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-primary-foreground/15 hover:bg-primary-foreground/25 text-primary-foreground text-xs font-semibold backdrop-blur-sm transition-all font-bengali shadow-xs"
+                title={lang === "en" ? "Suggest Correction / Update" : "তথ্য সংশোধনের আবেদন জানান"}
+              >
+                <FileEdit className="w-3.5 h-3.5" />
+                <span>{lang === "en" ? "Suggest Correction" : "সংশোধনের আবেদন"}</span>
+              </button>
             </div>
           </div>
         </div>
       </div>
 
       <div className="container mx-auto px-4 lg:px-8 py-10">
-        <div className="max-w-3xl mx-auto">
-          <motion.article initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="prose prose-lg max-w-none mb-10">
-            <div className="bg-card rounded-3xl border border-border p-6 md:p-10 depth-card">
-              <h2 className="font-bengali text-xl font-bold text-foreground mb-4">{t("eventDetails")}</h2>
-              <p className="font-bengali text-foreground/80 leading-relaxed">{t(event.description) || event.description}</p>
+        <div className="max-w-4xl mx-auto space-y-8">
+          {/* Main Description */}
+          <motion.article initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-card rounded-3xl border border-border p-6 md:p-10 depth-card space-y-6">
+            <h2 className="font-bengali text-xl font-bold text-foreground">{t("eventDetails")}</h2>
+            <p className="font-bengali text-foreground/80 leading-relaxed whitespace-pre-line text-sm md:text-base">
+              {t(event.description) || event.description}
+            </p>
 
-              <div className="mt-8 grid sm:grid-cols-3 gap-4">
-                <div className="bg-secondary/50 rounded-2xl p-4 text-center">
-                  <Calendar className="w-6 h-6 text-accent mx-auto mb-2" />
-                  <p className="text-xs text-muted-foreground font-bengali">{t("date")}</p>
-                  <p className="text-sm font-semibold text-foreground font-bengali">{t(event.date) || event.date}</p>
-                </div>
-                <div className="bg-secondary/50 rounded-2xl p-4 text-center">
-                  <Clock className="w-6 h-6 text-accent mx-auto mb-2" />
-                  <p className="text-xs text-muted-foreground font-bengali">{t("time")}</p>
-                  <p className="text-sm font-semibold text-foreground font-bengali">{t(event.time) || event.time}</p>
-                </div>
-                <div className="bg-secondary/50 rounded-2xl p-4 text-center">
-                  <MapPin className="w-6 h-6 text-accent mx-auto mb-2" />
-                  <p className="text-xs text-muted-foreground font-bengali">{t("location")}</p>
-                  <p className="text-sm font-semibold text-foreground font-bengali">{t(event.location) || event.location}</p>
-                </div>
+            <div className="mt-8 grid sm:grid-cols-3 gap-4">
+              <div className="bg-secondary/50 rounded-2xl p-4 text-center">
+                <Calendar className="w-6 h-6 text-accent mx-auto mb-2" />
+                <p className="text-xs text-muted-foreground font-bengali">{t("date")}</p>
+                <p className="text-sm font-semibold text-foreground font-bengali">{t(event.date) || event.date}</p>
+              </div>
+              <div className="bg-secondary/50 rounded-2xl p-4 text-center">
+                <Clock className="w-6 h-6 text-accent mx-auto mb-2" />
+                <p className="text-xs text-muted-foreground font-bengali">{t("time")}</p>
+                <p className="text-sm font-semibold text-foreground font-bengali">{t(event.time) || event.time}</p>
+              </div>
+              <div className="bg-secondary/50 rounded-2xl p-4 text-center">
+                <MapPin className="w-6 h-6 text-accent mx-auto mb-2" />
+                <p className="text-xs text-muted-foreground font-bengali">{t("location")}</p>
+                <p className="text-sm font-semibold text-foreground font-bengali">{t(event.location) || event.location}</p>
               </div>
             </div>
           </motion.article>
 
-          <div className="flex justify-end">
+          {/* ── Interconnectivity Section: Event Gallery & Connected Post ── */}
+          <div className="grid sm:grid-cols-2 gap-4">
+            {/* Event Gallery Button Card */}
+            {galleryItems.length > 0 && (
+              <div className="p-6 rounded-3xl bg-card border border-primary/30 depth-card flex flex-col justify-between space-y-4">
+                <div className="space-y-2">
+                  <span className="text-xs font-bold font-bengali text-primary flex items-center gap-1.5">
+                    <ImageLucide className="w-4 h-4" />
+                    ইভেন্ট ফটো ও ভিডিও অ্যালবাম
+                  </span>
+                  <h4 className="font-bengali font-bold text-base text-foreground">
+                    অনুষ্ঠানের স্মরণীয় মুহূর্তসমূহ ({galleryItems.length}টি মিডিয়া)
+                  </h4>
+                  <p className="text-xs text-muted-foreground font-bengali">
+                    অনুষ্ঠানে ধারণকৃত সকল ছবি এবং ভিডিও হাই-রেজোলিউশনে উপভোগ করুন।
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setGalleryModalOpen(true)}
+                  className="w-full py-3 rounded-2xl bg-primary text-primary-foreground font-bengali font-bold text-xs shadow-md shadow-primary/25 hover:bg-primary/90 flex items-center justify-center gap-2 transition-all active:scale-98"
+                >
+                  <ImageLucide className="w-4 h-4" />
+                  <span>ইভেন্ট গ্যালারি দেখুন</span>
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+            )}
+
+            {/* Connected Blog Post Card */}
+            {connectedPosts.length > 0 && (
+              <div className="p-6 rounded-3xl bg-card border border-border depth-card flex flex-col justify-between space-y-4">
+                <div className="space-y-2">
+                  <span className="text-xs font-bold font-bengali text-accent flex items-center gap-1.5">
+                    <FileText className="w-4 h-4" />
+                    অনুষ্ঠান সংক্রান্ত নিবন্ধ / প্রতিবেদন
+                  </span>
+                  <h4 className="font-bengali font-bold text-base text-foreground truncate">
+                    {connectedPosts[0].title}
+                  </h4>
+                  <p className="text-xs text-muted-foreground font-bengali line-clamp-2">
+                    {connectedPosts[0].excerpt}
+                  </p>
+                </div>
+
+                <Link
+                  to={`/blog/${createSlug(connectedPosts[0].title_en || connectedPosts[0].title, connectedPosts[0].id)}`}
+                  className="w-full py-3 rounded-2xl bg-secondary hover:bg-secondary/80 text-foreground font-bengali font-bold text-xs flex items-center justify-center gap-2 transition-all active:scale-98"
+                >
+                  <FileText className="w-4 h-4 text-primary" />
+                  <span>সম্পূর্ণ প্রতিবেদন পড়ুন</span>
+                  <ChevronRight className="w-4 h-4" />
+                </Link>
+              </div>
+            )}
+          </div>
+
+          {/* Share Action */}
+          <div className="flex justify-end pt-4">
             <div className="relative">
               <button onClick={() => setShowShareMenu(!showShareMenu)} className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-secondary text-secondary-foreground text-sm hover:bg-secondary/80 font-bengali transition-all">
                 <Share2 className="w-4 h-4" /> {t("sharePost")}
@@ -144,6 +263,27 @@ const EventDetailPage = () => {
           </div>
         </div>
       </div>
+
+      {/* Event Gallery Lightbox Modal */}
+      <EventGalleryModal
+        isOpen={galleryModalOpen}
+        onClose={() => setGalleryModalOpen(false)}
+        eventTitle={displayTitle}
+        eventDate={event.date}
+        items={galleryItems}
+      />
+
+      {/* Suggest Correction Modal */}
+      {correctionModalOpen && (
+        <CorrectionRequestModal
+          isOpen={correctionModalOpen}
+          onClose={() => setCorrectionModalOpen(false)}
+          targetType="event"
+          targetId={dbEvent ? dbEvent.id : (event ? event.id : "")}
+          targetTitle={displayTitle}
+        />
+      )}
+
       <Footer />
     </div>
   );
